@@ -1,0 +1,4 @@
+*.suo
+src/.vs/
+src/VeldridGlTF.Viewer/bin/
+src/VeldridGlTF.Viewer/obj/

@@ -1,0 +1,9 @@
+[submodule "src/modules/veldrid"]
+	path = src/modules/veldrid
+	url = https://github.com/mellinoe/veldrid.git
+[submodule "src/modules/SharpGLTF"]
+	path = src/modules/SharpGLTF
+	url = https://github.com/VPenades/SharpGLTF
+[submodule "src/modules/glTF-Sample-Models"]
+	path = src/modules/glTF-Sample-Models
+	url = https://github.com/KhronosGroup/glTF-Sample-Models.git
