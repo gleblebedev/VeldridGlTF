@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\modules\veldrid\src\Veldrid.SDL2\native\win-x64\SDL2.dll" Link="SDL2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\Veldrid.SPIRV.1.0.5\runtimes\win-x64\native\libveldrid-spirv.dll" Link="libveldrid-spirv.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\modules\veldrid\src\Veldrid.SDL2\Veldrid.SDL2.csproj" />
+    <ProjectReference Include="..\modules\veldrid\src\Veldrid\Veldrid.csproj" />
+    <ProjectReference Include="..\VeldridGlTF.Viewer\VeldridGlTF.Viewer.csproj" />
+  </ItemGroup>
+
+</Project>

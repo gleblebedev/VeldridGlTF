@@ -1,27 +1,57 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace VeldridGlTF.Viewer
 {
-    public class Transform
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Transform
     {
-        private Vector3 _position;
-        private Quaternion _rotation = Quaternion.Identity;
-        private Vector3 _scale = Vector3.One;
+        public static readonly Transform Identity = new Transform() {Position = Vector3.Zero, Rotation = Quaternion.Identity, Scale = Vector3.One};
 
-        public Vector3 Position { get => _position; set { _position = value; TransformChanged?.Invoke(); } }
-        public Quaternion Rotation { get => _rotation; set { _rotation = value; TransformChanged?.Invoke(); } }
-        public Vector3 Scale { get => _scale; set { _scale = value; TransformChanged?.Invoke(); } }
+        public Vector3 Position;
+        private readonly float _padding0;
+        public Quaternion Rotation;
+        public Vector3 Scale;
+        private readonly float _padding1;
 
-        public event Action TransformChanged;
-
-        public Vector3 Forward => Vector3.Transform(-Vector3.UnitZ, _rotation);
-
-        public Matrix4x4 GetTransformMatrix()
+        public Transform(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            return Matrix4x4.CreateScale(_scale)
-                * Matrix4x4.CreateFromQuaternion(_rotation)
-                * Matrix4x4.CreateTranslation(Position);
+            Position = position;
+            _padding0 = 0;
+            Rotation = rotation;
+            _padding1 = 0;
+            Scale = scale;
+        }
+
+        public Transform(Vector3 position, Quaternion rotation):this(position, rotation, Vector3.One)
+        {
+        }
+        public Transform(Quaternion rotation) : this(Vector3.Zero, rotation, Vector3.One)
+        {
+        }
+
+        public Transform(Vector3 position) : this(position, Quaternion.Identity, Vector3.One)
+        {
+        }
+
+        public static Transform operator* (Transform a,Transform b)
+        {
+            Matrix4x4 am, bm;
+            a.EvaluateMatrix(out am);
+            b.EvaluateMatrix(out bm);
+            var cm = am * bm;
+            var result = new Transform();
+            Matrix4x4.Decompose(cm, out result.Position, out result.Rotation, out result.Scale);
+            return result;
+        }
+
+        public void EvaluateMatrix(out Matrix4x4 matrix)
+        {
+            matrix = Matrix4x4.CreateScale(Scale)
+                     * 
+                     Matrix4x4.CreateFromQuaternion(Rotation) 
+                     *
+                     Matrix4x4.CreateTranslation(Position);
         }
     }
 }
