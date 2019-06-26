@@ -6,6 +6,8 @@ using Veldrid;
 using Veldrid.ImageSharp;
 using Veldrid.SPIRV;
 using VeldridGlTF.Viewer.Components;
+using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -14,67 +16,21 @@ namespace VeldridGlTF.Viewer.Systems.Render
     {
         private readonly StepContext _stepContext;
 
-        #region Shaders
-        private const string VertexCode = @"
-#version 450
-
-layout(set = 0, binding = 0) uniform ProjectionBuffer
-{
-    mat4 Projection;
-};
-
-layout(set = 0, binding = 1) uniform ViewBuffer
-{
-    mat4 View;
-};
-
-layout(set = 1, binding = 0) uniform WorldBuffer
-{
-    mat4 World;
-};
-
-layout(location = 0) in vec3 Position;
-layout(location = 1) in vec2 TexCoords;
-layout(location = 0) out vec2 fsin_texCoords;
-
-void main()
-{
-    vec4 worldPosition = World * vec4(Position, 1);
-    vec4 viewPosition = View * worldPosition;
-    vec4 clipPosition = Projection * viewPosition;
-    gl_Position = clipPosition;
-    fsin_texCoords = TexCoords;
-}";
-
-        private const string FragmentCode = @"
-#version 450
-
-layout(location = 0) in vec2 fsin_texCoords;
-layout(location = 0) out vec4 fsout_color;
-
-layout(set = 1, binding = 1) uniform texture2D SurfaceTexture;
-layout(set = 1, binding = 2) uniform sampler SurfaceSampler;
-
-void main()
-{
-    fsout_color =  texture(sampler2D(SurfaceTexture, SurfaceSampler), fsin_texCoords);
-}";
-        #endregion
-
-        EcsWorld _world = null;
-        EcsFilter<WorldTransform, StaticModel> _staticModels = null;
-
         protected Camera _camera;
         private CommandList _cl;
+        private DeviceBuffer _materialBuffer;
         private Pipeline _pipeline;
         private DeviceBuffer _projectionBuffer;
         private ResourceSet _projViewSet;
+        private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
         private ImageSharpTexture _stoneTexData;
         private Texture _surfaceTexture;
         private TextureView _surfaceTextureView;
         private float _ticks;
 
         private DeviceBuffer _viewBuffer;
+
+        private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
         private ResourceSet _worldTextureSet;
 
@@ -109,6 +65,65 @@ void main()
 
         public void PreDestroy()
         {
+        }
+
+        public void Run()
+        {
+            var deltaSeconds = _stepContext.DeltaSeconds;
+            _ticks += deltaSeconds * 1000f;
+
+            _camera.Yaw += deltaSeconds;
+            _camera.Position = _camera.Forward * -100;
+
+            _cl.Begin();
+
+            _cl.SetFramebuffer(MainSwapchain.Framebuffer);
+            _cl.ClearColorTarget(0, RgbaFloat.Black);
+            _cl.ClearDepthStencil(1f);
+
+            //var perspectiveFieldOfView = Matrix4x4.CreatePerspectiveFieldOfView(
+            //    1.0f,
+            //    (float)Window.Width / Window.Height,
+            //    0.5f,
+            //    100f);
+            var perspectiveFieldOfView = _camera.ProjectionMatrix;
+            _cl.UpdateBuffer(_projectionBuffer, 0, perspectiveFieldOfView);
+
+            //var lookAt = Matrix4x4.CreateLookAt(Vector3.UnitZ * 2.5f, Vector3.Zero, Vector3.UnitY);
+            var lookAt = _camera.ViewMatrix;
+            _cl.UpdateBuffer(_viewBuffer, 0, lookAt);
+
+            foreach (var modelIndex in _staticModels)
+            {
+                var worldTransform = _staticModels.Components1[modelIndex];
+                var staticModel = _staticModels.Components2[modelIndex];
+                var staticModelModel = ResolveHandler<IMesh, RenderMesh>(staticModel.Model);
+                var material = ResolveHandler<IMaterial, RenderMaterial>(staticModel.Material);
+                if (staticModelModel != null && material != null)
+                {
+                    if (staticModelModel._vertexBuffer == null)
+                        staticModelModel.CreateResources(GraphicsDevice, ResourceFactory);
+
+                    //var rotation =
+                    //    Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, _ticks / 1000f)
+                    //    * Matrix4x4.CreateFromAxisAngle(Vector3.UnitX, _ticks / 3000f);
+                    //_cl.UpdateBuffer(_worldBuffer, 0, ref rotation);
+                    _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
+                    _cl.UpdateBuffer(_materialBuffer, 0, ref material.DiffuseColor);
+
+                    _cl.SetPipeline(_pipeline);
+                    _cl.SetVertexBuffer(0, staticModelModel._vertexBuffer);
+                    _cl.SetIndexBuffer(staticModelModel._indexBuffer, IndexFormat.UInt16);
+                    _cl.SetGraphicsResourceSet(0, _projViewSet);
+                    _cl.SetGraphicsResourceSet(1, _worldTextureSet);
+                    _cl.DrawIndexed(staticModelModel.IndexCount, 1, 0, 0, 0);
+                }
+            }
+
+            _cl.End();
+            GraphicsDevice.SubmitCommands(_cl);
+            GraphicsDevice.SwapBuffers(MainSwapchain);
+            GraphicsDevice.WaitForIdle();
         }
 
         public void OnGraphicsDeviceCreated(GraphicsDevice gd, ResourceFactory factory, Swapchain sc)
@@ -146,8 +161,7 @@ void main()
             _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             _worldBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
-
-         
+            _materialBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             _surfaceTexture = _stoneTexData.CreateDeviceTexture(GraphicsDevice, ResourceFactory);
             _surfaceTextureView = factory.CreateTextureView(_surfaceTexture);
@@ -175,16 +189,26 @@ void main()
             var worldTextureLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex),
+                        ShaderStages.Vertex, ResourceLayoutElementOptions.None),
                     new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly,
                         ShaderStages.Fragment),
                     new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler,
-                        ShaderStages.Fragment)));
+                        ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("BaseColor", ResourceKind.UniformBuffer,
+                        ShaderStages.Vertex | ShaderStages.Fragment, ResourceLayoutElementOptions.None)
+                ));
 
             _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
-                RasterizerStateDescription.Default,
+                new RasterizerStateDescription
+                {
+                    CullMode = FaceCullMode.Back,
+                    FillMode = PolygonFillMode.Solid,
+                    FrontFace = FrontFace.CounterClockwise,
+                    DepthClipEnabled = true,
+                    ScissorTestEnabled = false
+                },
                 PrimitiveTopology.TriangleList,
                 shaderSet,
                 new[] {projViewLayout, worldTextureLayout},
@@ -199,7 +223,9 @@ void main()
                 worldTextureLayout,
                 _worldBuffer,
                 _surfaceTextureView,
-                GraphicsDevice.Aniso4xSampler));
+                GraphicsDevice.Aniso4xSampler,
+                _materialBuffer
+            ));
 
             _cl = factory.CreateCommandList();
         }
@@ -216,69 +242,72 @@ void main()
             return GetType().Name;
         }
 
-        public void Run()
+        public V ResolveHandler<T, V>(IResourceHandler<T> handler, V defaultValue = default) where V : class
         {
-
-            var deltaSeconds = _stepContext.DeltaSeconds;
-            _ticks += deltaSeconds * 1000f;
-
-            _camera.Yaw += deltaSeconds;
-            _camera.Position = _camera.Forward * -100;
-
-            _cl.Begin();
-
-            _cl.SetFramebuffer(MainSwapchain.Framebuffer);
-            _cl.ClearColorTarget(0, RgbaFloat.Black);
-            _cl.ClearDepthStencil(1f);
-
-            //var perspectiveFieldOfView = Matrix4x4.CreatePerspectiveFieldOfView(
-            //    1.0f,
-            //    (float)Window.Width / Window.Height,
-            //    0.5f,
-            //    100f);
-            var perspectiveFieldOfView = _camera.ProjectionMatrix;
-            _cl.UpdateBuffer(_projectionBuffer, 0, perspectiveFieldOfView);
-
-            //var lookAt = Matrix4x4.CreateLookAt(Vector3.UnitZ * 2.5f, Vector3.Zero, Vector3.UnitY);
-            var lookAt = _camera.ViewMatrix;
-            _cl.UpdateBuffer(_viewBuffer, 0, lookAt);
-
-            foreach (var modelIndex in _staticModels)
-            {
-                var worldTransform = _staticModels.Components1[modelIndex];
-                var staticModel = _staticModels.Components2[modelIndex];
-                if (staticModel.Model.Status == TaskStatus.RanToCompletion)
-                {
-                    var staticModelModel = staticModel.Model.GetAsync().Result as RenderMesh;
-                    if (staticModelModel != null)
-                    {
-                        if (staticModelModel._vertexBuffer == null)
-                        {
-                            staticModelModel.CreateResources(GraphicsDevice, ResourceFactory);
-                        }
-
-                        //var rotation =
-                        //    Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, _ticks / 1000f)
-                        //    * Matrix4x4.CreateFromAxisAngle(Vector3.UnitX, _ticks / 3000f);
-                        //_cl.UpdateBuffer(_worldBuffer, 0, ref rotation);
-                        _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
-
-                        _cl.SetPipeline(_pipeline);
-                        _cl.SetVertexBuffer(0, staticModelModel._vertexBuffer);
-                        _cl.SetIndexBuffer(staticModelModel._indexBuffer, IndexFormat.UInt16);
-                        _cl.SetGraphicsResourceSet(0, _projViewSet);
-                        _cl.SetGraphicsResourceSet(1, _worldTextureSet);
-                        _cl.DrawIndexed(staticModelModel.IndexCount, 1, 0, 0, 0);
-                    }
-                }
-            }
-
-            _cl.End();
-            GraphicsDevice.SubmitCommands(_cl);
-            GraphicsDevice.SwapBuffers(MainSwapchain);
-            GraphicsDevice.WaitForIdle();
+            if (handler == null)
+                return defaultValue;
+            if (handler.Status != TaskStatus.RanToCompletion)
+                return defaultValue;
+            return handler.GetAsync().Result as V;
         }
 
-        
+        #region Shaders
+
+        private const string VertexCode = @"
+#version 450
+
+layout(set = 0, binding = 0) uniform ProjectionBuffer
+{
+    mat4 Projection;
+};
+
+layout(set = 0, binding = 1) uniform ViewBuffer
+{
+    mat4 View;
+};
+
+layout(set = 1, binding = 0) uniform WorldBuffer
+{
+    mat4 World;
+};
+
+layout(location = 0) in vec3 Position;
+layout(location = 1) in vec2 TexCoords;
+layout(location = 0) out vec2 fsin_texCoords;
+
+void main()
+{
+    vec4 worldPosition = World * vec4(Position, 1);
+    vec4 viewPosition = View * worldPosition;
+    vec4 clipPosition = Projection * viewPosition;
+    gl_Position = clipPosition;
+    fsin_texCoords = TexCoords;
+}";
+
+        private const string FragmentCode = @"
+#version 450
+
+struct MaterialPropertiesInfo
+{
+    vec4 BaseColor;
+};
+
+
+layout(location = 0) in vec2 fsin_texCoords;
+layout(location = 0) out vec4 fsout_color;
+
+layout(set = 1, binding = 1) uniform texture2D SurfaceTexture;
+layout(set = 1, binding = 2) uniform sampler SurfaceSampler;
+layout(set = 1, binding = 3) uniform MaterialProperties
+{
+    MaterialPropertiesInfo _MaterialProperties;
+};
+
+void main()
+{
+    fsout_color =  texture(sampler2D(SurfaceTexture, SurfaceSampler), fsin_texCoords) * _MaterialProperties.BaseColor;
+}";
+
+        #endregion
     }
 }

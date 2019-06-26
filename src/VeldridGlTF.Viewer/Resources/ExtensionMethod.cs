@@ -4,7 +4,7 @@
     {
         public static ResourceManager With<T>(this ResourceManager resourceManager, IResourceLoader<T> loader)
         {
-            resourceManager.Register<T>(loader);
+            resourceManager.Register(loader);
             return resourceManager;
         }
     }

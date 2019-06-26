@@ -1,16 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
-using SharpGLTF.Schema2;
-using Veldrid;
-using Veldrid.ImageSharp;
-using Veldrid.SPIRV;
-using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Loaders;
 using VeldridGlTF.Viewer.Resources;
@@ -19,14 +9,14 @@ using VeldridGlTF.Viewer.Systems.Render;
 
 namespace VeldridGlTF.Viewer
 {
-    public class SceneRenderer:IDisposable
+    public class SceneRenderer : IDisposable
     {
-        private EcsWorld _world;
-        private EcsSystems _systems;
-        private StepContext _stepContext;
         private ResourceManager _resourceManager;
+        private readonly StepContext _stepContext;
+        private EcsSystems _systems;
 
-        public IApplicationWindow Window { get; }
+        private readonly VeldridRenderSystem _veldridRenderSystem;
+        private EcsWorld _world;
 
         public SceneRenderer(IApplicationWindow window)
         {
@@ -35,7 +25,7 @@ namespace VeldridGlTF.Viewer
             _world = new EcsWorld();
             _systems = new EcsSystems(_world);
             _stepContext = new StepContext();
-            _veldridRenderSystem = new VeldridRenderSystem(_stepContext,  window);
+            _veldridRenderSystem = new VeldridRenderSystem(_stepContext, window);
             _systems
                 .Add(new LocalToWorldSystem())
                 .Add(_veldridRenderSystem);
@@ -57,10 +47,17 @@ namespace VeldridGlTF.Viewer
 
             Window.Rendering += PreDraw;
             Window.Rendering += Draw;
-
         }
 
-        private VeldridRenderSystem _veldridRenderSystem;
+        public IApplicationWindow Window { get; }
+
+        public void Dispose()
+        {
+            _systems.Dispose();
+            _systems = null;
+            _world.Dispose();
+            _world = null;
+        }
 
         private async Task<EcsEntity> LoadGlTFSample()
         {
@@ -68,16 +65,14 @@ namespace VeldridGlTF.Viewer
                 .With(new GlTFLoader())
                 .With(new PrefabLoader())
                 .With(new MeshLoader());
-            var container = await _resourceManager.Resolve<GlTFContainer>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
-            foreach (var mesh in container.Meshes)
-            {
-                await mesh.GetAsync();
-            }
-            var prefab = await _resourceManager.Resolve<EntityPrefab>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb",null)).GetAsync();
+            var container = await _resourceManager
+                .Resolve<GlTFContainer>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
+            foreach (var mesh in container.Meshes) await mesh.GetAsync();
+            var prefab = await _resourceManager
+                .Resolve<EntityPrefab>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
             return prefab.Spawn(_world);
-            
         }
-      
+
         private void PreDraw(float deltaSeconds)
         {
         }
@@ -86,14 +81,6 @@ namespace VeldridGlTF.Viewer
         {
             _stepContext.DeltaSeconds = deltaSeconds;
             _systems.Run();
-        }
-
-        public void Dispose()
-        {
-            _systems.Dispose();
-            _systems = null;
-            _world.Dispose();
-            _world = null;
         }
     }
 }

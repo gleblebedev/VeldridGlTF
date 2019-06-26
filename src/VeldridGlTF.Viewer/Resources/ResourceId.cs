@@ -6,15 +6,9 @@ namespace VeldridGlTF.Viewer.Resources
     {
         public static readonly ResourceId Null = new ResourceId(null, null);
 
-        public string Container
-        {
-            get { return _container; }
-        }
+        public string Container { get; }
 
-        public string Id
-        {
-            get { return _id; }
-        }
+        public string Id { get; }
 
         public bool Equals(ResourceId other)
         {
@@ -44,13 +38,10 @@ namespace VeldridGlTF.Viewer.Resources
             return !left.Equals(right);
         }
 
-        private readonly string _container;
-        private readonly string _id;
-
         public ResourceId(string container, string id)
         {
-            _container = container;
-            _id = id;
+            Container = container;
+            Id = id;
         }
     }
 }

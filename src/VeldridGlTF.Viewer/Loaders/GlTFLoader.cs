@@ -12,7 +12,8 @@ namespace VeldridGlTF.Viewer.Loaders
         {
             if (id.Id != null)
                 throw new ArgumentException("Resource id value should be null", nameof(id));
-            return new GlTFContainer(manager, id.Container, SharpGLTF.Schema2.ModelRoot.Read(this.GetType().Assembly.GetManifestResourceStream(id.Container), new ReadSettings() { }));
+            return new GlTFContainer(manager, id.Container,
+                ModelRoot.Read(GetType().Assembly.GetManifestResourceStream(id.Container), new ReadSettings()));
         }
     }
 }

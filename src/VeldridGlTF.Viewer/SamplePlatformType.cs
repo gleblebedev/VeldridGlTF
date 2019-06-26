@@ -1,11 +1,8 @@
-﻿using System;
-
-namespace VeldridGlTF.Viewer
+﻿namespace VeldridGlTF.Viewer
 {
     public enum SamplePlatformType
     {
         Desktop,
-        Mobile,
+        Mobile
     }
-
 }

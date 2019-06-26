@@ -7,8 +7,8 @@ namespace VeldridGlTF.Viewer.Systems
     public struct CameraInfo
     {
         public Vector3 CameraPosition_WorldSpace;
-        private float _padding1;
+        private readonly float _padding1;
         public Vector3 CameraLookDirection;
-        private float _padding2;
+        private readonly float _padding2;
     }
 }

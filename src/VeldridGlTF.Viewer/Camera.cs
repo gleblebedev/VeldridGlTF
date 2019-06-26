@@ -1,32 +1,25 @@
 ﻿using System;
 using System.Numerics;
-using Veldrid;
 using VeldridGlTF.Viewer.Systems;
 
 namespace VeldridGlTF.Viewer
 {
     public class Camera
     {
-        private float _fov = 1f;
-        private float _near = 1f;
         private float _far = 1000f;
-
-        private Matrix4x4 _viewMatrix;
-        private Matrix4x4 _projectionMatrix;
-
-        private Vector3 _position = new Vector3(0, -.3f, -1f) * -800.0f;
         private Vector3 _lookDirection = new Vector3(0, -.3f, -1f);
         private float _moveSpeed = 10.0f;
-
-        private float _yaw;
+        private float _near = 1f;
         private float _pitch;
 
-        private Vector2 _previousMousePos;
-        private float _windowWidth;
-        private float _windowHeight;
+        private Vector3 _position = new Vector3(0, -.3f, -1f) * -800.0f;
 
-        public event Action<Matrix4x4> ProjectionChanged;
-        public event Action<Matrix4x4> ViewChanged;
+        private Vector2 _previousMousePos;
+
+        private float _windowHeight;
+        private float _windowWidth;
+
+        private float _yaw;
 
         public Camera(float width, float height)
         {
@@ -36,21 +29,68 @@ namespace VeldridGlTF.Viewer
             UpdateViewMatrix();
         }
 
-        public Matrix4x4 ViewMatrix => _viewMatrix;
-        public Matrix4x4 ProjectionMatrix => _projectionMatrix;
+        public Matrix4x4 ViewMatrix { get; private set; }
 
-        public Vector3 Position { get => _position; set { _position = value; UpdateViewMatrix(); } }
+        public Matrix4x4 ProjectionMatrix { get; private set; }
 
-        public float FarDistance { get => _far; set { _far = value; UpdatePerspectiveMatrix(); } }
-        public float FieldOfView => _fov;
-        public float NearDistance { get => _near; set { _near = value; UpdatePerspectiveMatrix(); } }
+        public Vector3 Position
+        {
+            get => _position;
+            set
+            {
+                _position = value;
+                UpdateViewMatrix();
+            }
+        }
+
+        public float FarDistance
+        {
+            get => _far;
+            set
+            {
+                _far = value;
+                UpdatePerspectiveMatrix();
+            }
+        }
+
+        public float FieldOfView { get; } = 1f;
+
+        public float NearDistance
+        {
+            get => _near;
+            set
+            {
+                _near = value;
+                UpdatePerspectiveMatrix();
+            }
+        }
 
         public float AspectRatio => _windowWidth / _windowHeight;
 
-        public float Yaw { get => _yaw; set { _yaw = value; UpdateViewMatrix(); } }
-        public float Pitch { get => _pitch; set { _pitch = value; UpdateViewMatrix(); } }
+        public float Yaw
+        {
+            get => _yaw;
+            set
+            {
+                _yaw = value;
+                UpdateViewMatrix();
+            }
+        }
+
+        public float Pitch
+        {
+            get => _pitch;
+            set
+            {
+                _pitch = value;
+                UpdateViewMatrix();
+            }
+        }
 
         public Vector3 Forward => GetLookDir();
+
+        public event Action<Matrix4x4> ProjectionChanged;
+        public event Action<Matrix4x4> ViewChanged;
 
 
         private float Clamp(float value, float min, float max)
@@ -71,29 +111,33 @@ namespace VeldridGlTF.Viewer
 
         private void UpdatePerspectiveMatrix()
         {
-            _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(_fov, _windowWidth / _windowHeight, _near, _far);
-            ProjectionChanged?.Invoke(_projectionMatrix);
+            ProjectionMatrix =
+                Matrix4x4.CreatePerspectiveFieldOfView(FieldOfView, _windowWidth / _windowHeight, _near, _far);
+            ProjectionChanged?.Invoke(ProjectionMatrix);
         }
 
         private void UpdateViewMatrix()
         {
-            Vector3 lookDir = GetLookDir();
+            var lookDir = GetLookDir();
             _lookDirection = lookDir;
-            _viewMatrix = Matrix4x4.CreateLookAt(_position, _position + _lookDirection, Vector3.UnitY);
-            ViewChanged?.Invoke(_viewMatrix);
+            ViewMatrix = Matrix4x4.CreateLookAt(_position, _position + _lookDirection, Vector3.UnitY);
+            ViewChanged?.Invoke(ViewMatrix);
         }
 
         private Vector3 GetLookDir()
         {
-            Quaternion lookRotation = Quaternion.CreateFromYawPitchRoll(Yaw, Pitch, 0f);
-            Vector3 lookDir = Vector3.Transform(-Vector3.UnitZ, lookRotation);
+            var lookRotation = Quaternion.CreateFromYawPitchRoll(Yaw, Pitch, 0f);
+            var lookDir = Vector3.Transform(-Vector3.UnitZ, lookRotation);
             return lookDir;
         }
 
-        public CameraInfo GetCameraInfo() => new CameraInfo
+        public CameraInfo GetCameraInfo()
         {
-            CameraPosition_WorldSpace = _position,
-            CameraLookDirection = _lookDirection
-        };
+            return new CameraInfo
+            {
+                CameraPosition_WorldSpace = _position,
+                CameraLookDirection = _lookDirection
+            };
+        }
     }
 }

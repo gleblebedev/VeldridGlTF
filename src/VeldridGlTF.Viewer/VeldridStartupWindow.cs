@@ -4,55 +4,50 @@ using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 using Veldrid.Utilities;
-using Vulkan.Xlib;
 
 namespace VeldridGlTF.Viewer
 {
     public class VeldridStartupWindow : IApplicationWindow
     {
         private readonly Sdl2Window _window;
-        private GraphicsDevice _gd;
         private DisposeCollectorResourceFactory _factory;
+        private GraphicsDevice _gd;
         private bool _windowResized = true;
-
-        public event Action<float> Rendering;
-        public event Action<GraphicsDevice, ResourceFactory, Swapchain> GraphicsDeviceCreated;
-        public event Action GraphicsDeviceDestroyed;
-        public event Action Resized;
-        public event Action<KeyEvent> KeyPressed;
-
-        public uint Width => (uint)_window.Width;
-        public uint Height => (uint)_window.Height;
-
-        public SamplePlatformType PlatformType => SamplePlatformType.Desktop;
 
         public VeldridStartupWindow(string title)
         {
-            WindowCreateInfo wci = new WindowCreateInfo
+            var wci = new WindowCreateInfo
             {
                 X = 100,
                 Y = 100,
                 WindowWidth = 1280,
                 WindowHeight = 720,
-                WindowTitle = title,
+                WindowTitle = title
             };
             _window = VeldridStartup.CreateWindow(ref wci);
-            _window.Resized += () =>
-            {
-                _windowResized = true;
-            };
+            _window.Resized += () => { _windowResized = true; };
             _window.KeyDown += OnKeyDown;
         }
 
+        public event Action<float> Rendering;
+        public event Action<GraphicsDevice, ResourceFactory, Swapchain> GraphicsDeviceCreated;
+        public event Action GraphicsDeviceDestroyed;
+        public event Action Resized;
+
+        public uint Width => (uint) _window.Width;
+        public uint Height => (uint) _window.Height;
+
+        public SamplePlatformType PlatformType => SamplePlatformType.Desktop;
+
         public void Run()
         {
-            GraphicsDeviceOptions options = new GraphicsDeviceOptions(
-                debug: false,
-                swapchainDepthFormat: PixelFormat.R16_UNorm,
-                syncToVerticalBlank: true,
-                resourceBindingModel: ResourceBindingModel.Improved,
-                preferDepthRangeZeroToOne: true,
-                preferStandardClipSpaceYDirection: true);
+            var options = new GraphicsDeviceOptions(
+                false,
+                PixelFormat.R16_UNorm,
+                true,
+                ResourceBindingModel.Improved,
+                true,
+                true);
 #if DEBUG
             options.Debug = true;
 #endif
@@ -60,15 +55,15 @@ namespace VeldridGlTF.Viewer
             _factory = new DisposeCollectorResourceFactory(_gd.ResourceFactory);
             GraphicsDeviceCreated?.Invoke(_gd, _factory, _gd.MainSwapchain);
 
-            Stopwatch sw = Stopwatch.StartNew();
-            double previousElapsed = sw.Elapsed.TotalSeconds;
+            var sw = Stopwatch.StartNew();
+            var previousElapsed = sw.Elapsed.TotalSeconds;
 
             while (_window.Exists)
             {
-                double newElapsed = sw.Elapsed.TotalSeconds;
-                float deltaSeconds = (float)(newElapsed - previousElapsed);
+                var newElapsed = sw.Elapsed.TotalSeconds;
+                var deltaSeconds = (float) (newElapsed - previousElapsed);
 
-                InputSnapshot inputSnapshot = _window.PumpEvents();
+                var inputSnapshot = _window.PumpEvents();
 
                 if (_window.Exists)
                 {
@@ -76,7 +71,7 @@ namespace VeldridGlTF.Viewer
                     if (_windowResized)
                     {
                         _windowResized = false;
-                        _gd.ResizeMainWindow((uint)_window.Width, (uint)_window.Height);
+                        _gd.ResizeMainWindow((uint) _window.Width, (uint) _window.Height);
                         Resized?.Invoke();
                     }
 
@@ -89,6 +84,8 @@ namespace VeldridGlTF.Viewer
             _gd.Dispose();
             GraphicsDeviceDestroyed?.Invoke();
         }
+
+        public event Action<KeyEvent> KeyPressed;
 
         protected void OnKeyDown(KeyEvent keyEvent)
         {

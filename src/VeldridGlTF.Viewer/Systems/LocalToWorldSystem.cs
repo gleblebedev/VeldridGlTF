@@ -6,8 +6,8 @@ namespace VeldridGlTF.Viewer.Systems
     [EcsInject]
     public class LocalToWorldSystem : IEcsRunSystem
     {
-        EcsWorld _world = null;
-        EcsFilter<LocalTransform, WorldTransform> _filter = null;
+        private readonly EcsFilter<LocalTransform, WorldTransform> _filter = null;
+        private EcsWorld _world = null;
 
         public void Run()
         {
@@ -15,8 +15,7 @@ namespace VeldridGlTF.Viewer.Systems
             {
                 var local = _filter.Components1[index];
                 var world = _filter.Components2[index];
-                local.EvaluateWorldTransform(out world.Transform);
-                world.Transform.EvaluateMatrix(out world.WorldMatrix);
+                local.EvaluateWorldTransform(out world.WorldMatrix);
             }
         }
     }

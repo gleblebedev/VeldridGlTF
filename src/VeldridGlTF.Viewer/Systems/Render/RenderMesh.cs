@@ -7,25 +7,24 @@ using VeldridGlTF.Viewer.Data;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
-    public class RenderMesh:IMesh
+    public class RenderMesh : IMesh
     {
-        private VertexPositionTexture[] _vertices;
-        private ushort[] _indices;
-        public DeviceBuffer _vertexBuffer;
         public DeviceBuffer _indexBuffer;
-        private uint _indexCount;
+        private readonly ushort[] _indices;
+        public DeviceBuffer _vertexBuffer;
+        private readonly VertexPositionTexture[] _vertices;
 
         public RenderMesh(Mesh mesh)
         {
-            List<VertexPositionTexture> vertices= new List<VertexPositionTexture>();
-            List<ushort> indices = new List<ushort>();
-            
+            var vertices = new List<VertexPositionTexture>();
+            var indices = new List<ushort>();
+
             foreach (var meshPrimitive in mesh.Primitives)
             {
                 var positions = meshPrimitive.GetVertices("POSITION").AsVector3Array();
                 var normals = GetMemoryAccessor(meshPrimitive.GetVertexAccessor("NORMAL"))?.AsVector3Array();
                 var texCoords0 = GetMemoryAccessor(meshPrimitive.GetVertexAccessor("TEXCOORD_0"))?.AsVector2Array();
-                Dictionary<int, ushort> map = new Dictionary<int, ushort>();
+                var map = new Dictionary<int, ushort>();
                 foreach (var face in meshPrimitive.GetTriangleIndices())
                 {
                     indices.Add(CopyVertex(face.Item1, map, vertices, positions, normals, texCoords0));
@@ -36,10 +35,13 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             _vertices = vertices.ToArray();
             _indices = indices.ToArray();
-            IndexCount = (uint)_vertices.Length;
+            IndexCount = (uint) _indices.Length;
         }
 
-        private ushort CopyVertex(int originalIndex, Dictionary<int, ushort> map, List<VertexPositionTexture> vertices, Vector3Array positions, Vector3Array? normals, Vector2Array? texCoords0)
+        public uint IndexCount { get; set; }
+
+        private ushort CopyVertex(int originalIndex, Dictionary<int, ushort> map, List<VertexPositionTexture> vertices,
+            Vector3Array positions, Vector3Array? normals, Vector2Array? texCoords0)
         {
             ushort index;
             if (map.TryGetValue(originalIndex, out index))
@@ -67,24 +69,20 @@ namespace VeldridGlTF.Viewer.Systems.Render
             if (accessor == null)
                 return null;
             var view = accessor.SourceBufferView;
-            var info = new MemoryAccessInfo(null, accessor.ByteOffset, accessor.Count, view.ByteStride, accessor.Dimensions, accessor.Encoding, accessor.Normalized);
+            var info = new MemoryAccessInfo(null, accessor.ByteOffset, accessor.Count, view.ByteStride,
+                accessor.Dimensions, accessor.Encoding, accessor.Normalized);
             return new MemoryAccessor(view.Content, info);
-        }
-        public uint IndexCount
-        {
-            get { return _indexCount; }
-            set { _indexCount = value; }
         }
 
         public void CreateResources(GraphicsDevice graphicsDevice, ResourceFactory factory)
         {
             _vertexBuffer =
                 factory.CreateBuffer(new BufferDescription(
-                    (uint)(VertexPositionTexture.SizeInBytes * _vertices.Length), BufferUsage.VertexBuffer));
+                    (uint) (VertexPositionTexture.SizeInBytes * _vertices.Length), BufferUsage.VertexBuffer));
             graphicsDevice.UpdateBuffer(_vertexBuffer, 0, _vertices);
 
             _indexBuffer =
-                factory.CreateBuffer(new BufferDescription(sizeof(ushort) * (uint)_indices.Length,
+                factory.CreateBuffer(new BufferDescription(sizeof(ushort) * (uint) _indices.Length,
                     BufferUsage.IndexBuffer));
             graphicsDevice.UpdateBuffer(_indexBuffer, 0, _indices);
         }

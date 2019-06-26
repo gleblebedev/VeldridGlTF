@@ -2,7 +2,7 @@
 
 namespace VeldridGlTF.Viewer.Resources
 {
-    public interface IResourceHandler<T>: IResourceHandler
+    public interface IResourceHandler<T> : IResourceHandler
     {
         Task<T> GetAsync();
     }

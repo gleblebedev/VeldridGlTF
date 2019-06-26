@@ -2,7 +2,7 @@
 
 namespace VeldridGlTF.Viewer.Resources
 {
-    public interface IResourceLoader<T>: IResourceLoader
+    public interface IResourceLoader<T> : IResourceLoader
     {
         Task<T> LoadAsync(ResourceManager manager, ResourceId id);
     }

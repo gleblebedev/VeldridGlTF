@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.ComTypes;
+using System.Threading.Tasks;
 
 namespace VeldridGlTF.Viewer.Resources
 {
-    public class ResourceContainer<T>: IResourceContainer
+    public class ResourceContainer<T> : IResourceContainer
     {
-        private readonly ResourceManager _manager;
         private readonly IResourceLoader<T> _loader;
-        ConcurrentDictionary<ResourceId, IResourceHandler<T>> _handlers = new ConcurrentDictionary<ResourceId, IResourceHandler<T>>();
-        object _gate = new object();
+        private readonly ResourceManager _manager;
+        private object _gate = new object();
+
+        private readonly ConcurrentDictionary<ResourceId, IResourceHandler<T>> _handlers =
+            new ConcurrentDictionary<ResourceId, IResourceHandler<T>>();
 
         public ResourceContainer(ResourceManager manager, IResourceLoader<T> loader)
         {
@@ -26,7 +26,7 @@ namespace VeldridGlTF.Viewer.Resources
 
         public IResourceHandler<T> Resolve(ResourceId id)
         {
-            return _handlers.GetOrAdd(id, _ => new ResourceHandler<T>(_manager,_, _loader));
+            return _handlers.GetOrAdd(id, _ => new ResourceHandler<T>(_manager, _, _loader));
         }
 
         public IResourceHandler<T> ResolveOrAdd(ResourceId id, Func<Task<T>> factory)
