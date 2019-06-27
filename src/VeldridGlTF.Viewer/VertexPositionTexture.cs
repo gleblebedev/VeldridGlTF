@@ -4,22 +4,20 @@ namespace VeldridGlTF.Viewer
 {
     public struct VertexPositionTexture
     {
-        public const uint SizeInBytes = 20;
+        public const uint SizeInBytes = (3+2+3)*4;
 
-        public float PosX;
-        public float PosY;
-        public float PosZ;
+        public Vector3 Pos;
 
-        public float TexU;
-        public float TexV;
+        public Vector2 UV;
 
-        public VertexPositionTexture(Vector3 pos, Vector2 uv)
+        public Vector3 Normal;
+
+
+        public VertexPositionTexture(Vector3 pos, Vector2 uv, Vector3 n)
         {
-            PosX = pos.X;
-            PosY = pos.Y;
-            PosZ = pos.Z;
-            TexU = uv.X;
-            TexV = uv.Y;
+            Pos = pos;
+            UV = uv;
+            Normal = n;
         }
     }
 }

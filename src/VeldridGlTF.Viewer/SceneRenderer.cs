@@ -65,9 +65,9 @@ namespace VeldridGlTF.Viewer
                 .With(new GlTFLoader())
                 .With(new PrefabLoader())
                 .With(new MeshLoader());
-            var container = await _resourceManager
-                .Resolve<GlTFContainer>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
-            foreach (var mesh in container.Meshes) await mesh.GetAsync();
+            //var container = await _resourceManager
+              //  .Resolve<GlTFContainer>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
+                //foreach (var mesh in container.Meshes) await mesh.GetAsync();
             var prefab = await _resourceManager
                 .Resolve<EntityPrefab>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
             return prefab.Spawn(_world);

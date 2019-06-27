@@ -72,8 +72,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var deltaSeconds = _stepContext.DeltaSeconds;
             _ticks += deltaSeconds * 1000f;
 
+            _camera.Pitch = -0.5f;
             _camera.Yaw += deltaSeconds;
-            _camera.Position = _camera.Forward * -100;
+            _camera.Position = _camera.Forward * -200;
 
             _cl.Begin();
 
@@ -92,14 +93,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
             //var lookAt = Matrix4x4.CreateLookAt(Vector3.UnitZ * 2.5f, Vector3.Zero, Vector3.UnitY);
             var lookAt = _camera.ViewMatrix;
             _cl.UpdateBuffer(_viewBuffer, 0, lookAt);
+            _cl.SetPipeline(_pipeline);
 
             foreach (var modelIndex in _staticModels)
             {
                 var worldTransform = _staticModels.Components1[modelIndex];
                 var staticModel = _staticModels.Components2[modelIndex];
                 var staticModelModel = ResolveHandler<IMesh, RenderMesh>(staticModel.Model);
-                var material = ResolveHandler<IMaterial, RenderMaterial>(staticModel.Material);
-                if (staticModelModel != null && material != null)
+                if (staticModelModel != null)
                 {
                     if (staticModelModel._vertexBuffer == null)
                         staticModelModel.CreateResources(GraphicsDevice, ResourceFactory);
@@ -109,14 +110,21 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     //    * Matrix4x4.CreateFromAxisAngle(Vector3.UnitX, _ticks / 3000f);
                     //_cl.UpdateBuffer(_worldBuffer, 0, ref rotation);
                     _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
-                    _cl.UpdateBuffer(_materialBuffer, 0, ref material.DiffuseColor);
 
-                    _cl.SetPipeline(_pipeline);
                     _cl.SetVertexBuffer(0, staticModelModel._vertexBuffer);
                     _cl.SetIndexBuffer(staticModelModel._indexBuffer, IndexFormat.UInt16);
                     _cl.SetGraphicsResourceSet(0, _projViewSet);
                     _cl.SetGraphicsResourceSet(1, _worldTextureSet);
-                    _cl.DrawIndexed(staticModelModel.IndexCount, 1, 0, 0, 0);
+                    for (var index = 0; index < staticModelModel.Primitives.Count && index < staticModel.Materials.Count; index++)
+                    {
+                        var material = ResolveHandler<IMaterial, RenderMaterial>(staticModel.Materials[index]);
+                        if (material != null)
+                        {
+                            var indexRange = staticModelModel.Primitives[index];
+                            _cl.UpdateBuffer(_materialBuffer, 0, ref material.DiffuseColor);
+                            _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
+                        }
+                    }
                 }
             }
 
@@ -173,7 +181,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
                         new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate,
                             VertexElementFormat.Float3),
                         new VertexElementDescription("TexCoords", VertexElementSemantic.TextureCoordinate,
-                            VertexElementFormat.Float2))
+                            VertexElementFormat.Float2),
+                        new VertexElementDescription("Normal", VertexElementSemantic.TextureCoordinate,
+                            VertexElementFormat.Float3))
                 },
                 factory.CreateFromSpirv(
                     new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(VertexCode), "main"),
@@ -273,7 +283,9 @@ layout(set = 1, binding = 0) uniform WorldBuffer
 
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec2 TexCoords;
+layout(location = 2) in vec3 Normal;
 layout(location = 0) out vec2 fsin_texCoords;
+layout(location = 1) out vec3 fsin_normal;
 
 void main()
 {
@@ -282,6 +294,8 @@ void main()
     vec4 clipPosition = Projection * viewPosition;
     gl_Position = clipPosition;
     fsin_texCoords = TexCoords;
+    mat3 InverseWorld = mat3(World);
+    fsin_normal = normalize(InverseWorld * Normal);
 }";
 
         private const string FragmentCode = @"
@@ -294,6 +308,7 @@ struct MaterialPropertiesInfo
 
 
 layout(location = 0) in vec2 fsin_texCoords;
+layout(location = 1) in vec3 fsin_normal;
 layout(location = 0) out vec4 fsout_color;
 
 layout(set = 1, binding = 1) uniform texture2D SurfaceTexture;
@@ -305,7 +320,8 @@ layout(set = 1, binding = 3) uniform MaterialProperties
 
 void main()
 {
-    fsout_color =  texture(sampler2D(SurfaceTexture, SurfaceSampler), fsin_texCoords) * _MaterialProperties.BaseColor;
+    float light = fsin_normal.y*0.5+0.5;
+    fsout_color =  texture(sampler2D(SurfaceTexture, SurfaceSampler), fsin_texCoords) * _MaterialProperties.BaseColor * light;
 }";
 
         #endregion

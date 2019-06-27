@@ -1,4 +1,5 @@
-﻿using VeldridGlTF.Viewer.Data;
+﻿using System.Collections.Generic;
+using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Components
@@ -7,6 +8,6 @@ namespace VeldridGlTF.Viewer.Components
     {
         public IResourceHandler<IMesh> Model { get; set; }
 
-        public IResourceHandler<IMaterial> Material { get; set; }
+        public IList<IResourceHandler<IMaterial>> Materials { get; } = new List<IResourceHandler<IMaterial>>();
     }
 }

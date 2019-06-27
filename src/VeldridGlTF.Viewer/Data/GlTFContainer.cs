@@ -88,7 +88,10 @@ namespace VeldridGlTF.Viewer.Data
                     {
                         prefab.Mesh = Meshes[node.Mesh];
 
-                        prefab.Material = Materials[node.Mesh.Primitives.First().Material];
+                        foreach (var meshPrimitive in node.Mesh.Primitives)
+                        {
+                            prefab.Materials.Add(Materials[meshPrimitive.Material]);
+                        }
                     }
 
                     ++index;

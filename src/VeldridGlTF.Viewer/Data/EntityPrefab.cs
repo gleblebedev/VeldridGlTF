@@ -28,7 +28,7 @@ namespace VeldridGlTF.Viewer.Data
         public IList<EntityPrefab> Children => _children;
 
         public IResourceHandler<IMesh> Mesh { get; set; }
-        public IResourceHandler<IMaterial> Material { get; set; }
+        public IList<IResourceHandler<IMaterial>> Materials { get; } = new List<IResourceHandler<IMaterial>>();
 
         public ResourceId Id { get; }
 
@@ -50,7 +50,11 @@ namespace VeldridGlTF.Viewer.Data
             {
                 var staticModel = world.AddComponent<StaticModel>(entity);
                 staticModel.Model = Mesh;
-                staticModel.Material = Material;
+                staticModel.Materials.Clear();
+                foreach (var resourceHandler in Materials)
+                {
+                    staticModel.Materials.Add(resourceHandler);
+                }
             }
 
             foreach (var child in _children) child.Spawn(world, lt);
