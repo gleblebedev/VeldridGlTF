@@ -48,10 +48,11 @@ namespace VeldridGlTF.Viewer
                 ResourceBindingModel.Improved,
                 true,
                 true);
+
 #if DEBUG
             options.Debug = true;
 #endif
-            _gd = VeldridStartup.CreateGraphicsDevice(_window, options);
+            _gd = VeldridStartup.CreateGraphicsDevice(_window, options); //, GraphicsBackend.OpenGL
             _factory = new DisposeCollectorResourceFactory(_gd.ResourceFactory);
             GraphicsDeviceCreated?.Invoke(_gd, _factory, _gd.MainSwapchain);
 

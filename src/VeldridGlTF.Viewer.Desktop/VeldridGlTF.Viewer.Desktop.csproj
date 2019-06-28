@@ -6,17 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\modules\veldrid\src\Veldrid.SDL2\native\win-x64\SDL2.dll" Link="SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\packages\Veldrid.SPIRV.1.0.5\runtimes\win-x64\native\libveldrid-spirv.dll" Link="libveldrid-spirv.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="Veldrid" Version="4.6.1" />
+    <PackageReference Include="Veldrid.OpenGLBindings" Version="4.6.1" />
+    <PackageReference Include="Veldrid.SDL2" Version="4.6.1" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.SDL2\Veldrid.SDL2.csproj" />
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid\Veldrid.csproj" />
     <ProjectReference Include="..\VeldridGlTF.Viewer\VeldridGlTF.Viewer.csproj" />
   </ItemGroup>
 

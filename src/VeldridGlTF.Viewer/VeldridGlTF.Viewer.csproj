@@ -20,12 +20,6 @@
     <ProjectReference Include="..\modules\ecs\Leopotam.Ecs.csproj" />
     <ProjectReference Include="..\modules\SharpGLTF\src\SharpGLTF.Core\SharpGLTF.Core.csproj" />
     <ProjectReference Include="..\modules\SharpGLTF\src\SharpGLTF.Toolkit\SharpGLTF.Toolkit.csproj" />
-    <ProjectReference Include="..\modules\veldrid-spirv\src\Veldrid.SPIRV\Veldrid.SPIRV.csproj" />
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.ImageSharp\Veldrid.ImageSharp.csproj" />
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.SDL2\Veldrid.SDL2.csproj" />
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.StartupUtilities\Veldrid.StartupUtilities.csproj" />
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.Utilities\Veldrid.Utilities.csproj" />
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid\Veldrid.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +30,44 @@
     <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\Buggy\glTF-Binary\Buggy.glb" Link="Assets\Buggy.glb">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CodeDom" Version="4.5.0" />
+    <PackageReference Include="Veldrid" Version="4.6.1" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.6.1" />
+    <PackageReference Include="Veldrid.SDL2" Version="4.6.1" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.6.1" />
+    <PackageReference Include="Veldrid.Utilities" Version="4.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Systems\Render\FragmentShader.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FragmentShader.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Systems\Render\VertexShader.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>VertexShader.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Systems\Render\FragmentShader.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>FragmentShader.cs</LastGenOutput>
+    </None>
+    <None Update="Systems\Render\VertexShader.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>VertexShader.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
 </Project>

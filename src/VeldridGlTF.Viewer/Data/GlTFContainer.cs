@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -33,6 +34,8 @@ namespace VeldridGlTF.Viewer.Data
 
             {
                 var index = 0;
+                var m = new HashSet<Material>(modelRoot.LogicalMaterials);
+                Debug.WriteLine("Unique materials: "+m.Count+" of "+ modelRoot.LogicalMaterials.Count);
                 foreach (var material in modelRoot.LogicalMaterials)
                 {
                     var id = string.IsNullOrWhiteSpace(material.Name) ? "@" + index : material.Name;

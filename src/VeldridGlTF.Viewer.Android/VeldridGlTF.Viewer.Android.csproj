@@ -102,28 +102,24 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher_round.png" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Veldrid">
+      <Version>4.6.1</Version>
+    </PackageReference>
+    <PackageReference Include="Veldrid.OpenGLBindings">
+      <Version>4.6.1</Version>
+    </PackageReference>
+    <PackageReference Include="Veldrid.SDL2">
+      <Version>4.6.1</Version>
+    </PackageReference>
+    <PackageReference Include="Veldrid.SPIRV">
+      <Version>1.0.9</Version>
+    </PackageReference>
     <PackageReference Include="Xamarin.Android.Support.Design" Version="28.0.0.1" />
     <PackageReference Include="Xamarin.Android.Support.Core.Utils" Version="28.0.0.1" />
     <PackageReference Include="Xamarin.Android.Support.CustomTabs" Version="28.0.0.1" />
     <PackageReference Include="Xamarin.Essentials" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.MetalBindings\Veldrid.MetalBindings.csproj">
-      <Project>{b7bf7574-8e77-46b4-b6eb-e7b64a6b4203}</Project>
-      <Name>Veldrid.MetalBindings</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.OpenGLBindings\Veldrid.OpenGLBindings.csproj">
-      <Project>{f0538968-6e7a-4390-8840-fa308dcbc652}</Project>
-      <Name>Veldrid.OpenGLBindings</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid.SDL2\Veldrid.SDL2.csproj">
-      <Project>{93e243cb-d893-41c1-8d25-52b91aff6a39}</Project>
-      <Name>Veldrid.SDL2</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\modules\veldrid\src\Veldrid\Veldrid.csproj">
-      <Project>{7377C3F6-D77E-4893-9F18-CEFFA0609FF1}</Project>
-      <Name>Veldrid</Name>
-    </ProjectReference>
     <ProjectReference Include="..\VeldridGlTF.Viewer\VeldridGlTF.Viewer.csproj">
       <Project>{501923a4-599a-4f42-b4cb-e03710a41ecb}</Project>
       <Name>VeldridGlTF.Viewer</Name>
