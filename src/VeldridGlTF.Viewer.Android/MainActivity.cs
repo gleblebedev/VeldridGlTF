@@ -35,11 +35,10 @@ namespace VeldridGlTF.Viewer.Android
                 ResourceBindingModel.Improved,
                 true,
                 true);
-            GraphicsBackend backend = GraphicsBackend.OpenGLES;
-            //GraphicsBackend backend = GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
-            //    ? GraphicsBackend.Vulkan
-            //    : GraphicsBackend.OpenGLES;
-            _view = new VeldridSurfaceView(this, backend, options);
+            var viewerOptions = new ViewerOptions();
+            viewerOptions.GraphicsBackend = GraphicsBackend.OpenGLES;
+
+            _view = new VeldridSurfaceView(this, viewerOptions, options);
             _window = new AndroidApplicationWindow(this, _view);
             _window.GraphicsDeviceCreated += (g, r, s) => _window.Run();
             _tc = new SceneRenderer(_window);

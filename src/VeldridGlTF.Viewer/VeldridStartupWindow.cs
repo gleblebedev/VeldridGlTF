@@ -9,20 +9,23 @@ namespace VeldridGlTF.Viewer
 {
     public class VeldridStartupWindow : IApplicationWindow
     {
+        private readonly ViewerOptions _options;
         private readonly Sdl2Window _window;
         private DisposeCollectorResourceFactory _factory;
         private GraphicsDevice _gd;
         private bool _windowResized = true;
 
-        public VeldridStartupWindow(string title)
+        public VeldridStartupWindow(string title, ViewerOptions options)
         {
+            _options = options;
             var wci = new WindowCreateInfo
             {
                 X = 100,
                 Y = 100,
                 WindowWidth = 1280,
                 WindowHeight = 720,
-                WindowTitle = title
+                WindowTitle = title,
+                WindowInitialState = _options.WindowState
             };
             _window = VeldridStartup.CreateWindow(ref wci);
             _window.Resized += () => { _windowResized = true; };
@@ -52,7 +55,10 @@ namespace VeldridGlTF.Viewer
 #if DEBUG
             options.Debug = true;
 #endif
-            _gd = VeldridStartup.CreateGraphicsDevice(_window, options); //, GraphicsBackend.OpenGL
+            if (_options.GraphicsBackend.HasValue)
+                _gd = VeldridStartup.CreateGraphicsDevice(_window, options, _options.GraphicsBackend.Value);
+            else
+                _gd = VeldridStartup.CreateGraphicsDevice(_window, options);
             _factory = new DisposeCollectorResourceFactory(_gd.ResourceFactory);
             GraphicsDeviceCreated?.Invoke(_gd, _factory, _gd.MainSwapchain);
 

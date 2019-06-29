@@ -33,6 +33,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
         private ResourceSet _worldTextureSet;
+        private ShaderManager _shaderManager;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
         {
@@ -69,6 +70,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public void Run()
         {
+            //float depthClear = GraphicsDevice.IsDepthRangeZeroToOne ? 0f : 1f;
             var deltaSeconds = _stepContext.DeltaSeconds;
             _ticks += deltaSeconds * 1000f;
 
@@ -79,7 +81,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _cl.Begin();
 
             _cl.SetFramebuffer(MainSwapchain.Framebuffer);
-            _cl.ClearColorTarget(0, RgbaFloat.Black);
+            //_cl.SetFullViewports();
+            _cl.ClearColorTarget(0, new RgbaFloat(48.0f/255.0f, 10.0f/ 255.0f, 36.0f / 255.0f, 1));
             _cl.ClearDepthStencil(1f);
 
             //var perspectiveFieldOfView = Matrix4x4.CreatePerspectiveFieldOfView(
@@ -166,10 +169,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         protected void CreateResources(ResourceFactory factory)
         {
-            _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
-            _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
-            _worldBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
-            _materialBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            _shaderManager = new ShaderManager(factory);
+            _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _worldBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _materialBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
             _surfaceTexture = _stoneTexData.CreateDeviceTexture(GraphicsDevice, ResourceFactory);
             _surfaceTextureView = factory.CreateTextureView(_surfaceTexture);
@@ -185,10 +189,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                         new VertexElementDescription("Normal", VertexElementSemantic.TextureCoordinate,
                             VertexElementFormat.Float3))
                 },
-                factory.CreateFromSpirv(
-                    new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(new VertexShader().TransformText()), "main"),
-                    new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(new FragmentShader().TransformText()), "main"))
-                );
+                _shaderManager.GetShaders(new ShaderKey()));
 
             var projViewLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(

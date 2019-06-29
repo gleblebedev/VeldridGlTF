@@ -27,13 +27,15 @@ namespace VeldridGlTF.Viewer.Android
         public event Action DeviceDisposed;
         public event Action Resized;
 
-        public VeldridSurfaceView(Context context, GraphicsBackend backend)
-            : this(context, backend, new GraphicsDeviceOptions())
+        public VeldridSurfaceView(Context context, ViewerOptions options)
+            : this(context, options, new GraphicsDeviceOptions())
         {
         }
 
-        public VeldridSurfaceView(Context context, GraphicsBackend backend, GraphicsDeviceOptions deviceOptions) : base(context)
+        public VeldridSurfaceView(Context context, ViewerOptions options, GraphicsDeviceOptions deviceOptions) : base(context)
         {
+            var backend = options.GraphicsBackend ?? GetDefaultBackend();
+
             if (!(backend == GraphicsBackend.Vulkan || backend == GraphicsBackend.OpenGLES))
             {
                 throw new NotSupportedException($"{backend} is not supported on Android.");
@@ -42,6 +44,13 @@ namespace VeldridGlTF.Viewer.Android
             _backend = backend;
             DeviceOptions = deviceOptions;
             Holder.AddCallback(this);
+        }
+
+        private GraphicsBackend GetDefaultBackend()
+        {
+            return GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)
+                ? GraphicsBackend.Vulkan
+                : GraphicsBackend.OpenGLES;
         }
 
         public void Disable()
