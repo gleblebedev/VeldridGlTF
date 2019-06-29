@@ -35,7 +35,7 @@ namespace VeldridGlTF.Viewer.Data
             {
                 var index = 0;
                 var m = new HashSet<Material>(modelRoot.LogicalMaterials);
-                Debug.WriteLine("Unique materials: "+m.Count+" of "+ modelRoot.LogicalMaterials.Count);
+                Debug.WriteLine("Unique materials: " + m.Count + " of " + modelRoot.LogicalMaterials.Count);
                 foreach (var material in modelRoot.LogicalMaterials)
                 {
                     var id = string.IsNullOrWhiteSpace(material.Name) ? "@" + index : material.Name;
@@ -92,9 +92,7 @@ namespace VeldridGlTF.Viewer.Data
                         prefab.Mesh = Meshes[node.Mesh];
 
                         foreach (var meshPrimitive in node.Mesh.Primitives)
-                        {
                             prefab.Materials.Add(Materials[meshPrimitive.Material]);
-                        }
                     }
 
                     ++index;

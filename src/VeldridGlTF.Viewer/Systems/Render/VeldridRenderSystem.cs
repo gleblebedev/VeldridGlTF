@@ -1,10 +1,8 @@
 ﻿using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
 using Veldrid;
 using Veldrid.ImageSharp;
-using Veldrid.SPIRV;
 using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
@@ -14,6 +12,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
     [EcsInject]
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem
     {
+        private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
         private readonly StepContext _stepContext;
 
         protected Camera _camera;
@@ -22,7 +21,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private Pipeline _pipeline;
         private DeviceBuffer _projectionBuffer;
         private ResourceSet _projViewSet;
-        private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
+        private ShaderManager _shaderManager;
         private ImageSharpTexture _stoneTexData;
         private Texture _surfaceTexture;
         private TextureView _surfaceTextureView;
@@ -33,7 +32,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
         private ResourceSet _worldTextureSet;
-        private ShaderManager _shaderManager;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
         {
@@ -82,7 +80,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             _cl.SetFramebuffer(MainSwapchain.Framebuffer);
             //_cl.SetFullViewports();
-            _cl.ClearColorTarget(0, new RgbaFloat(48.0f/255.0f, 10.0f/ 255.0f, 36.0f / 255.0f, 1));
+            _cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
             _cl.ClearDepthStencil(1f);
 
             //var perspectiveFieldOfView = Matrix4x4.CreatePerspectiveFieldOfView(
@@ -118,7 +116,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     _cl.SetIndexBuffer(staticModelModel._indexBuffer, IndexFormat.UInt16);
                     _cl.SetGraphicsResourceSet(0, _projViewSet);
                     _cl.SetGraphicsResourceSet(1, _worldTextureSet);
-                    for (var index = 0; index < staticModelModel.Primitives.Count && index < staticModel.Materials.Count; index++)
+                    for (var index = 0;
+                        index < staticModelModel.Primitives.Count && index < staticModel.Materials.Count;
+                        index++)
                     {
                         var material = ResolveHandler<IMaterial, RenderMaterial>(staticModel.Materials[index]);
                         if (material != null)
@@ -170,10 +170,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
         protected void CreateResources(ResourceFactory factory)
         {
             _shaderManager = new ShaderManager(factory);
-            _projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            _viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            _worldBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            _materialBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _projectionBuffer =
+                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _viewBuffer =
+                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _worldBuffer =
+                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _materialBuffer =
+                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
             _surfaceTexture = _stoneTexData.CreateDeviceTexture(GraphicsDevice, ResourceFactory);
             _surfaceTextureView = factory.CreateTextureView(_surfaceTexture);

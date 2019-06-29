@@ -1,12 +1,7 @@
 ﻿namespace VeldridGlTF.Viewer.Systems.Render
 {
-    public class ShaderGenerator: IShaderGenerator
+    public class ShaderGenerator : IShaderGenerator
     {
-
-        public ShaderGenerator()
-        {
-        }
-
         public string GetVertexShader(ShaderKey key)
         {
             return new VertexShader(key).TransformText();
@@ -17,22 +12,24 @@
             return new FragmentShader(key).TransformText();
         }
     }
+
     partial class FragmentShader
     {
-        public ShaderKey ShaderKey { get; set; }
-
         public FragmentShader(ShaderKey key)
         {
             ShaderKey = key;
         }
+
+        public ShaderKey ShaderKey { get; set; }
     }
+
     partial class VertexShader
     {
-        public ShaderKey ShaderKey { get; set; }
-
         public VertexShader(ShaderKey key)
         {
             ShaderKey = key;
         }
+
+        public ShaderKey ShaderKey { get; set; }
     }
 }

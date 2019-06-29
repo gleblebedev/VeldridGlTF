@@ -7,10 +7,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class ShaderManager
     {
-        private Dictionary<ShaderKey, Shader[]> _compiledShaders = new Dictionary<ShaderKey, Shader[]>();
-
         private readonly ResourceFactory _factory;
-        private ShaderGenerator _generator;
+        private readonly Dictionary<ShaderKey, Shader[]> _compiledShaders = new Dictionary<ShaderKey, Shader[]>();
+        private readonly ShaderGenerator _generator;
 
         public ShaderManager(ResourceFactory factory)
         {
@@ -21,10 +20,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public Shader[] GetShaders(ShaderKey shaderKey)
         {
             Shader[] shaders;
-            if (_compiledShaders.TryGetValue(shaderKey, out shaders))
-            {
-                return shaders;
-            }
+            if (_compiledShaders.TryGetValue(shaderKey, out shaders)) return shaders;
 
             var vertexShader = _generator.GetVertexShader(shaderKey);
             var fragmentShader = _generator.GetFragmentShader(shaderKey);

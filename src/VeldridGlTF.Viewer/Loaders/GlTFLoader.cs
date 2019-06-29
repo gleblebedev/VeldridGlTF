@@ -8,12 +8,12 @@ namespace VeldridGlTF.Viewer.Loaders
 {
     public class GlTFLoader : IResourceLoader<GlTFContainer>
     {
-        public async Task<GlTFContainer> LoadAsync(ResourceManager manager, ResourceId id)
+        public Task<GlTFContainer> LoadAsync(ResourceManager manager, ResourceId id)
         {
             if (id.Id != null)
                 throw new ArgumentException("Resource id value should be null", nameof(id));
-            return new GlTFContainer(manager, id.Container,
-                ModelRoot.Read(GetType().Assembly.GetManifestResourceStream(id.Container), new ReadSettings()));
+            return Task.Run(() => new GlTFContainer(manager, id.Container,
+                ModelRoot.Read(GetType().Assembly.GetManifestResourceStream(id.Container), new ReadSettings())));
         }
     }
 }

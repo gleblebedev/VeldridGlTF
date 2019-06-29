@@ -6,11 +6,11 @@ namespace VeldridGlTF.Viewer.Components
 {
     public class LocalTransform
     {
+        private static readonly TransformUpdatedArgs _transformUpdatedArgs = new TransformUpdatedArgs();
         private Flags _flags = Flags.Valid;
         private Matrix4x4 _matrix = Matrix4x4.Identity;
         private Vector3 _position = Vector3.Zero;
         private Quaternion _rotation = Quaternion.Identity;
-        private static readonly TransformUpdatedArgs _transformUpdatedArgs = new TransformUpdatedArgs();
         private Vector3 _scale = Vector3.One;
         public LocalTransform Parent;
 
@@ -26,13 +26,6 @@ namespace VeldridGlTF.Viewer.Components
                 InvalidateFlag(Flags.InvalidPRS);
                 _matrix = value;
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InvalidateFlag(Flags flag)
-        {
-            _flags |= flag;
-            OnUpdate?.Invoke(this, _transformUpdatedArgs);
         }
 
         public Vector3 Scale
@@ -77,6 +70,13 @@ namespace VeldridGlTF.Viewer.Components
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InvalidateFlag(Flags flag)
+        {
+            _flags |= flag;
+            OnUpdate?.Invoke(this, _transformUpdatedArgs);
+        }
+
         public event EventHandler<TransformUpdatedArgs> OnUpdate;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,14 +114,6 @@ namespace VeldridGlTF.Viewer.Components
             }
         }
 
-        [Flags]
-        private enum Flags
-        {
-            Valid = 0,
-            InvalidMatrix = 1,
-            InvalidPRS = 2
-        }
-
         public void Reset()
         {
             _matrix = Matrix4x4.Identity;
@@ -129,6 +121,14 @@ namespace VeldridGlTF.Viewer.Components
             _rotation = Quaternion.Identity;
             _scale = Vector3.One;
             _flags = Flags.Valid;
+        }
+
+        [Flags]
+        private enum Flags
+        {
+            Valid = 0,
+            InvalidMatrix = 1,
+            InvalidPRS = 2
         }
     }
 }

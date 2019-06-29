@@ -1,5 +1,4 @@
 ﻿using Leopotam.Ecs;
-using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.SceneGraph;
 
 namespace VeldridGlTF.Viewer.Systems
@@ -8,12 +7,12 @@ namespace VeldridGlTF.Viewer.Systems
     public class LocalToWorldSystem : IEcsRunSystem
     {
         private readonly Scene _scene;
+        private EcsWorld _world = null;
 
         public LocalToWorldSystem(Scene scene)
         {
             _scene = scene;
         }
-        private EcsWorld _world = null;
 
         public void Run()
         {

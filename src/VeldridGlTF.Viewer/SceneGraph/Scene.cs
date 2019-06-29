@@ -2,29 +2,19 @@
 
 namespace VeldridGlTF.Viewer.SceneGraph
 {
-    public class Scene: NodeContainer
+    public class Scene : NodeContainer
     {
-        private Node.WorldMatrixUpdateQueue _worldMatrixUpdateQueue = new Node.WorldMatrixUpdateQueue();
-        private EcsWorld _world;
-        private EcsSystems _systems;
+        private readonly Node.WorldMatrixUpdateQueue _worldMatrixUpdateQueue = new Node.WorldMatrixUpdateQueue();
 
         public Scene()
         {
-            _world = new EcsWorld();
-            _systems = new EcsSystems(_world, "main");
+            World = new EcsWorld();
+            Systems = new EcsSystems(World, "main");
         }
 
-        public EcsWorld World
-        {
-            get { return _world; }
-            set { _world = value; }
-        }
+        public EcsWorld World { get; set; }
 
-        public EcsSystems Systems
-        {
-            get { return _systems; }
-            set { _systems = value; }
-        }
+        public EcsSystems Systems { get; set; }
 
         public WorldMatrixToken EnqueueWorldTransformUpdate(Node node)
         {
@@ -38,10 +28,10 @@ namespace VeldridGlTF.Viewer.SceneGraph
 
         public void Dispose()
         {
-            _systems?.Dispose();
-            _systems = null;
-            _world.Dispose();
-            _world = null;
+            Systems?.Dispose();
+            Systems = null;
+            World.Dispose();
+            World = null;
         }
     }
 }

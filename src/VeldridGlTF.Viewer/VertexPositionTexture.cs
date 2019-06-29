@@ -4,7 +4,7 @@ namespace VeldridGlTF.Viewer
 {
     public struct VertexPositionTexture
     {
-        public const uint SizeInBytes = (3+2+3)*4;
+        public const uint SizeInBytes = (3 + 2 + 3) * 4;
 
         public Vector3 Pos;
 

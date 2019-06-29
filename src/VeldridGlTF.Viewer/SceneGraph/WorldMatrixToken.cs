@@ -29,7 +29,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
             return !left.Equals(right);
         }
 
-        private int _index;
+        private readonly int _index;
 
         public WorldMatrixToken(int index)
         {

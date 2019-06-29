@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Numerics;
 using SharpGLTF.Memory;
 using SharpGLTF.Schema2;
 using Veldrid;
@@ -12,14 +11,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public uint Start;
         public uint Length;
     }
+
     public class RenderMesh : IMesh
     {
+        private readonly ushort[] _indices;
+        private readonly VertexPositionTexture[] _vertices;
 
         public DeviceBuffer _indexBuffer;
-        private readonly ushort[] _indices;
         public DeviceBuffer _vertexBuffer;
         public List<IndexRange> Primitives = new List<IndexRange>();
-        private readonly VertexPositionTexture[] _vertices;
 
         public RenderMesh(Mesh mesh)
         {
@@ -33,7 +33,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 var texCoords0 = GetMemoryAccessor(meshPrimitive.GetVertexAccessor("TEXCOORD_0"))?.AsVector2Array();
                 var map = new Dictionary<int, ushort>();
                 var range = new IndexRange();
-                range.Start = (uint)indices.Count;
+                range.Start = (uint) indices.Count;
                 foreach (var face in meshPrimitive.GetTriangleIndices())
                 {
                     indices.Add(CopyVertex(face.Item1, map, vertices, positions, normals, texCoords0));
@@ -41,7 +41,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     indices.Add(CopyVertex(face.Item3, map, vertices, positions, normals, texCoords0));
                 }
 
-                range.Length = (uint)(indices.Count - range.Start);
+                range.Length = (uint) (indices.Count - range.Start);
                 Primitives.Add(range);
             }
 
@@ -65,6 +65,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 var uv = texCoords0.Value[originalIndex];
                 vertexPositionTexture.UV = uv;
             }
+
             if (normals != null)
             {
                 var n = normals.Value[originalIndex];

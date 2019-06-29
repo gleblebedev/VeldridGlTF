@@ -1,5 +1,3 @@
-﻿using System.Collections.Generic;
-
-namespace VeldridGlTF.Viewer.SceneGraph
+﻿namespace VeldridGlTF.Viewer.SceneGraph
 {
 }

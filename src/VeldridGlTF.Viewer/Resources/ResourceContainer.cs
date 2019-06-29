@@ -6,12 +6,12 @@ namespace VeldridGlTF.Viewer.Resources
 {
     public class ResourceContainer<T> : IResourceContainer
     {
+        private readonly ConcurrentDictionary<ResourceId, IResourceHandler<T>> _handlers =
+            new ConcurrentDictionary<ResourceId, IResourceHandler<T>>();
+
         private readonly IResourceLoader<T> _loader;
         private readonly ResourceManager _manager;
         private object _gate = new object();
-
-        private readonly ConcurrentDictionary<ResourceId, IResourceHandler<T>> _handlers =
-            new ConcurrentDictionary<ResourceId, IResourceHandler<T>>();
 
         public ResourceContainer(ResourceManager manager, IResourceLoader<T> loader)
         {

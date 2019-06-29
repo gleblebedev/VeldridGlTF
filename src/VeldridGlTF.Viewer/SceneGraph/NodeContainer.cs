@@ -2,13 +2,11 @@
 
 namespace VeldridGlTF.Viewer.SceneGraph
 {
-    public abstract class NodeContainer: INodeContainer
+    public abstract class NodeContainer : INodeContainer
     {
-        private HashSet<Node> _children = new HashSet<Node>();
-        public IReadOnlyCollection<Node> Children
-        {
-            get { return _children; }
-        }
+        private readonly HashSet<Node> _children = new HashSet<Node>();
+
+        public IReadOnlyCollection<Node> Children => _children;
 
         protected void Add(Node node, NodeContainer container)
         {
@@ -19,6 +17,5 @@ namespace VeldridGlTF.Viewer.SceneGraph
         {
             container._children.Remove(node);
         }
-
     }
 }

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using Leopotam.Ecs;
-using SharpGLTF.Schema2;
 using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Resources;
+using VeldridGlTF.Viewer.SceneGraph;
 
 namespace VeldridGlTF.Viewer.Data
 {
@@ -33,9 +32,9 @@ namespace VeldridGlTF.Viewer.Data
 
         public ResourceId Id { get; }
 
-        public SceneGraph.Node Spawn(SceneGraph.Scene scene, SceneGraph.Node parent = null)
+        public Node Spawn(Scene scene, Node parent = null)
         {
-            var node = new SceneGraph.Node(scene);
+            var node = new Node(scene);
             node.Parent = parent;
 
             if (LocalMatrix.HasValue) node.Transform.Matrix = LocalMatrix.Value;
@@ -51,10 +50,7 @@ namespace VeldridGlTF.Viewer.Data
                 var staticModel = node.AddComponent<StaticModel>();
                 staticModel.Model = Mesh;
                 staticModel.Materials.Clear();
-                foreach (var resourceHandler in Materials)
-                {
-                    staticModel.Materials.Add(resourceHandler);
-                }
+                foreach (var resourceHandler in Materials) staticModel.Materials.Add(resourceHandler);
             }
 
             foreach (var child in _children) child.Spawn(scene, node);
