@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
 using Leopotam.Ecs;
+using SharpGLTF.Schema2;
 using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Resources;
 
@@ -32,23 +33,22 @@ namespace VeldridGlTF.Viewer.Data
 
         public ResourceId Id { get; }
 
-        public EcsEntity Spawn(EcsWorld world, LocalTransform parent = null)
+        public SceneGraph.Node Spawn(SceneGraph.Scene scene, SceneGraph.Node parent = null)
         {
-            var entity = world.CreateEntity();
-            var lt = world.AddComponent<LocalTransform>(entity);
-            if (LocalMatrix.HasValue) lt.Matrix = LocalMatrix.Value;
+            var node = new SceneGraph.Node(scene);
+            node.Parent = parent;
 
-            if (Position.HasValue) lt.Position = Position.Value;
+            if (LocalMatrix.HasValue) node.Transform.Matrix = LocalMatrix.Value;
 
-            if (Rotation.HasValue) lt.Rotation = Rotation.Value;
+            if (Position.HasValue) node.Transform.Position = Position.Value;
 
-            if (Scale.HasValue) lt.Scale = Scale.Value;
+            if (Rotation.HasValue) node.Transform.Rotation = Rotation.Value;
 
-            lt.Parent = parent;
-            var wt = world.AddComponent<WorldTransform>(entity);
+            if (Scale.HasValue) node.Transform.Scale = Scale.Value;
+
             if (Mesh != null)
             {
-                var staticModel = world.AddComponent<StaticModel>(entity);
+                var staticModel = node.AddComponent<StaticModel>();
                 staticModel.Model = Mesh;
                 staticModel.Materials.Clear();
                 foreach (var resourceHandler in Materials)
@@ -57,8 +57,8 @@ namespace VeldridGlTF.Viewer.Data
                 }
             }
 
-            foreach (var child in _children) child.Spawn(world, lt);
-            return entity;
+            foreach (var child in _children) child.Spawn(scene, node);
+            return node;
         }
     }
 }

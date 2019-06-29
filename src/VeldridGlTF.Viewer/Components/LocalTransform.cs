@@ -10,7 +10,7 @@ namespace VeldridGlTF.Viewer.Components
         private Matrix4x4 _matrix = Matrix4x4.Identity;
         private Vector3 _position = Vector3.Zero;
         private Quaternion _rotation = Quaternion.Identity;
-
+        private static readonly TransformUpdatedArgs _transformUpdatedArgs = new TransformUpdatedArgs();
         private Vector3 _scale = Vector3.One;
         public LocalTransform Parent;
 
@@ -23,9 +23,16 @@ namespace VeldridGlTF.Viewer.Components
             }
             set
             {
-                _flags |= Flags.InvalidPRS;
+                InvalidateFlag(Flags.InvalidPRS);
                 _matrix = value;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InvalidateFlag(Flags flag)
+        {
+            _flags |= flag;
+            OnUpdate?.Invoke(this, _transformUpdatedArgs);
         }
 
         public Vector3 Scale
@@ -37,7 +44,7 @@ namespace VeldridGlTF.Viewer.Components
             }
             set
             {
-                _flags |= Flags.InvalidMatrix;
+                InvalidateFlag(Flags.InvalidMatrix);
                 _scale = value;
             }
         }
@@ -51,7 +58,7 @@ namespace VeldridGlTF.Viewer.Components
             }
             set
             {
-                _flags |= Flags.InvalidMatrix;
+                InvalidateFlag(Flags.InvalidMatrix);
                 _rotation = value;
             }
         }
@@ -65,10 +72,12 @@ namespace VeldridGlTF.Viewer.Components
             }
             set
             {
-                _flags |= Flags.InvalidMatrix;
+                InvalidateFlag(Flags.InvalidMatrix);
                 _position = value;
             }
         }
+
+        public event EventHandler<TransformUpdatedArgs> OnUpdate;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateMatrixIfNeeded()
@@ -111,6 +120,15 @@ namespace VeldridGlTF.Viewer.Components
             Valid = 0,
             InvalidMatrix = 1,
             InvalidPRS = 2
+        }
+
+        public void Reset()
+        {
+            _matrix = Matrix4x4.Identity;
+            _position = Vector3.Zero;
+            _rotation = Quaternion.Identity;
+            _scale = Vector3.One;
+            _flags = Flags.Valid;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Leopotam.Ecs;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Loaders;
 using VeldridGlTF.Viewer.Resources;
@@ -13,23 +12,20 @@ namespace VeldridGlTF.Viewer
     {
         private ResourceManager _resourceManager;
         private readonly StepContext _stepContext;
-        private EcsSystems _systems;
 
         private readonly VeldridRenderSystem _veldridRenderSystem;
-        private EcsWorld _world;
+        private VeldridGlTF.Viewer.SceneGraph.Scene _scene = new VeldridGlTF.Viewer.SceneGraph.Scene();
 
         public SceneRenderer(IApplicationWindow window)
         {
             Window = window;
 
-            _world = new EcsWorld();
-            _systems = new EcsSystems(_world);
             _stepContext = new StepContext();
             _veldridRenderSystem = new VeldridRenderSystem(_stepContext, window);
-            _systems
-                .Add(new LocalToWorldSystem())
+            _scene.Systems
+                .Add(new LocalToWorldSystem(_scene))
                 .Add(_veldridRenderSystem);
-            _systems.Initialize();
+            _scene.Systems.Initialize();
             _resourceManager = new ResourceManager();
 
             var e = LoadGlTFSample().Result;
@@ -53,13 +49,10 @@ namespace VeldridGlTF.Viewer
 
         public void Dispose()
         {
-            _systems.Dispose();
-            _systems = null;
-            _world.Dispose();
-            _world = null;
+            _scene.Dispose();
         }
 
-        private async Task<EcsEntity> LoadGlTFSample()
+        private async Task<SceneGraph.Node> LoadGlTFSample()
         {
             _resourceManager = new ResourceManager()
                 .With(new GlTFLoader())
@@ -70,7 +63,7 @@ namespace VeldridGlTF.Viewer
                 //foreach (var mesh in container.Meshes) await mesh.GetAsync();
             var prefab = await _resourceManager
                 .Resolve<EntityPrefab>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
-            return prefab.Spawn(_world);
+            return prefab.Spawn(_scene);
         }
 
         private void PreDraw(float deltaSeconds)
@@ -80,7 +73,7 @@ namespace VeldridGlTF.Viewer
         protected void Draw(float deltaSeconds)
         {
             _stepContext.DeltaSeconds = deltaSeconds;
-            _systems.Run();
+            _scene.Systems.Run();
         }
     }
 }
