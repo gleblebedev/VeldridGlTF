@@ -17,13 +17,20 @@ namespace VeldridGlTF.Viewer.SceneGraph
         private readonly WorldTransform _worldTransform;
         private WorldMatrixToken _worldTransformToken;
 
-        public Node(Scene scene)
+        public Node(Scene scene, bool hasTransform = true)
         {
+            //TODO: Make Node constructor internal
             _scene = scene;
-            _entity = _scene.World.CreateEntityWith(out _transform, out _worldTransform);
-            _transform.Parent = null;
-            _transform.OnUpdate += HandleTransformUpdate;
-            _transform.Reset();
+            _entity = _scene.World.CreateEntity();
+            if (hasTransform)
+            {
+                _transform = _scene.World.AddComponent<LocalTransform>(_entity);
+                _transform.Parent = null;
+                _transform.OnUpdate += HandleTransformUpdate;
+                _transform.Reset();
+
+                _worldTransform = _scene.World.AddComponent<WorldTransform>(_entity);
+            }
             Add(this, scene);
         }
 
@@ -36,9 +43,20 @@ namespace VeldridGlTF.Viewer.SceneGraph
             {
                 if (_parent != value)
                 {
-                    if (value != null && value._scene != _scene)
-                        throw new InvalidOperationException(
-                            "Can't move Node to a different scene. Please create a new node in the scene.");
+                    if (value != null)
+                    {
+                        if (value._scene != _scene)
+                        {
+                            throw new InvalidOperationException(
+                                "Can't move Node to a different scene. Please create a new node in the scene.");
+                        }
+
+                        if (_transform != null && value._transform == null)
+                        {
+                            throw new InvalidOperationException("Can't attach node with transform to a parent node with no transform");
+                        }
+                    }
+
                     if (_parent != null)
                         Remove(this, _parent);
                     else
@@ -46,13 +64,19 @@ namespace VeldridGlTF.Viewer.SceneGraph
                     _parent = value;
                     if (_parent != null)
                     {
-                        _transform.Parent = _parent._transform;
+                        if (_transform != null)
+                        {
+                            _transform.Parent = _parent._transform;
+                        }
                         Add(this, _parent);
                     }
                     else
                     {
                         Add(this, _scene);
-                        _transform.Parent = null;
+                        if (_transform != null)
+                        {
+                            _transform.Parent = null;
+                        }
                     }
 
                     InvalidateWorldTransform();
@@ -67,8 +91,15 @@ namespace VeldridGlTF.Viewer.SceneGraph
 
         private void InvalidateWorldTransform()
         {
-            if (_worldTransformToken == WorldMatrixToken.Empty)
-                _worldTransformToken = _scene.EnqueueWorldTransformUpdate(this);
+            if (_transform != null && _worldTransformToken == WorldMatrixToken.Empty)
+            {
+                // Don't schedule an update if parent is already scheduled.
+                // This could save time on prefab spawn and animations.
+                //if (_parent == null || _parent._worldTransformToken == WorldMatrixToken.Empty)
+                {
+                    _worldTransformToken = _scene.EnqueueWorldTransformUpdate(this);
+                }
+            }
         }
 
         public T GetComponent<T>() where T : class, new()
@@ -86,15 +117,14 @@ namespace VeldridGlTF.Viewer.SceneGraph
             _worldTransformToken = WorldMatrixToken.Empty;
         }
 
-        private void UpdateSubtreeWorldTransform(WorldMatrixToken updateToken)
+        private void UpdateSubtreeWorldTransform(WorldMatrixToken updateToken, Queue<Node> updateQueue)
         {
             EnsureWorldTransformIsUpToDate(updateToken);
-            var q = new Queue<Node>();
-            foreach (var child in Children) q.Enqueue(child);
+            foreach (var child in Children) updateQueue.Enqueue(child);
 
-            while (q.Count > 0)
+            while (updateQueue.Count > 0)
             {
-                var n = q.Dequeue();
+                var n = updateQueue.Dequeue();
                 if (n._worldTransformToken != WorldMatrixToken.Empty)
                 {
                     if (n._worldMatrixVersion != updateToken)
@@ -103,7 +133,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
                         n._worldMatrixVersion = updateToken;
                     }
 
-                    foreach (var child in n.Children) q.Enqueue(child);
+                    foreach (var child in n.Children) updateQueue.Enqueue(child);
                 }
             }
         }
@@ -128,6 +158,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
         public class WorldMatrixUpdateQueue
         {
             private readonly List<Node> _queue = new List<Node>(128);
+            private readonly Queue<Node> _updateQueue = new Queue<Node>(128);
             private int _updateCounter;
 
             public void Update()
@@ -136,7 +167,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
                 {
                     ++_updateCounter;
                     var updateToken = new WorldMatrixToken(_updateCounter);
-                    foreach (var node in _queue) node.UpdateSubtreeWorldTransform(updateToken);
+                    foreach (var node in _queue) node.UpdateSubtreeWorldTransform(updateToken, _updateQueue);
                     foreach (var node in _queue) node.ResetToken();
                     _queue.Clear();
                 }

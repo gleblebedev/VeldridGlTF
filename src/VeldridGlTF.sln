@@ -79,9 +79,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NativeLibraryLoader", "modu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Leopotam.Ecs", "modules\ecs\Leopotam.Ecs.csproj", "{24BFE94F-A366-4741-BA14-7DC50C849025}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VeldridGlTF.Viewer.UnitTests", "VeldridGlTF.Viewer.UnitTests\VeldridGlTF.Viewer.UnitTests.csproj", "{7D8A1091-BCA8-4F30-A9A3-E3709BE40375}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VeldridGlTF.Viewer.UnitTests", "VeldridGlTF.Viewer.UnitTests\VeldridGlTF.Viewer.UnitTests.csproj", "{7D8A1091-BCA8-4F30-A9A3-E3709BE40375}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Instancing.Desktop", "modules\veldrid-samples\src\Instancing\Desktop\Instancing.Desktop.csproj", "{C2899A53-DB2A-4161-B8F6-115C8F6D2A23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Instancing.Android", "modules\veldrid-samples\src\Instancing\Android\Instancing.Android.csproj", "{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -523,6 +525,24 @@ Global
 		{C2899A53-DB2A-4161-B8F6-115C8F6D2A23}.Release|iPhone.Build.0 = Release|Any CPU
 		{C2899A53-DB2A-4161-B8F6-115C8F6D2A23}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{C2899A53-DB2A-4161-B8F6-115C8F6D2A23}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|iPhone.Deploy.0 = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Debug|iPhoneSimulator.Deploy.0 = Debug|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|iPhone.Build.0 = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|iPhone.Deploy.0 = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0}.Release|iPhoneSimulator.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -563,6 +583,7 @@ Global
 		{7373CA4D-9102-4C43-8728-4657C7C1BCAC} = {66ADFF4C-893E-4F45-BA81-A07108C346ED}
 		{24BFE94F-A366-4741-BA14-7DC50C849025} = {66ADFF4C-893E-4F45-BA81-A07108C346ED}
 		{C2899A53-DB2A-4161-B8F6-115C8F6D2A23} = {FCA478EF-6FB5-4F8B-8DB5-8F626BD9478F}
+		{972A0A81-4E95-47DE-8B21-62FCBDA0DDB0} = {FCA478EF-6FB5-4F8B-8DB5-8F626BD9478F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5D237B5D-67B0-4CBA-B965-DB920A754BAB}

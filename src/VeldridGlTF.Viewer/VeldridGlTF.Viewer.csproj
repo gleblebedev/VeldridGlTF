@@ -33,6 +33,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\BoomBox\glTF-Binary\BoomBox.glb" Link="Assets\BoomBox.glb" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.5.0" />
     <PackageReference Include="System.CodeDom" Version="4.5.0" />
     <PackageReference Include="Veldrid" Version="4.6.1" />

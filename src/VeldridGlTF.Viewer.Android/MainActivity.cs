@@ -36,7 +36,7 @@ namespace VeldridGlTF.Viewer.Android
                 true,
                 true);
             var viewerOptions = new ViewerOptions();
-            viewerOptions.GraphicsBackend = GraphicsBackend.OpenGLES;
+            //viewerOptions.GraphicsBackend = GraphicsBackend.OpenGLES;
 
             _view = new VeldridSurfaceView(this, viewerOptions, options);
             _window = new AndroidApplicationWindow(this, _view);

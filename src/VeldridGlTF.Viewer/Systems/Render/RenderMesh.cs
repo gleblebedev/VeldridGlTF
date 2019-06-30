@@ -1,17 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using SharpGLTF.Memory;
 using SharpGLTF.Schema2;
 using Veldrid;
+using Veldrid.Utilities;
 using VeldridGlTF.Viewer.Data;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
-    public struct IndexRange
-    {
-        public uint Start;
-        public uint Length;
-    }
-
     public class RenderMesh : IMesh
     {
         private readonly ushort[] _indices;
@@ -20,15 +18,24 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public DeviceBuffer _indexBuffer;
         public DeviceBuffer _vertexBuffer;
         public List<IndexRange> Primitives = new List<IndexRange>();
+        private BoundingBox _bbox;
 
         public RenderMesh(Mesh mesh)
         {
             var vertices = new List<VertexPositionTexture>();
             var indices = new List<ushort>();
-
+            
+            BoundingBox bbox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
             foreach (var meshPrimitive in mesh.Primitives)
             {
+                var elements = new List<VertexElementDescription>();
+                foreach (var accessor in meshPrimitive.VertexAccessors)
+                {
+                    elements.Add(new VertexElementDescription(accessor.Key, GetVertexElementFormat(accessor.Value), VertexElementSemantic.TextureCoordinate));
+                }
+
                 var positions = meshPrimitive.GetVertices("POSITION").AsVector3Array();
+                bbox = BoundingBox.Combine(bbox, BoundingBox.CreateFromVertices(positions.ToArray()));
                 var normals = GetMemoryAccessor(meshPrimitive.GetVertexAccessor("NORMAL"))?.AsVector3Array();
                 var texCoords0 = GetMemoryAccessor(meshPrimitive.GetVertexAccessor("TEXCOORD_0"))?.AsVector2Array();
                 var map = new Dictionary<int, ushort>();
@@ -45,8 +52,104 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 Primitives.Add(range);
             }
 
+            _bbox = bbox;
             _vertices = vertices.ToArray();
             _indices = indices.ToArray();
+        }
+
+        private VertexElementFormat GetVertexElementFormat(Accessor accessorValue)
+        {
+            switch (accessorValue.Dimensions)
+            {
+                case DimensionType.SCALAR:
+                    switch (accessorValue.Encoding)
+                    {
+                        case EncodingType.BYTE:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.UNSIGNED_BYTE:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.SHORT:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.UNSIGNED_SHORT:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.UNSIGNED_INT:
+                            return VertexElementFormat.Int1;
+                        case EncodingType.FLOAT:
+                            return VertexElementFormat.Float1;
+                        default:
+                            throw FormatNotSupportedException(accessorValue);
+                    }
+                    break;
+                case DimensionType.VEC2:
+                    switch (accessorValue.Encoding)
+                    {
+                        case EncodingType.BYTE:
+                            return accessorValue.Normalized ? VertexElementFormat.SByte2 : VertexElementFormat.SByte2_Norm;
+                        case EncodingType.UNSIGNED_BYTE:
+                            return accessorValue.Normalized ? VertexElementFormat.Byte2 : VertexElementFormat.Byte2_Norm;
+                        case EncodingType.SHORT:
+                            return accessorValue.Normalized ? VertexElementFormat.Short2 : VertexElementFormat.Short2_Norm;
+                        case EncodingType.UNSIGNED_SHORT:
+                            return accessorValue.Normalized ? VertexElementFormat.UShort2 : VertexElementFormat.UShort2_Norm;
+                        case EncodingType.UNSIGNED_INT:
+                            return VertexElementFormat.Int2;
+                        case EncodingType.FLOAT:
+                            return VertexElementFormat.Float2;
+                        default:
+                            throw FormatNotSupportedException(accessorValue);
+                    }
+                    break;
+                case DimensionType.VEC3:
+                    switch (accessorValue.Encoding)
+                    {
+                        case EncodingType.BYTE:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.UNSIGNED_BYTE:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.SHORT:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.UNSIGNED_SHORT:
+                            throw FormatNotSupportedException(accessorValue);
+                        case EncodingType.UNSIGNED_INT:
+                            return VertexElementFormat.Int3;
+                        case EncodingType.FLOAT:
+                            return VertexElementFormat.Float3;
+                        default:
+                            throw FormatNotSupportedException(accessorValue);
+                    }
+                    break;
+                case DimensionType.VEC4:
+                    switch (accessorValue.Encoding)
+                    {
+                        case EncodingType.BYTE:
+                            return accessorValue.Normalized ? VertexElementFormat.SByte4 : VertexElementFormat.SByte4_Norm;
+                        case EncodingType.UNSIGNED_BYTE:
+                            return accessorValue.Normalized ? VertexElementFormat.Byte4 : VertexElementFormat.Byte4_Norm;
+                        case EncodingType.SHORT:
+                            return accessorValue.Normalized ? VertexElementFormat.Short4 : VertexElementFormat.Short4_Norm;
+                        case EncodingType.UNSIGNED_SHORT:
+                            return accessorValue.Normalized ? VertexElementFormat.UShort4 : VertexElementFormat.UShort4_Norm;
+                        case EncodingType.UNSIGNED_INT:
+                            return VertexElementFormat.Int4;
+                        case EncodingType.FLOAT:
+                            return VertexElementFormat.Float4;
+                        default:
+                            throw FormatNotSupportedException(accessorValue);
+                    }
+                case DimensionType.MAT2:
+                    throw FormatNotSupportedException(accessorValue);
+                case DimensionType.MAT3:
+                    throw FormatNotSupportedException(accessorValue);
+                case DimensionType.MAT4:
+                    throw FormatNotSupportedException(accessorValue);
+                default:
+                    throw FormatNotSupportedException(accessorValue);
+            }
+        }
+
+        private static FormatException FormatNotSupportedException(Accessor accessorValue)
+        {
+            return new FormatException(accessorValue.Name+" "+accessorValue.Dimensions+" "+accessorValue.Encoding+" "+accessorValue.Normalized+" is not supported");
         }
 
         private ushort CopyVertex(int originalIndex, Dictionary<int, ushort> map, List<VertexPositionTexture> vertices,

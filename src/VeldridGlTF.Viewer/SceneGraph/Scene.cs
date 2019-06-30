@@ -26,6 +26,14 @@ namespace VeldridGlTF.Viewer.SceneGraph
             _worldMatrixUpdateQueue.Update();
         }
 
+        public Node CreateNode(Node parent)
+        {
+            return new Node(this, true) {Parent =  parent};
+        }
+        public Node CreateNodeWithNoTransform(Node parent)
+        {
+            return new Node(this, false) { Parent = parent };
+        }
         public void Dispose()
         {
             Systems?.Dispose();

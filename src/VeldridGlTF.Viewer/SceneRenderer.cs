@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Loaders;
@@ -32,7 +33,7 @@ namespace VeldridGlTF.Viewer
                 .With(new PrefabLoader())
                 .With(new MeshLoader());
 
-            var r = LoadGlTFSample().Result;
+            Task.Run(LoadGlTFSample);
 
             Window.Rendering += PreDraw;
             Window.Rendering += Draw;
@@ -45,14 +46,21 @@ namespace VeldridGlTF.Viewer
             _scene.Dispose();
         }
 
+        private object _gate = new object();
+
+
         private async Task<Node> LoadGlTFSample()
         {
-            //var container = await _resourceManager
-            //  .Resolve<GlTFContainer>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
-            //foreach (var mesh in container.Meshes) await mesh.GetAsync();
-            var prefab = await _resourceManager
-                .Resolve<EntityPrefab>(new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null)).GetAsync();
-            return prefab.Spawn(_scene);
+            var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null);
+            //var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.BoomBox.glb", null);
+
+            var prefab = await _resourceManager.Resolve<EntityPrefab>(resourceId).GetAsync();
+            lock (_gate)
+            {
+                var node = prefab.Spawn(_scene);
+                //node.Transform.Scale = Vector3.One * 10000;
+                return node;
+            }
         }
 
         private void PreDraw(float deltaSeconds)
@@ -62,7 +70,10 @@ namespace VeldridGlTF.Viewer
         protected void Draw(float deltaSeconds)
         {
             _stepContext.DeltaSeconds = deltaSeconds;
-            _scene.Systems.Run();
+            lock (_gate)
+            {
+                _scene.Systems.Run();
+            }
         }
     }
 }

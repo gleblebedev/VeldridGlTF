@@ -133,8 +133,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             _cl.End();
             GraphicsDevice.SubmitCommands(_cl);
-            GraphicsDevice.SwapBuffers(MainSwapchain);
             GraphicsDevice.WaitForIdle();
+            GraphicsDevice.SwapBuffers(MainSwapchain);
         }
 
         public void OnGraphicsDeviceCreated(GraphicsDevice gd, ResourceFactory factory, Swapchain sc)
