@@ -37,5 +37,10 @@ namespace VeldridGlTF.Viewer.SceneGraph
         }
 
         public static readonly WorldMatrixToken Empty = new WorldMatrixToken(0);
+
+        public override string ToString()
+        {
+            return (_index == 0)?"<Empty>":string.Format("<{0}>",_index);
+        }
     }
 }

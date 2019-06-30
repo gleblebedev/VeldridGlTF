@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using VeldridGlTF.Viewer.SceneGraph;
 
-namespace VeldridGlTF.Viewer.Components
+namespace VeldridGlTF.Viewer.SceneGraph
 {
     public class LocalTransform
     {
@@ -12,7 +13,6 @@ namespace VeldridGlTF.Viewer.Components
         private Vector3 _position = Vector3.Zero;
         private Quaternion _rotation = Quaternion.Identity;
         private Vector3 _scale = Vector3.One;
-        public LocalTransform Parent;
 
         public Matrix4x4 Matrix
         {
@@ -97,20 +97,6 @@ namespace VeldridGlTF.Viewer.Components
             {
                 _flags &= ~Flags.InvalidPRS;
                 Matrix4x4.Decompose(_matrix, out _scale, out _rotation, out _position);
-            }
-        }
-
-        public void EvaluateWorldTransform(out Matrix4x4 transform)
-        {
-            UpdateMatrixIfNeeded();
-            if (Parent != null)
-            {
-                Parent.EvaluateWorldTransform(out var parent);
-                transform = _matrix * parent;
-            }
-            else
-            {
-                transform = _matrix;
             }
         }
 

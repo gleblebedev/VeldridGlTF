@@ -6,6 +6,7 @@ using Veldrid.ImageSharp;
 using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
+using VeldridGlTF.Viewer.SceneGraph;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {

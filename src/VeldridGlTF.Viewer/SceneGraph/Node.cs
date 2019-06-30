@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Leopotam.Ecs;
 using VeldridGlTF.Viewer.Components;
 
@@ -16,20 +17,22 @@ namespace VeldridGlTF.Viewer.SceneGraph
         private WorldMatrixToken _worldMatrixVersion = WorldMatrixToken.Empty;
         private readonly WorldTransform _worldTransform;
         private WorldMatrixToken _worldTransformToken;
+        private readonly NodeComponent _nodeComponent;
 
         public Node(Scene scene, bool hasTransform = true)
         {
             //TODO: Make Node constructor internal
             _scene = scene;
-            _entity = _scene.World.CreateEntity();
+            _entity = _scene.World.CreateEntityWith(out _nodeComponent);
+            _nodeComponent.Node = this;
             if (hasTransform)
             {
                 _transform = _scene.World.AddComponent<LocalTransform>(_entity);
-                _transform.Parent = null;
                 _transform.OnUpdate += HandleTransformUpdate;
                 _transform.Reset();
 
                 _worldTransform = _scene.World.AddComponent<WorldTransform>(_entity);
+                _worldTransform.WorldMatrix = Matrix4x4.Identity;
             }
             Add(this, scene);
         }
@@ -58,25 +61,22 @@ namespace VeldridGlTF.Viewer.SceneGraph
                     }
 
                     if (_parent != null)
+                    {
                         Remove(this, _parent);
+                    }
                     else
+                    {
                         Remove(this, _scene);
+                    }
+
                     _parent = value;
                     if (_parent != null)
                     {
-                        if (_transform != null)
-                        {
-                            _transform.Parent = _parent._transform;
-                        }
                         Add(this, _parent);
                     }
                     else
                     {
                         Add(this, _scene);
-                        if (_transform != null)
-                        {
-                            _transform.Parent = null;
-                        }
                     }
 
                     InvalidateWorldTransform();
@@ -95,7 +95,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
             {
                 // Don't schedule an update if parent is already scheduled.
                 // This could save time on prefab spawn and animations.
-                //if (_parent == null || _parent._worldTransformToken == WorldMatrixToken.Empty)
+                if (_parent == null || _parent._worldTransformToken == WorldMatrixToken.Empty)
                 {
                     _worldTransformToken = _scene.EnqueueWorldTransformUpdate(this);
                 }
@@ -120,12 +120,18 @@ namespace VeldridGlTF.Viewer.SceneGraph
         private void UpdateSubtreeWorldTransform(WorldMatrixToken updateToken, Queue<Node> updateQueue)
         {
             EnsureWorldTransformIsUpToDate(updateToken);
-            foreach (var child in Children) updateQueue.Enqueue(child);
+            if (HasChildren)
+            {
+                foreach (var child in Children)
+                {
+                    updateQueue.Enqueue(child);
+                }
+            }
 
             while (updateQueue.Count > 0)
             {
                 var n = updateQueue.Dequeue();
-                if (n._worldTransformToken != WorldMatrixToken.Empty)
+                if (n._transform != null && n._worldTransformToken == WorldMatrixToken.Empty)
                 {
                     if (n._worldMatrixVersion != updateToken)
                     {
@@ -133,9 +139,36 @@ namespace VeldridGlTF.Viewer.SceneGraph
                         n._worldMatrixVersion = updateToken;
                     }
 
-                    foreach (var child in n.Children) updateQueue.Enqueue(child);
+                    if (n.HasChildren)
+                    {
+                        foreach (var child in n.Children) updateQueue.Enqueue(child);
+                    }
                 }
             }
+        }
+
+        public void EvaluateWorldTransform(out Matrix4x4 m)
+        {
+            if (_parent != null)
+            {
+                _parent.EvaluateWorldTransform(out var parent);
+                if (_transform != null)
+                {
+                    m = _transform.Matrix * parent;
+                    return;
+                }
+
+                m = parent;
+                return;
+            }
+            if (_transform != null)
+            {
+                m = _transform.Matrix;
+                return;
+            }
+
+            m = Matrix4x4.Identity;
+            return;
         }
 
         private void EnsureWorldTransformIsUpToDate(WorldMatrixToken updateToken)

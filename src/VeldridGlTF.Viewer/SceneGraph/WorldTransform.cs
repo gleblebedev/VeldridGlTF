@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace VeldridGlTF.Viewer.Components
+namespace VeldridGlTF.Viewer.SceneGraph
 {
     public class WorldTransform
     {

@@ -1,7 +1,7 @@
 ﻿using Leopotam.Ecs;
 using VeldridGlTF.Viewer.SceneGraph;
 
-namespace VeldridGlTF.Viewer.Systems
+namespace VeldridGlTF.Viewer.SceneGraph
 {
     [EcsInject]
     public class LocalToWorldSystem : IEcsRunSystem
