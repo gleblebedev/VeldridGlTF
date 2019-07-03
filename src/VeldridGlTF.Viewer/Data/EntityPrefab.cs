@@ -47,8 +47,8 @@ namespace VeldridGlTF.Viewer.Data
 
             if (Mesh != null)
             {
-                var staticModel = node.AddComponent<StaticModel>();
-                staticModel.Model = Mesh;
+                var staticModel = node.AddComponent<Model>();
+                staticModel.Mesh = Mesh;
                 staticModel.Materials.Clear();
                 foreach (var resourceHandler in Materials) staticModel.Materials.Add(resourceHandler);
             }

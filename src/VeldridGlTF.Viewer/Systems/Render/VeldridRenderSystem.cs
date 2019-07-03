@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
 using Veldrid;
@@ -13,26 +14,30 @@ namespace VeldridGlTF.Viewer.Systems.Render
     [EcsInject]
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem
     {
-        private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
+        private readonly EcsFilter<WorldTransform, Model> _staticModels = null;
         private readonly StepContext _stepContext;
 
         protected Camera _camera;
         private CommandList _cl;
         private DeviceBuffer _materialBuffer;
-        private Pipeline _pipeline;
+        private Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
         private DeviceBuffer _projectionBuffer;
-        private ResourceSet _projViewSet;
+        private ResourceSet _environmentSet;
+        private ResourceSet _meshSet;
+        private ResourceSet _defaultMaterialSet;
         private ShaderManager _shaderManager;
-        private ImageSharpTexture _stoneTexData;
+        private ImageSharpTexture _defaultTexture;
         private Texture _surfaceTexture;
-        private TextureView _surfaceTextureView;
+        private TextureView _defaultDiffuseTextureView;
         private float _ticks;
 
         private DeviceBuffer _viewBuffer;
 
         private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
-        private ResourceSet _worldTextureSet;
+        private ResourceLayout _environmentLayout;
+        private ResourceLayout _meshLayout;
+        private ResourceLayout _materialLayout;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
         {
@@ -52,7 +57,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public void Initialize()
         {
             _camera = new Camera(Window.Width, Window.Height);
-            _stoneTexData = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Avocado_baseColor.png");
+            _defaultTexture = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Avocado_baseColor.png");
         }
 
         public void Destroy()
@@ -95,38 +100,41 @@ namespace VeldridGlTF.Viewer.Systems.Render
             //var lookAt = Matrix4x4.CreateLookAt(Vector3.UnitZ * 2.5f, Vector3.Zero, Vector3.UnitY);
             var lookAt = _camera.ViewMatrix;
             _cl.UpdateBuffer(_viewBuffer, 0, lookAt);
-            _cl.SetPipeline(_pipeline);
 
             foreach (var modelIndex in _staticModels)
             {
                 var worldTransform = _staticModels.Components1[modelIndex];
-                var staticModel = _staticModels.Components2[modelIndex];
-                var staticModelModel = ResolveHandler<IMesh, RenderMesh>(staticModel.Model);
-                if (staticModelModel != null)
+                var model = _staticModels.Components2[modelIndex];
+                if (model.RenderContext as RenderContext == null)
+                    model.RenderContext = new RenderContext(this, model);
+                var context = (RenderContext)model.RenderContext;
+                context.Update();
+                var renderMesh = ResolveHandler<IMesh, RenderMesh>(model.Mesh);
+                if (renderMesh != null)
                 {
-                    if (staticModelModel._vertexBuffer == null)
-                        staticModelModel.CreateResources(GraphicsDevice, ResourceFactory);
+                    renderMesh.EnsureResources(GraphicsDevice, ResourceFactory);
 
-                    //var rotation =
-                    //    Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, _ticks / 1000f)
-                    //    * Matrix4x4.CreateFromAxisAngle(Vector3.UnitX, _ticks / 3000f);
-                    //_cl.UpdateBuffer(_worldBuffer, 0, ref rotation);
                     _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
 
-                    _cl.SetVertexBuffer(0, staticModelModel._vertexBuffer);
-                    _cl.SetIndexBuffer(staticModelModel._indexBuffer, IndexFormat.UInt16);
-                    _cl.SetGraphicsResourceSet(0, _projViewSet);
-                    _cl.SetGraphicsResourceSet(1, _worldTextureSet);
-                    for (var index = 0;
-                        index < staticModelModel.Primitives.Count && index < staticModel.Materials.Count;
-                        index++)
+                    _cl.SetIndexBuffer(renderMesh._indexBuffer, IndexFormat.UInt16);
+                    for (var index = 0; index < context.DrawCalls.Count; index++)
                     {
-                        var material = ResolveHandler<IMaterial, RenderMaterial>(staticModel.Materials[index]);
-                        if (material != null)
+                        var drawCall = context.DrawCalls[index];
+                        if (drawCall != null)
                         {
-                            var indexRange = staticModelModel.Primitives[index];
-                            _cl.UpdateBuffer(_materialBuffer, 0, ref material.DiffuseColor);
-                            _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
+                            var indexRange = renderMesh.Primitives[index];
+                            var material = drawCall.Material;
+                            if (material != null)
+                            {
+                                material.EnsureResources(this);
+                                _cl.SetPipeline(drawCall.Pipeline);
+                                _cl.SetGraphicsResourceSet(0, _environmentSet);
+                                _cl.SetGraphicsResourceSet(1, _meshSet);
+                                _cl.SetGraphicsResourceSet(2, material.MaterialSet ?? _defaultMaterialSet);
+                                _cl.SetVertexBuffer(0, renderMesh._vertexBuffer, indexRange.DataOffset);
+                                _cl.UpdateBuffer(_materialBuffer, 0, ref material.DiffuseColor);
+                                _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
+                            }
                         }
                     }
                 }
@@ -136,6 +144,39 @@ namespace VeldridGlTF.Viewer.Systems.Render
             GraphicsDevice.SubmitCommands(_cl);
             GraphicsDevice.WaitForIdle();
             GraphicsDevice.SwapBuffers(MainSwapchain);
+        }
+
+        public Pipeline GetPipeline(PipelineKey pipelineKey)
+        {
+            Pipeline pipeline;
+            if (_pipelines.TryGetValue(pipelineKey, out pipeline))
+            {
+                return pipeline;
+            }
+
+            var shaderSet = new ShaderSetDescription(
+                new[]
+                {
+                    pipelineKey.Shader.VertexLayout.VertexLayoutDescription
+                },
+                _shaderManager.GetShaders(pipelineKey.Shader));
+
+            pipeline = ResourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+                BlendStateDescription.SingleOverrideBlend,
+                DepthStencilStateDescription.DepthOnlyLessEqual,
+                new RasterizerStateDescription
+                {
+                    CullMode = FaceCullMode.Back,
+                    FillMode = PolygonFillMode.Solid,
+                    FrontFace = FrontFace.CounterClockwise,
+                    DepthClipEnabled = true,
+                    ScissorTestEnabled = false
+                },
+                pipelineKey.PrimitiveTopology,
+                shaderSet,
+                new[] { _environmentLayout, _meshLayout, _materialLayout },
+                MainSwapchain.Framebuffer.OutputDescription));
+            return pipeline;
         }
 
         public void OnGraphicsDeviceCreated(GraphicsDevice gd, ResourceFactory factory, Swapchain sc)
@@ -180,66 +221,45 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _materialBuffer =
                 factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
 
-            _surfaceTexture = _stoneTexData.CreateDeviceTexture(GraphicsDevice, ResourceFactory);
-            _surfaceTextureView = factory.CreateTextureView(_surfaceTexture);
+            _surfaceTexture = _defaultTexture.CreateDeviceTexture(GraphicsDevice, ResourceFactory);
+            _defaultDiffuseTextureView = factory.CreateTextureView(_surfaceTexture);
 
-            var shaderSet = new ShaderSetDescription(
-                new[]
-                {
-                    new VertexLayoutDescription(
-                        new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate,
-                            VertexElementFormat.Float3),
-                        new VertexElementDescription("TexCoords", VertexElementSemantic.TextureCoordinate,
-                            VertexElementFormat.Float2),
-                        new VertexElementDescription("Normal", VertexElementSemantic.TextureCoordinate,
-                            VertexElementFormat.Float3))
-                },
-                _shaderManager.GetShaders(new ShaderKey()));
-
-            var projViewLayout = factory.CreateResourceLayout(
+            _environmentLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer,
                         ShaderStages.Vertex),
                     new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer,
                         ShaderStages.Vertex)));
 
-            var worldTextureLayout = factory.CreateResourceLayout(
+            _meshLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex, ResourceLayoutElementOptions.None),
+                        ShaderStages.Vertex, ResourceLayoutElementOptions.None)
+                ));
+
+            _materialLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly,
                         ShaderStages.Fragment),
                     new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler,
                         ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("BaseColor", ResourceKind.UniformBuffer,
+                    new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.UniformBuffer,
                         ShaderStages.Vertex | ShaderStages.Fragment, ResourceLayoutElementOptions.None)
                 ));
 
-            _pipeline = factory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
-                new RasterizerStateDescription
-                {
-                    CullMode = FaceCullMode.Back,
-                    FillMode = PolygonFillMode.Solid,
-                    FrontFace = FrontFace.CounterClockwise,
-                    DepthClipEnabled = true,
-                    ScissorTestEnabled = false
-                },
-                PrimitiveTopology.TriangleList,
-                shaderSet,
-                new[] {projViewLayout, worldTextureLayout},
-                MainSwapchain.Framebuffer.OutputDescription));
-
-            _projViewSet = factory.CreateResourceSet(new ResourceSetDescription(
-                projViewLayout,
+            _environmentSet = factory.CreateResourceSet(new ResourceSetDescription(
+                _environmentLayout,
                 _projectionBuffer,
                 _viewBuffer));
 
-            _worldTextureSet = factory.CreateResourceSet(new ResourceSetDescription(
-                worldTextureLayout,
-                _worldBuffer,
-                _surfaceTextureView,
+            _meshSet = factory.CreateResourceSet(new ResourceSetDescription(
+                _meshLayout,
+                _worldBuffer
+            ));
+
+            _defaultMaterialSet = factory.CreateResourceSet(new ResourceSetDescription(
+                _materialLayout,
+                _defaultDiffuseTextureView,
                 GraphicsDevice.Aniso4xSampler,
                 _materialBuffer
             ));
@@ -266,6 +286,27 @@ namespace VeldridGlTF.Viewer.Systems.Render
             if (handler.Status != TaskStatus.RanToCompletion)
                 return defaultValue;
             return handler.GetAsync().Result as V;
+        }
+
+        public ResourceSet CreateMaterialSet(RenderMaterial material)
+        {
+            var diffuseTexture = _defaultDiffuseTextureView;
+            if (material.DiffuseTexture != null)
+            {
+                var texture = material.DiffuseTexture.GetAsync().Result as RenderTexture;
+                if (texture != null)
+                {
+                    texture.EnsureResources(this);
+                    diffuseTexture = texture.TextureView ?? diffuseTexture;
+                }
+            }
+
+            return ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                _materialLayout,
+                diffuseTexture,
+                GraphicsDevice.Aniso4xSampler,
+                _materialBuffer
+            ));
         }
     }
 }

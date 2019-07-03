@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using SharpGLTF.Schema2;
 using Veldrid;
 
 namespace VeldridGlTF.Viewer.Systems.Render.ElementAccessors
 {
-    public class AbstractElementAccessor
+    public abstract class AbstractElementAccessor
     {
         private readonly string _key;
         private readonly VertexElementFormat _format;
@@ -18,6 +19,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.ElementAccessors
             _format = format;
             _accessor = accessor;
         }
+
+        public abstract int Size { get; }
 
         public VertexElementDescription VertexElementDescription
         {
@@ -40,17 +43,17 @@ namespace VeldridGlTF.Viewer.Systems.Render.ElementAccessors
                     switch (accessor.Encoding)
                     {
                         case EncodingType.BYTE:
-                            throw FormatNotSupportedException(accessor);
+                            return new ScalarElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_BYTE:
-                            throw FormatNotSupportedException(accessor);
+                            return new ScalarElementAccessor(key, accessor);
                         case EncodingType.SHORT:
-                            throw FormatNotSupportedException(accessor);
+                            return new ScalarElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_SHORT:
-                            throw FormatNotSupportedException(accessor);
+                            return new ScalarElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_INT:
-                            return new IntElementAccessor(key, VertexElementFormat.Int1, 1, accessor);
+                            return new ScalarElementAccessor(key, accessor);
                         case EncodingType.FLOAT:
-                            return new FloatElementAccessor(key, VertexElementFormat.Float1, 1, accessor);
+                            return new ScalarElementAccessor(key, accessor);
                         default:
                             throw FormatNotSupportedException(accessor);
                     }
@@ -59,17 +62,17 @@ namespace VeldridGlTF.Viewer.Systems.Render.ElementAccessors
                     switch (accessor.Encoding)
                     {
                         case EncodingType.BYTE:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.SByte2 : VertexElementFormat.SByte2_Norm, accessor);
+                            return new Vec2ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_BYTE:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.Byte2 : VertexElementFormat.Byte2_Norm, accessor);
+                            return new Vec2ElementAccessor(key, accessor);
                         case EncodingType.SHORT:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.Short2 : VertexElementFormat.Short2_Norm, accessor);
+                            return new Vec2ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_SHORT:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.UShort2 : VertexElementFormat.UShort2_Norm, accessor);
+                            return new Vec2ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_INT:
-                            return new IntElementAccessor(key, VertexElementFormat.Int2, 2, accessor);
+                            return new Vec2ElementAccessor(key, accessor);
                         case EncodingType.FLOAT:
-                            return new FloatElementAccessor(key, VertexElementFormat.Float2, 2, accessor);
+                            return new Vec2ElementAccessor(key, accessor);
                         default:
                             throw FormatNotSupportedException(accessor);
                     }
@@ -78,17 +81,17 @@ namespace VeldridGlTF.Viewer.Systems.Render.ElementAccessors
                     switch (accessor.Encoding)
                     {
                         case EncodingType.BYTE:
-                            throw FormatNotSupportedException(accessor);
+                            return new Vec3ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_BYTE:
-                            throw FormatNotSupportedException(accessor);
+                            return new Vec3ElementAccessor(key, accessor);
                         case EncodingType.SHORT:
-                            throw FormatNotSupportedException(accessor);
+                            return new Vec3ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_SHORT:
-                            throw FormatNotSupportedException(accessor);
+                            return new Vec3ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_INT:
-                            return new IntElementAccessor(key, VertexElementFormat.Int3, 3, accessor);
+                            return new Vec3ElementAccessor(key, accessor);
                         case EncodingType.FLOAT:
-                            return new FloatElementAccessor(key, VertexElementFormat.Float3, 3, accessor);
+                            return new Vec3ElementAccessor(key, accessor);
                         default:
                             throw FormatNotSupportedException(accessor);
                     }
@@ -97,17 +100,17 @@ namespace VeldridGlTF.Viewer.Systems.Render.ElementAccessors
                     switch (accessor.Encoding)
                     {
                         case EncodingType.BYTE:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.SByte4 : VertexElementFormat.SByte4_Norm, accessor);
+                            return new Vec4ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_BYTE:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.Byte4 : VertexElementFormat.Byte4_Norm, accessor);
+                            return new Vec4ElementAccessor(key, accessor);
                         case EncodingType.SHORT:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.Short4 : VertexElementFormat.Short4_Norm, accessor);
+                            return new Vec4ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_SHORT:
-                            return new AbstractElementAccessor(key, accessor.Normalized ? VertexElementFormat.UShort4 : VertexElementFormat.UShort4_Norm, accessor);
+                            return new Vec4ElementAccessor(key, accessor);
                         case EncodingType.UNSIGNED_INT:
-                            return new IntElementAccessor(key, VertexElementFormat.Int4, 3, accessor);
+                            return new Vec4ElementAccessor(key, accessor);
                         case EncodingType.FLOAT:
-                            return new FloatElementAccessor(key, VertexElementFormat.Float4, 4, accessor);
+                            return new Vec4ElementAccessor(key, accessor);
                         default:
                             throw FormatNotSupportedException(accessor);
                     }
@@ -126,5 +129,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.ElementAccessors
         {
             return new FormatException(accessorValue.Name + " " + accessorValue.Dimensions + " " + accessorValue.Encoding + " " + accessorValue.Normalized + " is not supported");
         }
+
+        public abstract void Write(int index, VertexBufferStream vertexBuffer);
     }
 }

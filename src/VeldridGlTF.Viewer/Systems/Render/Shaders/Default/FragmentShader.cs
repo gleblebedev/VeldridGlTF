@@ -38,8 +38,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             
             #line default
             #line hidden
-            this.Write("layout(location = 0) in vec2 fsin_texCoords;\r\nlayout(set = 1, binding = 1) unifor" +
-                    "m texture2D SurfaceTexture;\r\nlayout(set = 1, binding = 2) uniform sampler Surfac" +
+            this.Write("layout(location = 0) in vec2 fsin_texCoords;\r\nlayout(set = 2, binding = 0) unifor" +
+                    "m texture2D SurfaceTexture;\r\nlayout(set = 2, binding = 1) uniform sampler Surfac" +
                     "eSampler;\r\n");
             
             #line 21 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
@@ -52,7 +52,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             this.Write(@"layout(location = 1) in vec3 fsin_normal;
 layout(location = 0) out vec4 fsout_color;
 
-layout(set = 1, binding = 3) uniform MaterialProperties
+layout(set = 2, binding = 2) uniform MaterialProperties
 {
     MaterialPropertiesInfo _MaterialProperties;
 };

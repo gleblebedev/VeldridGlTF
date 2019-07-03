@@ -48,6 +48,7 @@ namespace VeldridGlTF.Viewer.Android
 
         private GraphicsBackend GetDefaultBackend()
         {
+            return GraphicsBackend.OpenGLES;
             try
             {
                 return GraphicsDevice.IsBackendSupported(GraphicsBackend.Vulkan)

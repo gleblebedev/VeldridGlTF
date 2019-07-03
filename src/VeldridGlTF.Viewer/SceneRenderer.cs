@@ -51,14 +51,14 @@ namespace VeldridGlTF.Viewer
 
         private async Task<Node> LoadGlTFSample()
         {
-            var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null);
-            //var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.BoomBox.glb", null);
+            //var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null);
+            var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.BoomBox.glb", null);
 
             var prefab = await _resourceManager.Resolve<EntityPrefab>(resourceId).GetAsync();
             lock (_gate)
             {
                 var node = prefab.Spawn(_scene);
-                //node.Transform.Scale = Vector3.One * 10000;
+                node.Transform.Scale = Vector3.One * 10000;
                 return node;
             }
         }

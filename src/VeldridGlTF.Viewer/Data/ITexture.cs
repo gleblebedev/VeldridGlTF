@@ -3,8 +3,4 @@
     public interface ITexture
     {
     }
-
-    public interface IMaterial
-    {
-    }
 }

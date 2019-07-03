@@ -52,12 +52,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Systems\Render\FragmentShader.cs">
+    <Compile Update="Systems\Render\Shaders\Default\FragmentShader.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>FragmentShader.tt</DependentUpon>
     </Compile>
-    <Compile Update="Systems\Render\VertexShader.cs">
+    <Compile Update="Systems\Render\Shaders\Default\VertexShader.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>VertexShader.tt</DependentUpon>
@@ -65,11 +65,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Systems\Render\FragmentShader.tt">
+    <None Update="Systems\Render\Shaders\Default\FragmentShader.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>FragmentShader.cs</LastGenOutput>
     </None>
-    <None Update="Systems\Render\VertexShader.tt">
+    <None Update="Systems\Render\Shaders\Default\VertexShader.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>VertexShader.cs</LastGenOutput>
     </None>

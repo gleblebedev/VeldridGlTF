@@ -2,6 +2,7 @@
 using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
+using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -9,12 +10,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
     {
         private readonly ResourceFactory _factory;
         private readonly Dictionary<ShaderKey, Shader[]> _compiledShaders = new Dictionary<ShaderKey, Shader[]>();
-        private readonly ShaderGenerator _generator;
+        private readonly DefaultShaderGenerator _generator;
 
         public ShaderManager(ResourceFactory factory)
         {
             _factory = factory;
-            _generator = new ShaderGenerator();
+            _generator = new DefaultShaderGenerator();
         }
 
         public Shader[] GetShaders(ShaderKey shaderKey)
