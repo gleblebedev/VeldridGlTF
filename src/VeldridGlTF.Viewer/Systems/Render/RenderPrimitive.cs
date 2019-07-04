@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using Veldrid;
-using VeldridGlTF.Viewer.Systems.Render.ElementAccessors;
+﻿using Veldrid;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {

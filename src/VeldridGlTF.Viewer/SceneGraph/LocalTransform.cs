@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using VeldridGlTF.Viewer.SceneGraph;
 
 namespace VeldridGlTF.Viewer.SceneGraph
 {

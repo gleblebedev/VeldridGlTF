@@ -6,10 +6,10 @@ using System.Numerics;
 using System.Threading.Tasks;
 using SharpGLTF.Materials;
 using SharpGLTF.Schema2;
+using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
-using VeldridGlTF.Viewer.Systems.Render;
 
-namespace VeldridGlTF.Viewer.Data
+namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
     public class GlTFContainer
     {
@@ -24,10 +24,10 @@ namespace VeldridGlTF.Viewer.Data
                 {
                     var id = string.IsNullOrWhiteSpace(texture.Name) ? "@" + index : texture.Name;
                     var resourceId = new ResourceId(container, id);
-                    var handler = new ResourceHandler<ITexture>(resourceId,
-                        () => Task.Run(() => (ITexture) new RenderTexture(resourceId, texture)));
+                    var handler = new ResourceHandler<IImage>(resourceId,
+                        () => Task.Run(() => (IImage) new EmbeddedImage(resourceId, texture)));
                     manager.ResolveOrAdd(resourceId, handler);
-                    Textures.Add(texture, id, handler);
+                    Textures.Add(texture, id, manager.Resolve<ITexture>(resourceId));
                     ++index;
                 }
             }
@@ -41,13 +41,13 @@ namespace VeldridGlTF.Viewer.Data
                     var id = string.IsNullOrWhiteSpace(material.Name) ? "@" + index : material.Name;
                     while (Materials.ContainsId(id)) id += "_";
                     var resourceId = new ResourceId(container, id);
-                    var result = new RenderMaterial(resourceId);
-                    result.DiffuseColor = material.GetDiffuseColor(Vector4.One);
+                    var result = new MaterialDescription(resourceId);
+                    result.BaseColor = material.GetDiffuseColor(Vector4.One);
                     result.DiffuseTexture = Textures[material.GetDiffuseTexture()];
-                    Func<Task<IMaterial>> factory = () => Task.FromResult((IMaterial) result);
-                    var handler = new ResourceHandler<IMaterial>(resourceId, factory);
+                    Func<Task<IMaterialDescription>> factory = () => Task.FromResult((IMaterialDescription) result);
+                    var handler = new ResourceHandler<IMaterialDescription>(resourceId, factory);
                     manager.ResolveOrAdd(resourceId, handler);
-                    Materials.Add(material, id, handler);
+                    Materials.Add(material, id, manager.Resolve<IMaterial>(resourceId));
                     ++index;
                 }
             }
@@ -57,10 +57,10 @@ namespace VeldridGlTF.Viewer.Data
                 {
                     var id = string.IsNullOrWhiteSpace(mesh.Name) ? "@" + index : mesh.Name;
                     var resourceId = new ResourceId(container, id);
-                    var handler =
-                        new ResourceHandler<IMesh>(resourceId, () => Task.Run(() => (IMesh) new RenderMesh(mesh)));
+                    var handler = new ResourceHandler<IGeometry>(resourceId,
+                        () => Task.Run(() => (IGeometry) new MeshGeometry(resourceId, mesh)));
                     manager.ResolveOrAdd(resourceId, handler);
-                    Meshes.Add(mesh, id, handler);
+                    Meshes.Add(mesh, id, manager.Resolve<IMesh>(resourceId));
                     ++index;
                 }
             }

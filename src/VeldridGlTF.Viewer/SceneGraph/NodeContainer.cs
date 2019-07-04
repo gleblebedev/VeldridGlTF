@@ -6,14 +6,11 @@ namespace VeldridGlTF.Viewer.SceneGraph
 {
     public abstract class NodeContainer : INodeContainer
     {
-        private Lazy<HashSet<Node>> _children = new Lazy<HashSet<Node>>(LazyThreadSafetyMode.PublicationOnly);
+        private readonly Lazy<HashSet<Node>> _children = new Lazy<HashSet<Node>>(LazyThreadSafetyMode.PublicationOnly);
 
         public IReadOnlyCollection<Node> Children => _children.Value;
 
-        public bool HasChildren
-        {
-            get { return _children.IsValueCreated && _children.Value.Count != 0; }
-        }
+        public bool HasChildren => _children.IsValueCreated && _children.Value.Count != 0;
 
         protected void Add(Node node, NodeContainer container)
         {

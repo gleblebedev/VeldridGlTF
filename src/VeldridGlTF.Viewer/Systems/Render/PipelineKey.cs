@@ -5,6 +5,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class PipelineKey : IEquatable<PipelineKey>
     {
+        public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
+        public ShaderKey Shader;
+
         public bool Equals(PipelineKey other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -16,7 +19,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((PipelineKey) obj);
         }
 
@@ -37,8 +40,5 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             return !Equals(left, right);
         }
-
-        public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
-        public ShaderKey Shader;
     }
 }

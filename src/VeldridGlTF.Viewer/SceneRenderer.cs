@@ -1,22 +1,23 @@
 ﻿using System;
-using System.Numerics;
 using System.Threading.Tasks;
 using VeldridGlTF.Viewer.Data;
-using VeldridGlTF.Viewer.Loaders;
+using VeldridGlTF.Viewer.Loaders.GlTF;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
-using VeldridGlTF.Viewer.Systems;
 using VeldridGlTF.Viewer.Systems.Render;
+using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer
 {
     public class SceneRenderer : IDisposable
     {
+        private readonly ResourceManager _resourceManager;
+        private readonly Scene _scene = new Scene();
         private readonly StepContext _stepContext;
 
         private readonly VeldridRenderSystem _veldridRenderSystem;
-        private readonly ResourceManager _resourceManager;
-        private readonly Scene _scene = new Scene();
+
+        private readonly object _gate = new object();
 
         public SceneRenderer(IApplicationWindow window)
         {
@@ -29,9 +30,15 @@ namespace VeldridGlTF.Viewer
                 .Add(_veldridRenderSystem);
             _scene.Systems.Initialize();
             _resourceManager = new ResourceManager()
-                .With(new GlTFLoader())
-                .With(new PrefabLoader())
-                .With(new MeshLoader());
+                    .With(new ContainerLoader())
+                    .WithContainer<IGeometry>()
+                    .WithContainer<IImage>()
+                    .WithContainer<IMaterialDescription>()
+                    .With(new PrefabLoader())
+                    .With(new TextureLoader(_veldridRenderSystem))
+                    .With(new MaterialLoader(_veldridRenderSystem))
+                    .With(new MeshLoader(_veldridRenderSystem))
+                ;
 
             Task.Run(LoadGlTFSample);
 
@@ -46,19 +53,17 @@ namespace VeldridGlTF.Viewer
             _scene.Dispose();
         }
 
-        private object _gate = new object();
-
 
         private async Task<Node> LoadGlTFSample()
         {
-            //var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null);
-            var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.BoomBox.glb", null);
+            var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null);
+            //var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.BoomBox.glb", null);
 
             var prefab = await _resourceManager.Resolve<EntityPrefab>(resourceId).GetAsync();
             lock (_gate)
             {
                 var node = prefab.Spawn(_scene);
-                node.Transform.Scale = Vector3.One * 10000;
+                //node.Transform.Scale = Vector3.One * 10000;
                 return node;
             }
         }

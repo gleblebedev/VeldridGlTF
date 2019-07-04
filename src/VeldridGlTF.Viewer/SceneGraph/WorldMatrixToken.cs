@@ -40,7 +40,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
 
         public override string ToString()
         {
-            return (_index == 0)?"<Empty>":string.Format("<{0}>",_index);
+            return _index == 0 ? "<Empty>" : string.Format("<{0}>", _index);
         }
     }
 }

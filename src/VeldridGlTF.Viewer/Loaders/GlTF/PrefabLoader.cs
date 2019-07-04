@@ -2,7 +2,7 @@
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 
-namespace VeldridGlTF.Viewer.Loaders
+namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
     public class PrefabLoader : IResourceLoader<EntityPrefab>
     {

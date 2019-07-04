@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
 using Veldrid;
 using Veldrid.ImageSharp;
 using VeldridGlTF.Viewer.Components;
-using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
+using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -19,25 +20,30 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         protected Camera _camera;
         private CommandList _cl;
-        private DeviceBuffer _materialBuffer;
-        private Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
-        private DeviceBuffer _projectionBuffer;
-        private ResourceSet _environmentSet;
-        private ResourceSet _meshSet;
-        private ResourceSet _defaultMaterialSet;
-        private ShaderManager _shaderManager;
-        private ImageSharpTexture _defaultTexture;
-        private Texture _surfaceTexture;
         private TextureView _defaultDiffuseTextureView;
+        private ResourceSet _defaultMaterialSet;
+        private ImageSharpTexture _defaultTexture;
+        private ResourceLayout _environmentLayout;
+        private ResourceSet _environmentSet;
+        private GraphicsDevice _graphicsDevice;
+        private TaskCompletionSource<GraphicsDevice> _graphicsDeviceTask = new TaskCompletionSource<GraphicsDevice>();
+        private ResourceLayout _meshLayout;
+        private ResourceSet _meshSet;
+        private readonly Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
+        private DeviceBuffer _projectionBuffer;
+        private ResourceFactory _resourceFactory;
+
+        private TaskCompletionSource<ResourceFactory>
+            _resourceFactoryTask = new TaskCompletionSource<ResourceFactory>();
+
+        private ShaderManager _shaderManager;
+        private Texture _surfaceTexture;
         private float _ticks;
 
         private DeviceBuffer _viewBuffer;
 
         private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
-        private ResourceLayout _environmentLayout;
-        private ResourceLayout _meshLayout;
-        private ResourceLayout _materialLayout;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
         {
@@ -48,11 +54,19 @@ namespace VeldridGlTF.Viewer.Systems.Render
             Window.GraphicsDeviceDestroyed += OnDeviceDestroyed;
         }
 
-        public GraphicsDevice GraphicsDevice { get; private set; }
-        public ResourceFactory ResourceFactory { get; private set; }
+        public Task<GraphicsDevice> GraphicsDevice => _graphicsDeviceTask.Task;
+
+        public Task<ResourceFactory> ResourceFactory => _resourceFactoryTask.Task;
+
         public Swapchain MainSwapchain { get; private set; }
 
         public IApplicationWindow Window { get; }
+
+        public ResourceLayout MaterialLayout { get; private set; }
+
+        public DeviceBuffer MaterialBuffer { get; private set; }
+
+        public BindableResource DefaultTextureView => _defaultDiffuseTextureView;
 
         public void Initialize()
         {
@@ -107,13 +121,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 var model = _staticModels.Components2[modelIndex];
                 if (model.RenderContext as RenderContext == null)
                     model.RenderContext = new RenderContext(this, model);
-                var context = (RenderContext)model.RenderContext;
+                var context = (RenderContext) model.RenderContext;
                 context.Update();
-                var renderMesh = ResolveHandler<IMesh, RenderMesh>(model.Mesh);
-                if (renderMesh != null)
+                RenderMesh renderMesh;
+                if (model.Mesh.TryGetAs(out renderMesh) && renderMesh != null)
                 {
-                    renderMesh.EnsureResources(GraphicsDevice, ResourceFactory);
-
                     _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
 
                     _cl.SetIndexBuffer(renderMesh._indexBuffer, IndexFormat.UInt16);
@@ -126,13 +138,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
                             var material = drawCall.Material;
                             if (material != null)
                             {
-                                material.EnsureResources(this);
                                 _cl.SetPipeline(drawCall.Pipeline);
                                 _cl.SetGraphicsResourceSet(0, _environmentSet);
                                 _cl.SetGraphicsResourceSet(1, _meshSet);
-                                _cl.SetGraphicsResourceSet(2, material.MaterialSet ?? _defaultMaterialSet);
+                                _cl.SetGraphicsResourceSet(2, material.ResourceSet);
                                 _cl.SetVertexBuffer(0, renderMesh._vertexBuffer, indexRange.DataOffset);
-                                _cl.UpdateBuffer(_materialBuffer, 0, ref material.DiffuseColor);
+                                material.UpdateBuffer(_cl, MaterialBuffer);
                                 _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
                             }
                         }
@@ -141,18 +152,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
             }
 
             _cl.End();
-            GraphicsDevice.SubmitCommands(_cl);
-            GraphicsDevice.WaitForIdle();
-            GraphicsDevice.SwapBuffers(MainSwapchain);
+            _graphicsDevice.SubmitCommands(_cl);
+            _graphicsDevice.WaitForIdle();
+            _graphicsDevice.SwapBuffers(MainSwapchain);
         }
 
         public Pipeline GetPipeline(PipelineKey pipelineKey)
         {
             Pipeline pipeline;
-            if (_pipelines.TryGetValue(pipelineKey, out pipeline))
-            {
-                return pipeline;
-            }
+            if (_pipelines.TryGetValue(pipelineKey, out pipeline)) return pipeline;
 
             var shaderSet = new ShaderSetDescription(
                 new[]
@@ -161,7 +169,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 },
                 _shaderManager.GetShaders(pipelineKey.Shader));
 
-            pipeline = ResourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+            pipeline = _resourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 DepthStencilStateDescription.DepthOnlyLessEqual,
                 new RasterizerStateDescription
@@ -174,16 +182,18 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 },
                 pipelineKey.PrimitiveTopology,
                 shaderSet,
-                new[] { _environmentLayout, _meshLayout, _materialLayout },
+                new[] {_environmentLayout, _meshLayout, MaterialLayout},
                 MainSwapchain.Framebuffer.OutputDescription));
             return pipeline;
         }
 
         public void OnGraphicsDeviceCreated(GraphicsDevice gd, ResourceFactory factory, Swapchain sc)
         {
-            GraphicsDevice = gd;
-            ResourceFactory = factory;
+            _graphicsDevice = gd;
+            _resourceFactory = factory;
             MainSwapchain = sc;
+            _graphicsDeviceTask.SetResult(gd);
+            _resourceFactoryTask.SetResult(factory);
             CreateResources(factory);
             CreateSwapchainResources(factory);
         }
@@ -208,7 +218,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return null;
         }
 
-
         protected void CreateResources(ResourceFactory factory)
         {
             _shaderManager = new ShaderManager(factory);
@@ -218,10 +227,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             _worldBuffer =
                 factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            _materialBuffer =
-                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            MaterialBuffer = CreateMaterialBuffer();
 
-            _surfaceTexture = _defaultTexture.CreateDeviceTexture(GraphicsDevice, ResourceFactory);
+            _surfaceTexture = _defaultTexture.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
             _defaultDiffuseTextureView = factory.CreateTextureView(_surfaceTexture);
 
             _environmentLayout = factory.CreateResourceLayout(
@@ -237,7 +245,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                         ShaderStages.Vertex, ResourceLayoutElementOptions.None)
                 ));
 
-            _materialLayout = factory.CreateResourceLayout(
+            MaterialLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly,
                         ShaderStages.Fragment),
@@ -258,10 +266,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
             ));
 
             _defaultMaterialSet = factory.CreateResourceSet(new ResourceSetDescription(
-                _materialLayout,
+                MaterialLayout,
                 _defaultDiffuseTextureView,
-                GraphicsDevice.Aniso4xSampler,
-                _materialBuffer
+                _graphicsDevice.Aniso4xSampler,
+                MaterialBuffer
             ));
 
             _cl = factory.CreateCommandList();
@@ -269,9 +277,19 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         protected virtual void OnDeviceDestroyed()
         {
-            GraphicsDevice = null;
-            ResourceFactory = null;
+            if (_graphicsDevice != null)
+                _graphicsDevice = null;
+            else
+                _graphicsDeviceTask.SetException(new Exception("Device wasn't created."));
+
+            if (_resourceFactory != null)
+                _resourceFactory = null;
+            else
+                _resourceFactoryTask.SetException(new Exception("Resource factory wasn't created."));
+
             MainSwapchain = null;
+            _graphicsDeviceTask = new TaskCompletionSource<GraphicsDevice>();
+            _resourceFactoryTask = new TaskCompletionSource<ResourceFactory>();
         }
 
         protected virtual string GetTitle()
@@ -288,25 +306,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return handler.GetAsync().Result as V;
         }
 
-        public ResourceSet CreateMaterialSet(RenderMaterial material)
+        public DeviceBuffer CreateMaterialBuffer()
         {
-            var diffuseTexture = _defaultDiffuseTextureView;
-            if (material.DiffuseTexture != null)
-            {
-                var texture = material.DiffuseTexture.GetAsync().Result as RenderTexture;
-                if (texture != null)
-                {
-                    texture.EnsureResources(this);
-                    diffuseTexture = texture.TextureView ?? diffuseTexture;
-                }
-            }
-
-            return ResourceFactory.CreateResourceSet(new ResourceSetDescription(
-                _materialLayout,
-                diffuseTexture,
-                GraphicsDevice.Aniso4xSampler,
-                _materialBuffer
-            ));
+            var materialBuffer =
+                _resourceFactory.CreateBuffer(
+                    new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            return materialBuffer;
         }
     }
 }

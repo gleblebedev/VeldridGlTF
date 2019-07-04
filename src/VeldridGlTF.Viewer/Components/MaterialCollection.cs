@@ -7,9 +7,8 @@ namespace VeldridGlTF.Viewer.Components
 {
     public class MaterialCollection : IList<IResourceHandler<IMaterial>>
     {
-        private readonly Model _model;
-
         private readonly List<IResourceHandler<IMaterial>> _materials = new List<IResourceHandler<IMaterial>>(1);
+        private readonly Model _model;
 
         public MaterialCollection(Model model)
         {

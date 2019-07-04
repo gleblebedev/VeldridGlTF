@@ -8,8 +8,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class ShaderManager
     {
-        private readonly ResourceFactory _factory;
         private readonly Dictionary<ShaderKey, Shader[]> _compiledShaders = new Dictionary<ShaderKey, Shader[]>();
+        private readonly ResourceFactory _factory;
         private readonly DefaultShaderGenerator _generator;
 
         public ShaderManager(ResourceFactory factory)

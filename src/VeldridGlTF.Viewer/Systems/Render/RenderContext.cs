@@ -2,20 +2,29 @@
 using System.Linq;
 using Veldrid;
 using VeldridGlTF.Viewer.Components;
-using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Resources;
+using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class RenderContext : IRenderContext
     {
-        private readonly VeldridRenderSystem _renderSystem;
         private readonly Model _model;
+        private readonly VeldridRenderSystem _renderSystem;
+
+        private bool _isValid;
+        private RenderMesh _mesh;
 
         public RenderContext(VeldridRenderSystem renderSystem, Model model)
         {
             _renderSystem = renderSystem;
             _model = model;
         }
+
+        public RenderMesh Mesh => _mesh;
+
+        public List<DrawCall> DrawCalls { get; } = new List<DrawCall>();
+
         public void Invalidate()
         {
             _isValid = false;
@@ -26,64 +35,45 @@ namespace VeldridGlTF.Viewer.Systems.Render
             if (_isValid)
                 return;
 
-            _drawCalls.Clear();
-            _mesh = _renderSystem.ResolveHandler<IMesh, RenderMesh>(_model.Mesh);
-            if (_mesh == null)
-            {
-                return;
-            }
+            DrawCalls.Clear();
+
+            if (!_model.Mesh.TryGetAs(out _mesh) || _mesh == null) return;
 
             for (var index = 0; index < _model.Materials.Count && index < _mesh.Primitives.Count; index++)
             {
                 var mat = _model.Materials[index];
-                var material = _renderSystem.ResolveHandler<IMaterial, RenderMaterial>(mat);
-                if (material != null)
+
+                MaterialResource material;
+                if (mat.TryGetAs(out material))
                 {
                     var indexRange = _mesh.Primitives[index];
-                    var shaderKey = new ShaderKey() {VertexLayout = indexRange.Elements};
-                    if (material.DiffuseTexture != null && shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_=>_.Name == "TEXCOORD_0"))
-                    {
+                    var shaderKey = new ShaderKey {VertexLayout = indexRange.Elements};
+                    if (material.DiffuseTexture != null &&
+                        shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "TEXCOORD_0"))
                         shaderKey.Flags |= ShaderFlag.DiffuseMap;
-                    }
-                    var pipeline = _renderSystem.GetPipeline(new PipelineKey()
+                    var pipeline = _renderSystem.GetPipeline(new PipelineKey
                     {
                         Shader = shaderKey,
                         PrimitiveTopology = indexRange.PrimitiveTopology
                     });
-                    var drawCall = new DrawCall()
+                    var drawCall = new DrawCall
                     {
                         Pipeline = pipeline,
                         Material = material
                     };
-                    _drawCalls.Add(drawCall);
+                    DrawCalls.Add(drawCall);
                 }
                 else
                 {
-                    _drawCalls.Add(null);
+                    DrawCalls.Add(null);
                 }
             }
         }
 
-        public RenderMesh Mesh
-        {
-            get { return _mesh; }
-        }
-
-        public List<DrawCall> DrawCalls
-        {
-            get { return _drawCalls; }
-        }
-
-        private List<DrawCall> _drawCalls = new List<DrawCall>();
-
-        private bool _isValid = false;
-        private RenderMesh _mesh;
-
         public class DrawCall
         {
+            public MaterialResource Material;
             public Pipeline Pipeline;
-
-            public RenderMaterial Material;
         }
     }
 }

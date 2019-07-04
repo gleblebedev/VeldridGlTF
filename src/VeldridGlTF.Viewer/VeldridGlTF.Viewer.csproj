@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -13,7 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\Avocado\glTF\Avocado_baseColor.png" Link="Assets\Avocado_baseColor.png" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\Avocado\glTF\Avocado_baseColor.png"
+                      Link="Assets\Avocado_baseColor.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,7 +34,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\BoomBox\glTF-Binary\BoomBox.glb" Link="Assets\BoomBox.glb" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\BoomBox\glTF-Binary\BoomBox.glb"
+                      Link="Assets\BoomBox.glb" />
   </ItemGroup>
 
   <ItemGroup>

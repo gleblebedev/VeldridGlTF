@@ -2,22 +2,19 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Leopotam.Ecs;
-using VeldridGlTF.Viewer.Components;
 
 namespace VeldridGlTF.Viewer.SceneGraph
 {
     public class Node : NodeContainer
     {
-        private readonly Scene _scene;
-
         private readonly EcsEntity _entity;
+        private readonly NodeComponent _nodeComponent;
+        private readonly Scene _scene;
+        private readonly WorldTransform _worldTransform;
         private Node _parent;
-        private readonly LocalTransform _transform;
 
         private WorldMatrixToken _worldMatrixVersion = WorldMatrixToken.Empty;
-        private readonly WorldTransform _worldTransform;
         private WorldMatrixToken _worldTransformToken;
-        private readonly NodeComponent _nodeComponent;
 
         public Node(Scene scene, bool hasTransform = true)
         {
@@ -27,17 +24,18 @@ namespace VeldridGlTF.Viewer.SceneGraph
             _nodeComponent.Node = this;
             if (hasTransform)
             {
-                _transform = _scene.World.AddComponent<LocalTransform>(_entity);
-                _transform.OnUpdate += HandleTransformUpdate;
-                _transform.Reset();
+                Transform = _scene.World.AddComponent<LocalTransform>(_entity);
+                Transform.OnUpdate += HandleTransformUpdate;
+                Transform.Reset();
 
                 _worldTransform = _scene.World.AddComponent<WorldTransform>(_entity);
                 _worldTransform.WorldMatrix = Matrix4x4.Identity;
             }
+
             Add(this, scene);
         }
 
-        public LocalTransform Transform => _transform;
+        public LocalTransform Transform { get; }
 
         public Node Parent
         {
@@ -49,35 +47,24 @@ namespace VeldridGlTF.Viewer.SceneGraph
                     if (value != null)
                     {
                         if (value._scene != _scene)
-                        {
                             throw new InvalidOperationException(
                                 "Can't move Node to a different scene. Please create a new node in the scene.");
-                        }
 
-                        if (_transform != null && value._transform == null)
-                        {
-                            throw new InvalidOperationException("Can't attach node with transform to a parent node with no transform");
-                        }
+                        if (Transform != null && value.Transform == null)
+                            throw new InvalidOperationException(
+                                "Can't attach node with transform to a parent node with no transform");
                     }
 
                     if (_parent != null)
-                    {
                         Remove(this, _parent);
-                    }
                     else
-                    {
                         Remove(this, _scene);
-                    }
 
                     _parent = value;
                     if (_parent != null)
-                    {
                         Add(this, _parent);
-                    }
                     else
-                    {
                         Add(this, _scene);
-                    }
 
                     InvalidateWorldTransform();
                 }
@@ -91,15 +78,11 @@ namespace VeldridGlTF.Viewer.SceneGraph
 
         private void InvalidateWorldTransform()
         {
-            if (_transform != null && _worldTransformToken == WorldMatrixToken.Empty)
-            {
+            if (Transform != null && _worldTransformToken == WorldMatrixToken.Empty)
                 // Don't schedule an update if parent is already scheduled.
                 // This could save time on prefab spawn and animations.
                 if (_parent == null || _parent._worldTransformToken == WorldMatrixToken.Empty)
-                {
                     _worldTransformToken = _scene.EnqueueWorldTransformUpdate(this);
-                }
-            }
         }
 
         public T GetComponent<T>() where T : class, new()
@@ -121,28 +104,23 @@ namespace VeldridGlTF.Viewer.SceneGraph
         {
             EnsureWorldTransformIsUpToDate(updateToken);
             if (HasChildren)
-            {
                 foreach (var child in Children)
-                {
                     updateQueue.Enqueue(child);
-                }
-            }
 
             while (updateQueue.Count > 0)
             {
                 var n = updateQueue.Dequeue();
-                if (n._transform != null && n._worldTransformToken == WorldMatrixToken.Empty)
+                if (n.Transform != null && n._worldTransformToken == WorldMatrixToken.Empty)
                 {
                     if (n._worldMatrixVersion != updateToken)
                     {
-                        n._worldTransform.WorldMatrix = n._transform.Matrix * n._parent._worldTransform.WorldMatrix;
+                        n._worldTransform.WorldMatrix = n.Transform.Matrix * n._parent._worldTransform.WorldMatrix;
                         n._worldMatrixVersion = updateToken;
                     }
 
                     if (n.HasChildren)
-                    {
-                        foreach (var child in n.Children) updateQueue.Enqueue(child);
-                    }
+                        foreach (var child in n.Children)
+                            updateQueue.Enqueue(child);
                 }
             }
         }
@@ -152,23 +130,23 @@ namespace VeldridGlTF.Viewer.SceneGraph
             if (_parent != null)
             {
                 _parent.EvaluateWorldTransform(out var parent);
-                if (_transform != null)
+                if (Transform != null)
                 {
-                    m = _transform.Matrix * parent;
+                    m = Transform.Matrix * parent;
                     return;
                 }
 
                 m = parent;
                 return;
             }
-            if (_transform != null)
+
+            if (Transform != null)
             {
-                m = _transform.Matrix;
+                m = Transform.Matrix;
                 return;
             }
 
             m = Matrix4x4.Identity;
-            return;
         }
 
         private void EnsureWorldTransformIsUpToDate(WorldMatrixToken updateToken)
@@ -178,12 +156,12 @@ namespace VeldridGlTF.Viewer.SceneGraph
                 _worldMatrixVersion = updateToken;
                 if (_parent == null)
                 {
-                    _worldTransform.WorldMatrix = _transform.Matrix;
+                    _worldTransform.WorldMatrix = Transform.Matrix;
                 }
                 else
                 {
                     _parent.EnsureWorldTransformIsUpToDate(updateToken);
-                    _worldTransform.WorldMatrix = _transform.Matrix * _parent._worldTransform.WorldMatrix;
+                    _worldTransform.WorldMatrix = Transform.Matrix * _parent._worldTransform.WorldMatrix;
                 }
             }
         }

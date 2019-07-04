@@ -22,9 +22,19 @@ namespace VeldridGlTF.Viewer.Resources
 
         public TaskStatus Status => _taskFactory.Value.Status;
 
+        Task IResourceHandler.GetAsync()
+        {
+            return _taskFactory.Value;
+        }
+
         public Task<T> GetAsync()
         {
             return _taskFactory.Value;
+        }
+
+        public override string ToString()
+        {
+            return $"{_id.Container}/{_id.Id}<{typeof(T).Name}>({{{Status}}})";
         }
     }
 }

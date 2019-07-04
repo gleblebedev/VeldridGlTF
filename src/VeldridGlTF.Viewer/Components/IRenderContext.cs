@@ -3,6 +3,5 @@
     public interface IRenderContext
     {
         void Invalidate();
-        
     }
 }

@@ -1,101 +1,26 @@
 ﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using SharpGLTF.Memory;
-using SharpGLTF.Schema2;
 using Veldrid;
-using Veldrid.Utilities;
 using VeldridGlTF.Viewer.Data;
-using VeldridGlTF.Viewer.Systems.Render.ElementAccessors;
+using VeldridGlTF.Viewer.Resources;
 
-namespace VeldridGlTF.Viewer.Systems.Render
+namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
-    public class RenderMesh : IMesh
+    public class RenderMesh : AbstractResource, IMesh
     {
-        private readonly ushort[] _indices;
-        private readonly byte[] _vertices;
-
+        public readonly List<RenderPrimitive> _primitives;
         public DeviceBuffer _indexBuffer;
         public DeviceBuffer _vertexBuffer;
-        public List<RenderPrimitive> Primitives = new List<RenderPrimitive>();
-        private BoundingBox _bbox;
 
-        public RenderMesh(Mesh mesh)
+        public RenderMesh(ResourceId id, DeviceBuffer vertexBuffer, DeviceBuffer indexBuffer,
+            List<RenderPrimitive> primitives) : base(id)
         {
-            var indices = new List<ushort>();
-            var memory = new VertexBufferStream(1024);
-
-            BoundingBox bbox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
-            foreach (var meshPrimitive in mesh.Primitives)
-            {
-                var elements = new List<AbstractElementAccessor>();
-                foreach (var accessor in meshPrimitive.VertexAccessors)
-                {
-                    var elementAccessor = AbstractElementAccessor.GetElementAccessor(accessor.Key, accessor.Value);
-                    elements.Add(elementAccessor);
-                }
-
-                var positions = meshPrimitive.GetVertices("POSITION").AsVector3Array();
-                bbox = BoundingBox.Combine(bbox, BoundingBox.CreateFromVertices(positions.ToArray()));
-
-                var map = new Dictionary<int, ushort>();
-                var range = new RenderPrimitive();
-                range.Elements = new RenderVertexLayout(elements.Select(_=>_.VertexElementDescription));
-                range.PrimitiveTopology = PrimitiveTopology.TriangleList;
-                range.DataOffset = (uint)memory.Position;
-                range.Start = (uint)indices.Count;
-                ushort numVertices = 0;
-                foreach (var face in meshPrimitive.GetTriangleIndices())
-                {
-                    indices.Add(CopyVertex(face.Item1, map, memory, elements, ref numVertices));
-                    indices.Add(CopyVertex(face.Item2, map, memory, elements, ref numVertices));
-                    indices.Add(CopyVertex(face.Item3, map, memory, elements, ref numVertices));
-                }
-
-                range.Length = (uint) (indices.Count-range.Start);
-                Primitives.Add(range);
-            }
-
-            _bbox = bbox;
-            _vertices = memory.ToArray();
-            _indices = indices.ToArray();
+            _vertexBuffer = vertexBuffer;
+            _indexBuffer = indexBuffer;
+            _primitives = primitives;
         }
 
-        private ushort CopyVertex(int originalIndex, Dictionary<int, ushort> map, VertexBufferStream vbStream, IEnumerable<AbstractElementAccessor> accessors, ref ushort numVertices)
-        {
-            ushort index;
-            if (map.TryGetValue(originalIndex, out index))
-                return index;
-            index = numVertices;
-            ++numVertices;
+        public List<RenderPrimitive> Primitives => _primitives;
 
-            map.Add(originalIndex, index);
-            foreach (var accessor in accessors)
-            {
-                accessor.Write((int)originalIndex, vbStream);
-            }
-            return index;
-        }
-
-        public void EnsureResources(GraphicsDevice graphicsDevice, ResourceFactory factory)
-        {
-            if (_vertexBuffer == null)
-            {
-                _vertexBuffer =
-                    factory.CreateBuffer(new BufferDescription(
-                        (uint) (VertexPositionTexture.SizeInBytes * _vertices.Length), BufferUsage.VertexBuffer));
-                graphicsDevice.UpdateBuffer(_vertexBuffer, 0, _vertices);
-            }
-
-            if (_indexBuffer == null)
-            {
-                _indexBuffer =
-                    factory.CreateBuffer(new BufferDescription(sizeof(ushort) * (uint) _indices.Length,
-                        BufferUsage.IndexBuffer));
-                graphicsDevice.UpdateBuffer(_indexBuffer, 0, _indices);
-            }
-        }
 
         //private static VertexPositionTexture[] GetCubeVertices()
         //{

@@ -28,12 +28,14 @@ namespace VeldridGlTF.Viewer.SceneGraph
 
         public Node CreateNode(Node parent)
         {
-            return new Node(this, true) {Parent =  parent};
+            return new Node(this) {Parent = parent};
         }
+
         public Node CreateNodeWithNoTransform(Node parent)
         {
-            return new Node(this, false) { Parent = parent };
+            return new Node(this, false) {Parent = parent};
         }
+
         public void Dispose()
         {
             Systems?.Dispose();

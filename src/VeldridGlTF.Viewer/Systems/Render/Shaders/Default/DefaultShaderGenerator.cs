@@ -112,6 +112,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
                 default:
                     throw new ArgumentOutOfRangeException(nameof(format), format, null);
             }
+
             throw new NotImplementedException(format.ToString());
         }
     }

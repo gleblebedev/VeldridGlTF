@@ -6,26 +6,21 @@ namespace VeldridGlTF.Viewer.Components
 {
     public class Model
     {
-        private readonly IList<IResourceHandler<IMaterial>> _materials;
-
         public Model()
         {
-            _materials = new MaterialCollection(this);
-        }
-
-        public void InvalidateRenderContext()
-        {
-            if (RenderContext != null)
-            {
-                RenderContext.Invalidate();
-            }
+            Materials = new MaterialCollection(this);
         }
 
 
         public IResourceHandler<IMesh> Mesh { get; set; }
 
-        public IList<IResourceHandler<IMaterial>> Materials => _materials;
+        public IList<IResourceHandler<IMaterial>> Materials { get; }
 
         public IRenderContext RenderContext { get; set; }
+
+        public void InvalidateRenderContext()
+        {
+            if (RenderContext != null) RenderContext.Invalidate();
+        }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Leopotam.Ecs;
-using VeldridGlTF.Viewer.SceneGraph;
 
 namespace VeldridGlTF.Viewer.SceneGraph
 {

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 using SharpGLTF.Schema2;
-using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 
-namespace VeldridGlTF.Viewer.Loaders
+namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
-    public class GlTFLoader : IResourceLoader<GlTFContainer>
+    public class ContainerLoader : IResourceLoader<GlTFContainer>
     {
         public Task<GlTFContainer> LoadAsync(ResourceManager manager, ResourceId id)
         {
