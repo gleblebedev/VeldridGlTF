@@ -59,15 +59,22 @@ namespace VeldridGlTF.Viewer.Resources
             }
         }
 
-        public static ResourceManager With<T>(this ResourceManager resourceManager, IResourceLoader<T> loader)
+        public static ResourceManager With<T>(this ResourceManager resourceManager, IResourceCollection<T> collection)
+        {
+            resourceManager.Register(collection);
+            return resourceManager;
+        }
+
+        public static ResourceManager With<T>(this ResourceManager resourceManager, ResourceLoader<T> loader)
         {
             resourceManager.Register(loader);
             return resourceManager;
         }
 
-        public static ResourceManager WithContainer<T>(this ResourceManager resourceManager)
+        public static ResourceManager With(this ResourceManager resourceManager,
+            ResourceLoader<IResourceContainer> loader, params string[] extensions)
         {
-            resourceManager.Register<T>(null);
+            resourceManager.Register(loader, extensions);
             return resourceManager;
         }
     }

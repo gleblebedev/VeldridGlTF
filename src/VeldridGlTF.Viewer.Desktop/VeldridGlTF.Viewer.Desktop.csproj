@@ -17,4 +17,23 @@
     <ProjectReference Include="..\VeldridGlTF.Viewer\VeldridGlTF.Viewer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\BoomBox\glTF-Binary\BoomBox.glb" Link="Assets\BoomBox.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\Buggy\glTF-Binary\Buggy.glb" Link="Assets\Buggy.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\MetalRoughSpheres\glTF-Binary\MetalRoughSpheres.glb" Link="Assets\MetalRoughSpheres.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

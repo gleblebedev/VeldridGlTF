@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Loaders.FileSystem;
 using VeldridGlTF.Viewer.Loaders.GlTF;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
@@ -11,15 +13,14 @@ namespace VeldridGlTF.Viewer
 {
     public class SceneRenderer : IDisposable
     {
+        private readonly object _gate = new object();
         private readonly ResourceManager _resourceManager;
         private readonly Scene _scene = new Scene();
         private readonly StepContext _stepContext;
 
         private readonly VeldridRenderSystem _veldridRenderSystem;
 
-        private readonly object _gate = new object();
-
-        public SceneRenderer(IApplicationWindow window)
+        public SceneRenderer(IApplicationWindow window, ViewerOptions options)
         {
             Window = window;
 
@@ -29,18 +30,20 @@ namespace VeldridGlTF.Viewer
                 .Add(new LocalToWorldSystem(_scene))
                 .Add(_veldridRenderSystem);
             _scene.Systems.Initialize();
+            FileCollection fileCollection;
+            if (options.RootFolder != null)
+                fileCollection = new FileCollection(options.RootFolder);
+            else
+                fileCollection = new FileCollection(options.DataFolder);
             _resourceManager = new ResourceManager()
-                    .With(new ContainerLoader())
-                    .WithContainer<IGeometry>()
-                    .WithContainer<IImage>()
-                    .WithContainer<IMaterialDescription>()
-                    .With(new PrefabLoader())
+                    .With(fileCollection)
+                    .With(new ContainerLoader(), ".glb", ".gltf")
                     .With(new TextureLoader(_veldridRenderSystem))
                     .With(new MaterialLoader(_veldridRenderSystem))
                     .With(new MeshLoader(_veldridRenderSystem))
                 ;
 
-            Task.Run(LoadGlTFSample);
+            Task.Run(() => LoadGlTFSample(options.FileName, options.Scale));
 
             Window.Rendering += PreDraw;
             Window.Rendering += Draw;
@@ -54,16 +57,15 @@ namespace VeldridGlTF.Viewer
         }
 
 
-        private async Task<Node> LoadGlTFSample()
+        private async Task<Node> LoadGlTFSample(string name, float scale)
         {
-            var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.Buggy.glb", null);
-            //var resourceId = new ResourceId("VeldridGlTF.Viewer.Assets.BoomBox.glb", null);
+            var resourceId = new ResourceId(name, null);
 
             var prefab = await _resourceManager.Resolve<EntityPrefab>(resourceId).GetAsync();
             lock (_gate)
             {
                 var node = prefab.Spawn(_scene);
-                //node.Transform.Scale = Vector3.One * 10000;
+                node.Transform.Scale = Vector3.One * scale;
                 return node;
             }
         }

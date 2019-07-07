@@ -13,29 +13,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\Avocado\glTF\Avocado_baseColor.png"
-                      Link="Assets\Avocado_baseColor.png" />
+    <None Remove="Assets\Diffuse.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Diffuse.png" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\modules\ecs\Leopotam.Ecs.csproj" />
     <ProjectReference Include="..\modules\SharpGLTF\src\SharpGLTF.Core\SharpGLTF.Core.csproj" />
     <ProjectReference Include="..\modules\SharpGLTF\src\SharpGLTF.Toolkit\SharpGLTF.Toolkit.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assets\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\Buggy\glTF-Binary\Buggy.glb" Link="Assets\Buggy.glb">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="..\modules\glTF-Sample-Models\2.0\BoomBox\glTF-Binary\BoomBox.glb"
-                      Link="Assets\BoomBox.glb" />
   </ItemGroup>
 
   <ItemGroup>

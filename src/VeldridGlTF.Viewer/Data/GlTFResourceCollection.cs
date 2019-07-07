@@ -3,16 +3,17 @@ using System.Collections.Generic;
 
 namespace VeldridGlTF.Viewer.Data
 {
-    public class GlTFResourceCollection<R, T> : IEnumerable<T> where R : class
+    public class GlTFResourceCollection<R, T> : IEnumerable<KeyValuePair<R, T>> where R : class
     {
         private readonly Dictionary<string, T> _byId = new Dictionary<string, T>();
         private readonly Dictionary<R, T> _byType = new Dictionary<R, T>();
+        private T _nullId;
 
         public T this[string id]
         {
             get
             {
-                if (id == null) return default;
+                if (id == null) return _nullId;
                 T res;
                 if (!_byId.TryGetValue(id, out res))
                     return default;
@@ -32,9 +33,9 @@ namespace VeldridGlTF.Viewer.Data
             }
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public IEnumerator<KeyValuePair<R, T>> GetEnumerator()
         {
-            return _byType.Values.GetEnumerator();
+            return _byType.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -44,12 +45,18 @@ namespace VeldridGlTF.Viewer.Data
 
         public void Add(R res, string id, T val)
         {
-            _byType.Add(res, val);
-            _byId.Add(id, val);
+            if (res != null)
+                _byType.Add(res, val);
+            if (id == null)
+                _nullId = val;
+            else
+                _byId.Add(id, val);
         }
 
         public bool ContainsId(string id)
         {
+            if (id == null)
+                return _nullId != null;
             return _byId.ContainsKey(id);
         }
     }

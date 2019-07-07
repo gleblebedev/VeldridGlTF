@@ -60,12 +60,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AndroidApplicationWindow.cs" />
+    <Compile Include="AssetFolder.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VeldridSurfaceView.cs" />
   </ItemGroup>
   <ItemGroup>
+    <AndroidAsset Include="..\modules\glTF-Sample-Models\2.0\Buggy\glTF-Binary\Buggy.glb">
+      <Link>Assets\Buggy.glb</Link>
+    </AndroidAsset>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Assets\AboutAssets.txt" />

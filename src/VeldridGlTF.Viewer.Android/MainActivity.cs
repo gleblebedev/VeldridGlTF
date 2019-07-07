@@ -41,7 +41,7 @@ namespace VeldridGlTF.Viewer.Android
             _view = new VeldridSurfaceView(this, viewerOptions, options);
             _window = new AndroidApplicationWindow(this, _view);
             _window.GraphicsDeviceCreated += (g, r, s) => _window.Run();
-            _tc = new SceneRenderer(_window);
+            _tc = new SceneRenderer(_window, new ViewerOptions(){FileName = "Buggy.glb", RootFolder = new AssetFolder(Assets,"") });
             SetContentView(_view);
         }
 

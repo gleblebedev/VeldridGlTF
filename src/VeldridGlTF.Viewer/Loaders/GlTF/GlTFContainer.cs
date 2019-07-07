@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -11,23 +12,66 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
-    public class GlTFContainer
+    public class GlTFContainer : IResourceContainer
     {
-        private readonly Dictionary<Node, EntityPrefab> _entities = new Dictionary<Node, EntityPrefab>();
-        private readonly Dictionary<string, EntityPrefab> _entityById = new Dictionary<string, EntityPrefab>();
+        //private readonly Dictionary<Node, EntityPrefab> _entities = new Dictionary<Node, EntityPrefab>();
+        //private readonly Dictionary<string, EntityPrefab> _entityById = new Dictionary<string, EntityPrefab>();
+        public GlTFResourceCollection<Node, IResourceHandler<EntityPrefab>> Entities { get; } =
+            new GlTFResourceCollection<Node, IResourceHandler<EntityPrefab>>();
 
-        public GlTFContainer(ResourceManager manager, string container, ModelRoot modelRoot)
+        public GlTFResourceCollection<Mesh, IResourceHandler<IGeometry>> Meshes { get; } =
+            new GlTFResourceCollection<Mesh, IResourceHandler<IGeometry>>();
+
+        public GlTFResourceCollection<Texture, IResourceHandler<IImage>> Textures { get; } =
+            new GlTFResourceCollection<Texture, IResourceHandler<IImage>>();
+
+        public GlTFResourceCollection<Material, IResourceHandler<IMaterialDescription>> Materials { get; } =
+            new GlTFResourceCollection<Material, IResourceHandler<IMaterialDescription>>();
+
+        public EntityPrefab Root { get; set; }
+
+        public IResourceHandler<T> Resolve<T>(ResourceId id)
         {
+            if (typeof(T) == typeof(IImage)) return (IResourceHandler<T>) Textures[id.Id];
+            if (typeof(T) == typeof(EntityPrefab)) return (IResourceHandler<T>) Entities[id.Id];
+            if (typeof(T) == typeof(IMaterialDescription)) return (IResourceHandler<T>) Materials[id.Id];
+            if (typeof(T) == typeof(IGeometry)) return (IResourceHandler<T>) Meshes[id.Id];
+
+            throw new NotImplementedException("Resource type " + typeof(T) + " isn't supported by container");
+        }
+
+        public async Task ParseFile(ResourceContext context)
+        {
+            var file = await context.ResolveDependencyAsync<IFile>(context.Id);
+            ModelRoot modelRoot;
+            using (var stream = file.Open())
+            {
+                if (stream.CanSeek)
+                {
+                    modelRoot = ModelRoot.Read(stream,
+                        new ReadSettings {FileReader = new FileReader(context).ReadAsset});
+                }
+                else
+                {
+                    var buf = new MemoryStream();
+                    stream.CopyTo(buf);
+                    buf.Position = 0;
+                    modelRoot = ModelRoot.Read(buf,
+                        new ReadSettings {FileReader = new FileReader(context).ReadAsset});
+                }
+            }
+
+
+            var container = context.Id.Path;
+
             {
                 var index = 0;
                 foreach (var texture in modelRoot.LogicalTextures)
                 {
                     var id = string.IsNullOrWhiteSpace(texture.Name) ? "@" + index : texture.Name;
                     var resourceId = new ResourceId(container, id);
-                    var handler = new ResourceHandler<IImage>(resourceId,
-                        () => Task.Run(() => (IImage) new EmbeddedImage(resourceId, texture)));
-                    manager.ResolveOrAdd(resourceId, handler);
-                    Textures.Add(texture, id, manager.Resolve<ITexture>(resourceId));
+                    Textures.Add(texture, id,
+                        new ManualResourceHandler<IImage>(resourceId, new EmbeddedImage(resourceId, texture)));
                     ++index;
                 }
             }
@@ -43,11 +87,10 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                     var resourceId = new ResourceId(container, id);
                     var result = new MaterialDescription(resourceId);
                     result.BaseColor = material.GetDiffuseColor(Vector4.One);
-                    result.DiffuseTexture = Textures[material.GetDiffuseTexture()];
-                    Func<Task<IMaterialDescription>> factory = () => Task.FromResult((IMaterialDescription) result);
-                    var handler = new ResourceHandler<IMaterialDescription>(resourceId, factory);
-                    manager.ResolveOrAdd(resourceId, handler);
-                    Materials.Add(material, id, manager.Resolve<IMaterial>(resourceId));
+                    var resourceHandler = Textures[material.GetDiffuseTexture()];
+                    if (resourceHandler != null) result.DiffuseTexture = context.Resolve<ITexture>(resourceHandler.Id);
+
+                    Materials.Add(material, id, new ManualResourceHandler<IMaterialDescription>(resourceId, result));
                     ++index;
                 }
             }
@@ -57,92 +100,53 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 {
                     var id = string.IsNullOrWhiteSpace(mesh.Name) ? "@" + index : mesh.Name;
                     var resourceId = new ResourceId(container, id);
-                    var handler = new ResourceHandler<IGeometry>(resourceId,
-                        () => Task.Run(() => (IGeometry) new MeshGeometry(resourceId, mesh)));
-                    manager.ResolveOrAdd(resourceId, handler);
-                    Meshes.Add(mesh, id, manager.Resolve<IMesh>(resourceId));
+                    Meshes.Add(mesh, id,
+                        new ManualResourceHandler<IGeometry>(resourceId, new MeshGeometry(resourceId, mesh)));
                     ++index;
                 }
             }
             {
                 var index = 0;
+                var prefabs = new Dictionary<Node, EntityPrefab>();
                 foreach (var node in modelRoot.LogicalNodes)
                 {
                     var id = string.IsNullOrWhiteSpace(node.Name) ? "@" + index : node.Name;
+                    while (Entities.ContainsId(id)) id += "_";
                     var resourceId = new ResourceId(container, id);
                     var prefab = new EntityPrefab(resourceId);
                     prefab.LocalMatrix = node.LocalMatrix;
-                    //var localTransform = node.LocalTransform;
-                    //prefab.Position = localTransform.Translation;
-                    //prefab.Rotation = localTransform.Rotation;
-                    //prefab.Scale = localTransform.Scale;
-                    //prefab.WorldMatrix = node.WorldMatrix;
-
-                    //var t = new Transform(prefab.Position, prefab.Rotation, prefab.Scale);
-                    //Matrix4x4 m;
-                    //t.EvaluateMatrix(out m);
-
-                    _entities.Add(node, prefab);
-                    _entityById.Add(id, prefab);
-                    Func<Task<EntityPrefab>> factory = () => Task.FromResult(prefab);
-                    manager.ResolveOrAdd(resourceId, factory);
+                    Entities.Add(node, id, new ManualResourceHandler<EntityPrefab>(resourceId, prefab));
+                    prefabs.Add(node, prefab);
 
                     if (node.Mesh != null)
                     {
-                        prefab.Mesh = Meshes[node.Mesh];
+                        prefab.Mesh = context.Resolve<IMesh>(Meshes[node.Mesh].Id);
 
                         foreach (var meshPrimitive in node.Mesh.Primitives)
-                            prefab.Materials.Add(Materials[meshPrimitive.Material]);
+                            prefab.Materials.Add(context.Resolve<IMaterial>(Materials[meshPrimitive.Material].Id));
                     }
 
                     ++index;
                 }
 
-                foreach (var kv in _entities)
+                foreach (var kv in Entities)
                 foreach (var child in kv.Key.VisualChildren)
-                    kv.Value.Children.Add(_entities[child]);
+                    kv.Value.GetAsync().Result.Children.Add(prefabs[child]);
 
-                foreach (var prefabKV in _entities)
-                {
-                    //if (prefabKV.Key.VisualParent != null)
-                    //{
-                    //    Matrix4x4 parentInv;
-                    //    Matrix4x4.Invert(prefabKV.Key.VisualParent.WorldMatrix, out parentInv);
-                    //    var localM = Matrix4x4.Multiply(prefabKV.Key.WorldMatrix, parentInv);
-
-                    //    var prefab = prefabKV.Value;
-                    //    Vector3 scale;
-                    //    Quaternion rot;
-                    //    Vector3 translation;
-                    //    Matrix4x4.Decompose(localM, out scale, out rot, out translation);
-                    //    prefab.Position = translation;
-                    //    prefab.Rotation = rot;
-                    //    prefab.Scale = scale;
-                    //}
-                }
 
                 var rootElements = new List<EntityPrefab>();
                 if (modelRoot.DefaultScene != null)
                     foreach (var child in modelRoot.DefaultScene.VisualChildren)
-                        rootElements.Add(_entities[child]);
+                        rootElements.Add(prefabs[child]);
 
                 if (rootElements.Count == 1)
                     Root = rootElements.First();
                 else
                     Root = new EntityPrefab(new ResourceId(container, null), rootElements);
+
+                Entities.Add(null, null, new ManualResourceHandler<EntityPrefab>(new ResourceId(container), Root));
             }
         }
-
-        public GlTFResourceCollection<Mesh, IResourceHandler<IMesh>> Meshes { get; } =
-            new GlTFResourceCollection<Mesh, IResourceHandler<IMesh>>();
-
-        public GlTFResourceCollection<Texture, IResourceHandler<ITexture>> Textures { get; } =
-            new GlTFResourceCollection<Texture, IResourceHandler<ITexture>>();
-
-        public GlTFResourceCollection<Material, IResourceHandler<IMaterial>> Materials { get; } =
-            new GlTFResourceCollection<Material, IResourceHandler<IMaterial>>();
-
-        public EntityPrefab Root { get; set; }
 
         private Vector4 GetColor(Material material)
         {
@@ -155,14 +159,6 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             if (diffuse != null)
                 return baseColor.Value.Parameter;
             return Vector4.One;
-        }
-
-        public EntityPrefab GetEntity(string id)
-        {
-            EntityPrefab res;
-            if (!_entityById.TryGetValue(id, out res))
-                return null;
-            return res;
         }
     }
 }

@@ -15,6 +15,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
     [EcsInject]
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem
     {
+        private readonly Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
         private readonly EcsFilter<WorldTransform, Model> _staticModels = null;
         private readonly StepContext _stepContext;
 
@@ -29,7 +30,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private TaskCompletionSource<GraphicsDevice> _graphicsDeviceTask = new TaskCompletionSource<GraphicsDevice>();
         private ResourceLayout _meshLayout;
         private ResourceSet _meshSet;
-        private readonly Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
         private DeviceBuffer _projectionBuffer;
         private ResourceFactory _resourceFactory;
 
@@ -71,7 +71,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public void Initialize()
         {
             _camera = new Camera(Window.Width, Window.Height);
-            _defaultTexture = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Avocado_baseColor.png");
+            _defaultTexture = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Diffuse.png");
         }
 
         public void Destroy()

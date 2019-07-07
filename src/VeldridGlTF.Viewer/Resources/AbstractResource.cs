@@ -11,7 +11,7 @@
 
         public override string ToString()
         {
-            return $"{Id.Container}/{Id.Id}<{GetType().Name}>";
+            return $"{Id.Path}#{Id.Id}<{GetType().Name}>";
         }
     }
 }

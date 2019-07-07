@@ -2,6 +2,6 @@
 {
     public interface IResourceContainer
     {
-        IResourceHandler Resolve(ResourceId id);
+        IResourceHandler<T> Resolve<T>(ResourceId id);
     }
 }

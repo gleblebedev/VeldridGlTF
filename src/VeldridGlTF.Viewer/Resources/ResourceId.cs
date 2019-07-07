@@ -4,21 +4,27 @@ namespace VeldridGlTF.Viewer.Resources
 {
     public struct ResourceId : IEquatable<ResourceId>
     {
-        public static readonly ResourceId Null = new ResourceId(null, null);
+        public static readonly ResourceId Null = default;
 
-        public ResourceId(string container, string id)
+        public ResourceId(string path)
         {
-            Container = container;
+            Path = path;
+            Id = null;
+        }
+
+        public ResourceId(string path, string id)
+        {
+            Path = path;
             Id = id;
         }
 
-        public string Container { get; }
+        public string Path { get; }
 
         public string Id { get; }
 
         public bool Equals(ResourceId other)
         {
-            return string.Equals(Container, other.Container) && string.Equals(Id, other.Id);
+            return string.Equals(Path, other.Path) && string.Equals(Id, other.Id);
         }
 
         public override bool Equals(object obj)
@@ -30,7 +36,7 @@ namespace VeldridGlTF.Viewer.Resources
         {
             unchecked
             {
-                return ((Container != null ? Container.GetHashCode() : 0) * 397) ^ (Id != null ? Id.GetHashCode() : 0);
+                return ((Path != null ? Path.GetHashCode() : 0) * 397) ^ (Id != null ? Id.GetHashCode() : 0);
             }
         }
 
@@ -46,7 +52,8 @@ namespace VeldridGlTF.Viewer.Resources
 
         public override string ToString()
         {
-            return $"{Container}/{Id}";
+            if (Id == null) return $"{Path}";
+            return $"{Path}#{Id}";
         }
     }
 }

@@ -8,7 +8,7 @@ using PrimitiveTopology = Veldrid.PrimitiveTopology;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
-    public class MeshLoader : IResourceLoader<IMesh>
+    public class MeshLoader : ResourceLoader<IMesh>
     {
         private readonly VeldridRenderSystem _renderSystem;
 
@@ -17,14 +17,13 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             _renderSystem = renderSystem;
         }
 
-        public async Task<IMesh> LoadAsync(ResourceManager manager, ResourceId id)
+        public override async Task<IMesh> LoadAsync(ResourceContext context)
         {
-            var geometry = await manager.Resolve<IGeometry>(id).GetAsyncOrDefault();
-            if (geometry == null) return null;
+            var geometry = await context.ResolveDependencyAsync<IGeometry>(context.Id);
 
             var indices = new List<ushort>();
             var memory = new VertexBufferStream(1024);
-            var Primitives = new List<RenderPrimitive>(geometry.Primitives.Count);
+            var primitives = new List<RenderPrimitive>(geometry.Primitives.Count);
             foreach (var meshPrimitive in geometry.Primitives)
             {
                 var map = new Dictionary<int, ushort>();
@@ -38,24 +37,24 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                     indices.Add(CopyVertex(index, map, memory, meshPrimitive.Streams, ref numVertices));
 
                 range.Length = (uint) (indices.Count - range.Start);
-                Primitives.Add(range);
+                primitives.Add(range);
             }
 
             var _vertices = memory.ToArray();
             var graphicsDevice = await _renderSystem.GraphicsDevice;
             var factory = await _renderSystem.ResourceFactory;
 
-            var _vertexBuffer =
+            var vertexBuffer =
                 factory.CreateBuffer(new BufferDescription(
                     (uint) _vertices.Length, BufferUsage.VertexBuffer));
-            graphicsDevice.UpdateBuffer(_vertexBuffer, 0, _vertices);
+            graphicsDevice.UpdateBuffer(vertexBuffer, 0, _vertices);
 
-            var _indexBuffer =
+            var indexBuffer =
                 factory.CreateBuffer(new BufferDescription(sizeof(ushort) * (uint) indices.Count,
                     BufferUsage.IndexBuffer));
-            graphicsDevice.UpdateBuffer(_indexBuffer, 0, indices.ToArray());
+            graphicsDevice.UpdateBuffer(indexBuffer, 0, indices.ToArray());
 
-            return new RenderMesh(id, _vertexBuffer, _indexBuffer, Primitives);
+            return new RenderMesh(context.Id, vertexBuffer, indexBuffer, primitives);
         }
 
         private ushort CopyVertex(int originalIndex, Dictionary<int, ushort> map, VertexBufferStream vbStream,

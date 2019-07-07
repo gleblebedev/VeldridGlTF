@@ -5,14 +5,32 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
-    public class ContainerLoader : IResourceLoader<GlTFContainer>
+    public class ContainerLoader : ResourceLoader<IResourceContainer>
     {
-        public Task<GlTFContainer> LoadAsync(ResourceManager manager, ResourceId id)
+        private ReadSettings _readSettings;
+
+        public ContainerLoader()
         {
-            if (id.Id != null)
-                throw new ArgumentException("Resource id value should be null", nameof(id));
-            return Task.Run(() => new GlTFContainer(manager, id.Container,
-                ModelRoot.Read(GetType().Assembly.GetManifestResourceStream(id.Container), new ReadSettings())));
+            _readSettings = new ReadSettings();
+        }
+
+        public override async Task<IResourceContainer> LoadAsync(ResourceContext context)
+        {
+            if (context.Id.Id != null)
+                throw new ArgumentException("Resource id value should be null", nameof(context));
+
+            var container = new GlTFContainer();
+            try
+            {
+                await container.ParseFile(context);
+            }
+            catch (Exception ex)
+            {
+                //container.Dispose();
+                throw new ResourceException(context.Id, ex);
+            }
+
+            return container;
         }
     }
 }

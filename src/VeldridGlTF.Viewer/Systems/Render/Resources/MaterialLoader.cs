@@ -4,7 +4,7 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
-    public class MaterialLoader : IResourceLoader<IMaterial>
+    public class MaterialLoader : ResourceLoader<IMaterial>
     {
         private readonly VeldridRenderSystem _renderSystem;
 
@@ -13,10 +13,10 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             _renderSystem = renderSystem;
         }
 
-        public async Task<IMaterial> LoadAsync(ResourceManager manager, ResourceId id)
+        public override async Task<IMaterial> LoadAsync(ResourceContext context)
         {
-            var description = await manager.Resolve<IMaterialDescription>(id).GetAsync();
-            var material = new MaterialResource(id, _renderSystem);
+            var description = await context.ResolveDependencyAsync<IMaterialDescription>(context.Id);
+            var material = new MaterialResource(context.Id, _renderSystem);
             await material.UpdateAsync(description);
             return material;
         }
