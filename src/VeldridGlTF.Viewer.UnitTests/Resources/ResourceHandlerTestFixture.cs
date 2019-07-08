@@ -32,6 +32,7 @@ namespace VeldridGlTF.Viewer1.Resources
             }, null);
 
             Assert.AreEqual(0, values.Count);
+            Assert.AreEqual(TaskStatus.WaitingForActivation, h.Status);
 
             source.SetValue(1);
 
@@ -40,6 +41,7 @@ namespace VeldridGlTF.Viewer1.Resources
 
             source.SetValue(2);
 
+            Assert.AreEqual(TaskStatus.RanToCompletion, h.Status);
             Assert.AreEqual(2, values.Count);
             Assert.True(values[0].IsDisposed);
             Assert.False(values[1].IsDisposed);

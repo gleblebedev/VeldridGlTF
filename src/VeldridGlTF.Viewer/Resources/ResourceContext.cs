@@ -112,7 +112,14 @@ namespace VeldridGlTF.Viewer.Resources
 
         public override void Dispose()
         {
-            Task.ContinueWith(DisposeTaskResult);
+            if (Task.IsCompleted)
+            {
+                DisposeTaskResult(Task);
+            }
+            else
+            {
+                Task.ContinueWith(DisposeTaskResult);
+            }
             _cancellationTokenSource.Cancel();
             base.Dispose();
         }
