@@ -3,6 +3,7 @@ using System.Numerics;
 using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
+using VeldridGlTF.Viewer.Systems.Render;
 
 namespace VeldridGlTF.Viewer.Data
 {
@@ -47,10 +48,9 @@ namespace VeldridGlTF.Viewer.Data
 
             if (Mesh != null)
             {
-                var staticModel = node.AddComponent<Model>();
+                var staticModel = node.AddStaticModel();
                 staticModel.Mesh = Mesh;
-                staticModel.Materials.Clear();
-                foreach (var resourceHandler in Materials) staticModel.Materials.Add(resourceHandler);
+                staticModel.Materials = new MaterialSet(Materials);
             }
 
             foreach (var child in _children) child.Spawn(scene, node);

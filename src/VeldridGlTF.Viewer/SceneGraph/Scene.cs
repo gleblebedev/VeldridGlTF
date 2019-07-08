@@ -1,10 +1,12 @@
 ﻿using Leopotam.Ecs;
+using VeldridGlTF.Viewer.Systems;
 
 namespace VeldridGlTF.Viewer.SceneGraph
 {
     public class Scene : NodeContainer
     {
         private readonly Node.WorldMatrixUpdateQueue _worldMatrixUpdateQueue = new Node.WorldMatrixUpdateQueue();
+        private IRenderSystem _render;
 
         public Scene()
         {
@@ -15,6 +17,12 @@ namespace VeldridGlTF.Viewer.SceneGraph
         public EcsWorld World { get; set; }
 
         public EcsSystems Systems { get; set; }
+
+        public IRenderSystem Render
+        {
+            get { return _render; }
+            set { _render = value; }
+        }
 
         public WorldMatrixToken EnqueueWorldTransformUpdate(Node node)
         {

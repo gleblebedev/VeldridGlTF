@@ -29,12 +29,12 @@ namespace VeldridGlTF.Viewer.Resources
             _loaders.Add(typeof(T), collection);
         }
 
-        public void Register(ResourceLoader<IResourceContainer> loader, params string[] extensions)
+        public void Register(IResourceLoader<IResourceContainer> loader, params string[] extensions)
         {
             _containerCollection.Register(loader, extensions);
         }
 
-        public void Register<T>(ResourceLoader<T> loader)
+        public void Register<T>(IResourceLoader<T> loader)
         {
             _loaders.Add(typeof(T), new ResourceCollection<T>(this, loader));
         }

@@ -29,6 +29,7 @@ namespace VeldridGlTF.Viewer
             _scene.Systems
                 .Add(new LocalToWorldSystem(_scene))
                 .Add(_veldridRenderSystem);
+            _scene.Render = _veldridRenderSystem;
             _scene.Systems.Initialize();
             FileCollection fileCollection;
             if (options.RootFolder != null)

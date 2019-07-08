@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -116,7 +115,7 @@ namespace VeldridGlTF.Viewer1.Resources
             Assert.AreEqual(1, counter);
         }
 
-        class GenAsyncA<T> : ResourceLoader<T>
+        class GenAsyncA<T> : IResourceLoader<T>
         {
             private readonly T _value;
 
@@ -124,13 +123,13 @@ namespace VeldridGlTF.Viewer1.Resources
             {
                 _value = value;
             }
-            public override Task<T> LoadAsync(ResourceContext context)
+            public Task<T> LoadAsync(ResourceContext context)
             {
                 return Task.Run(() => _value);
             }
         }
 
-        class Loader<T> : ResourceLoader<T>
+        class Loader<T> : IResourceLoader<T>
         {
             private readonly Func<ResourceContext, Task<T>> _loader;
 
@@ -138,7 +137,7 @@ namespace VeldridGlTF.Viewer1.Resources
             {
                 _loader = loader;
             }
-            public override Task<T> LoadAsync(ResourceContext context)
+            public Task<T> LoadAsync(ResourceContext context)
             {
                 return _loader(context);
             }

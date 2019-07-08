@@ -8,14 +8,14 @@ namespace VeldridGlTF.Viewer.Resources
     public class ResourceContext : IDisposable
     {
         private readonly List<ResourceHandler> _dependencies;
-        private readonly ResourceManager _manager;
+        private readonly IResourceContainer _resourceContainer;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private bool _isDisposed;
 
-        public ResourceContext(ResourceId id, ResourceManager manager)
+        public ResourceContext(ResourceId id, IResourceContainer resourceContainer)
         {
             Id = id;
-            _manager = manager;
+            _resourceContainer = resourceContainer;
             _dependencies = new List<ResourceHandler>();
             _cancellationTokenSource = new CancellationTokenSource();
         }
@@ -35,6 +35,8 @@ namespace VeldridGlTF.Viewer.Resources
 
         protected void AddDependency<Dependency>(IResourceHandler<Dependency> handler)
         {
+            if (handler == null)
+                return;
             if (_isDisposed) throw new ObjectDisposedException("ResourceContext is disposed");
             handler.ResourceChanged += InvalidateContext;
         }
@@ -53,7 +55,7 @@ namespace VeldridGlTF.Viewer.Resources
         public async Task<Dependency> ResolveDependencyAsync<Dependency>(ResourceId resourceId)
         {
             if (_isDisposed) throw new ObjectDisposedException("ResourceContext is disposed");
-            var handler = _manager.Resolve<Dependency>(resourceId);
+            var handler = _resourceContainer.Resolve<Dependency>(resourceId);
             AddDependency(handler);
             return await handler.GetAsync();
         }
@@ -61,21 +63,27 @@ namespace VeldridGlTF.Viewer.Resources
         public async Task<Dependency> ResolveDependencyAsync<Dependency>(IResourceHandler<Dependency> handler)
         {
             if (_isDisposed) throw new ObjectDisposedException("ResourceContext is disposed");
+            if (handler == null)
+            {
+                return default;
+            }
+
             AddDependency(handler);
             return await handler.GetAsync();
         }
 
         public IResourceHandler<T> Resolve<T>(ResourceId resourceId)
         {
-            return _manager.Resolve<T>(resourceId);
+            return _resourceContainer.Resolve<T>(resourceId);
         }
     }
 
     public class ResourceContext<T> : ResourceContext
     {
-        private readonly ResourceLoader<T> _loader;
+        private readonly IResourceLoader<T> _loader;
+        CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        public ResourceContext(ResourceId id, ResourceManager manager, ResourceLoader<T> loader) : base(id, manager)
+        public ResourceContext(ResourceId id, IResourceContainer resourceContainer, IResourceLoader<T> loader) : base(id, resourceContainer)
         {
             _loader = loader;
         }
@@ -94,9 +102,31 @@ namespace VeldridGlTF.Viewer.Resources
             }
         }
 
+        public CancellationToken CancellationToken
+        {
+            get
+            {
+                return _cancellationTokenSource.Token;
+            }
+        }
+
         public override void Dispose()
         {
+            Task.ContinueWith(DisposeTaskResult);
+            _cancellationTokenSource.Cancel();
             base.Dispose();
         }
+
+        private void DisposeTaskResult(Task<T> task)
+        {
+            if (task.IsCompleted)
+            {
+                var disposable = task.Result as IDisposable;
+                if (disposable != null)
+                {
+                    disposable.Dispose();
+                }
+            }
+        }
     }
-}
+} 

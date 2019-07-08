@@ -2,7 +2,7 @@
 
 namespace VeldridGlTF.Viewer.Resources
 {
-    internal class ProxyLoader<T> : ResourceLoader<T>
+    internal class ProxyLoader<T> : IResourceLoader<T>
     {
         private readonly IResourceHandler<IResourceContainer> _containerHandler;
 
@@ -11,7 +11,7 @@ namespace VeldridGlTF.Viewer.Resources
             _containerHandler = containerHandler;
         }
 
-        public override async Task<T> LoadAsync(ResourceContext context)
+        public async Task<T> LoadAsync(ResourceContext context)
         {
             var container = await context.ResolveDependencyAsync(_containerHandler);
             return await context.ResolveDependencyAsync(container.Resolve<T>(context.Id));

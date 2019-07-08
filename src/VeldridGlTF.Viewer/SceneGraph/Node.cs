@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Leopotam.Ecs;
+using VeldridGlTF.Viewer.Components;
 
 namespace VeldridGlTF.Viewer.SceneGraph
 {
@@ -189,6 +190,11 @@ namespace VeldridGlTF.Viewer.SceneGraph
                 _queue.Add(node);
                 return new WorldMatrixToken(_queue.Count);
             }
+        }
+
+        public IStaticModel AddStaticModel()
+        {
+            return _scene.Render.AddStaticModel(_entity);
         }
     }
 }

@@ -14,12 +14,12 @@ namespace VeldridGlTF.Viewer.Resources
 
     internal class ResourceCollection<T> : ResourceCollection, IResourceCollection<T>
     {
-        private readonly ResourceLoader<T> _loader;
+        private readonly IResourceLoader<T> _loader;
 
         private readonly ConcurrentDictionary<ResourceId, ResourceHandler<T>> _resources =
             new ConcurrentDictionary<ResourceId, ResourceHandler<T>>();
 
-        public ResourceCollection(ResourceManager resourceManager, ResourceLoader<T> loader) : base(resourceManager)
+        public ResourceCollection(ResourceManager resourceManager, IResourceLoader<T> loader) : base(resourceManager)
         {
             _loader = loader;
         }

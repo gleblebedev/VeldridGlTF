@@ -13,10 +13,10 @@ using VeldridGlTF.Viewer.Systems.Render.Resources;
 namespace VeldridGlTF.Viewer.Systems.Render
 {
     [EcsInject]
-    public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem
+    public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IRenderSystem
     {
         private readonly Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
-        private readonly EcsFilter<WorldTransform, Model> _staticModels = null;
+        private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
         private readonly StepContext _stepContext;
 
         protected Camera _camera;
@@ -27,14 +27,13 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private ResourceLayout _environmentLayout;
         private ResourceSet _environmentSet;
         private GraphicsDevice _graphicsDevice;
-        private TaskCompletionSource<GraphicsDevice> _graphicsDeviceTask = new TaskCompletionSource<GraphicsDevice>();
+        private ManualResourceHandler<GraphicsDevice> _graphicsDeviceTask = new ManualResourceHandler<GraphicsDevice>(ResourceId.Null);
         private ResourceLayout _meshLayout;
         private ResourceSet _meshSet;
         private DeviceBuffer _projectionBuffer;
         private ResourceFactory _resourceFactory;
 
-        private TaskCompletionSource<ResourceFactory>
-            _resourceFactoryTask = new TaskCompletionSource<ResourceFactory>();
+        private ManualResourceHandler<ResourceFactory> _resourceFactoryTask = new ManualResourceHandler<ResourceFactory>(ResourceId.Null);
 
         private ShaderManager _shaderManager;
         private Texture _surfaceTexture;
@@ -54,9 +53,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             Window.GraphicsDeviceDestroyed += OnDeviceDestroyed;
         }
 
-        public Task<GraphicsDevice> GraphicsDevice => _graphicsDeviceTask.Task;
+        public IResourceHandler<GraphicsDevice> GraphicsDevice => _graphicsDeviceTask;
 
-        public Task<ResourceFactory> ResourceFactory => _resourceFactoryTask.Task;
+        public IResourceHandler<ResourceFactory> ResourceFactory => _resourceFactoryTask;
 
         public Swapchain MainSwapchain { get; private set; }
 
@@ -119,22 +118,17 @@ namespace VeldridGlTF.Viewer.Systems.Render
             {
                 var worldTransform = _staticModels.Components1[modelIndex];
                 var model = _staticModels.Components2[modelIndex];
-                if (model.RenderContext as RenderContext == null)
-                    model.RenderContext = new RenderContext(this, model);
-                var context = (RenderContext) model.RenderContext;
-                context.Update();
-                RenderMesh renderMesh;
-                if (model.Mesh.TryGetAs(out renderMesh) && renderMesh != null)
-                {
-                    _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
 
-                    _cl.SetIndexBuffer(renderMesh._indexBuffer, IndexFormat.UInt16);
-                    for (var index = 0; index < context.DrawCalls.Count; index++)
+                if (model.GetRenderCache().TryGet(out var renderCache) && renderCache != null)
+                {
+                    _cl.SetIndexBuffer(renderCache.IndexBuffer, IndexFormat.UInt16);
+                    _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
+                    for (var index = 0; index < renderCache.DrawCalls.Count; index++)
                     {
-                        var drawCall = context.DrawCalls[index];
+                        var drawCall = renderCache.DrawCalls[index];
                         if (drawCall != null)
                         {
-                            var indexRange = renderMesh.Primitives[index];
+                            var indexRange = renderCache.DrawCalls[index].Primitive;
                             var material = drawCall.Material;
                             if (material != null)
                             {
@@ -142,7 +136,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                                 _cl.SetGraphicsResourceSet(0, _environmentSet);
                                 _cl.SetGraphicsResourceSet(1, _meshSet);
                                 _cl.SetGraphicsResourceSet(2, material.ResourceSet);
-                                _cl.SetVertexBuffer(0, renderMesh._vertexBuffer, indexRange.DataOffset);
+                                _cl.SetVertexBuffer(0, renderCache.VertexBuffer, indexRange.DataOffset);
                                 material.UpdateBuffer(_cl, MaterialBuffer);
                                 _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
                             }
@@ -192,8 +186,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _graphicsDevice = gd;
             _resourceFactory = factory;
             MainSwapchain = sc;
-            _graphicsDeviceTask.SetResult(gd);
-            _resourceFactoryTask.SetResult(factory);
+            _graphicsDeviceTask.SetValue(gd);
+            _resourceFactoryTask.SetValue(factory);
             CreateResources(factory);
             CreateSwapchainResources(factory);
         }
@@ -288,8 +282,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 _resourceFactoryTask.SetException(new Exception("Resource factory wasn't created."));
 
             MainSwapchain = null;
-            _graphicsDeviceTask = new TaskCompletionSource<GraphicsDevice>();
-            _resourceFactoryTask = new TaskCompletionSource<ResourceFactory>();
+            _graphicsDeviceTask.Reset();
+            _resourceFactoryTask.Reset();
         }
 
         protected virtual string GetTitle()
@@ -312,6 +306,13 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 _resourceFactory.CreateBuffer(
                     new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             return materialBuffer;
+        }
+
+        public IStaticModel AddStaticModel(EcsEntity entity)
+        {
+            var model = _world.AddComponent<StaticModel>(entity);
+            model.RenderSystem = this;
+            return model;
         }
     }
 }

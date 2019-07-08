@@ -1,6 +1,8 @@
-﻿namespace VeldridGlTF.Viewer.Resources
+﻿using System;
+
+namespace VeldridGlTF.Viewer.Resources
 {
-    public class AbstractResource
+    public class AbstractResource: IDisposable
     {
         public AbstractResource(ResourceId id)
         {
@@ -12,6 +14,11 @@
         public override string ToString()
         {
             return $"{Id.Path}#{Id.Id}<{GetType().Name}>";
+        }
+
+        public virtual void Dispose()
+        {
+            
         }
     }
 }

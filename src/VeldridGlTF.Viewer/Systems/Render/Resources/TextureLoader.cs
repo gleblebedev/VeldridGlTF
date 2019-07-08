@@ -5,7 +5,7 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
-    public class TextureLoader : ResourceLoader<ITexture>
+    public class TextureLoader : IResourceLoader<ITexture>
     {
         private readonly VeldridRenderSystem _renderSystem;
 
@@ -14,11 +14,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             _renderSystem = renderSystem;
         }
 
-        public override async Task<ITexture> LoadAsync(ResourceContext context)
+        public async Task<ITexture> LoadAsync(ResourceContext context)
         {
             var image = await context.ResolveDependencyAsync<IImage>(context.Id);
-            var graphicsDevice = await _renderSystem.GraphicsDevice;
-            var resourceFactory = await _renderSystem.ResourceFactory;
+            var graphicsDevice = await context.ResolveDependencyAsync(_renderSystem.GraphicsDevice);
+            var resourceFactory = await context.ResolveDependencyAsync(_renderSystem.ResourceFactory);
             using (var stream = image.Open())
             {
                 var deviceTexture = new ImageSharpTexture(stream).CreateDeviceTexture(graphicsDevice, resourceFactory);

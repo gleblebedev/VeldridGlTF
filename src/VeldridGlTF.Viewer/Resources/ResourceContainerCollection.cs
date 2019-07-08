@@ -10,8 +10,8 @@ namespace VeldridGlTF.Viewer.Resources
         private readonly ConcurrentDictionary<string, ResourceHandler<IResourceContainer>> _containers =
             new ConcurrentDictionary<string, ResourceHandler<IResourceContainer>>();
 
-        private readonly Dictionary<string, ResourceLoader<IResourceContainer>> _loaderByExtension =
-            new Dictionary<string, ResourceLoader<IResourceContainer>>();
+        private readonly Dictionary<string, IResourceLoader<IResourceContainer>> _loaderByExtension =
+            new Dictionary<string, IResourceLoader<IResourceContainer>>();
 
         private readonly ResourceManager _manager;
 
@@ -50,13 +50,13 @@ namespace VeldridGlTF.Viewer.Resources
 
         private ResourceHandler<IResourceContainer> CreateConainer(string url)
         {
-            ResourceLoader<IResourceContainer> loader;
+            IResourceLoader<IResourceContainer> loader;
             if (!_loaderByExtension.TryGetValue(Path.GetExtension(url).ToLower(), out loader)) return null;
 
             return new ResourceHandler<IResourceContainer>(new ResourceId(url), loader, _manager);
         }
 
-        public void Register(ResourceLoader<IResourceContainer> loader, string[] extensions)
+        public void Register(IResourceLoader<IResourceContainer> loader, string[] extensions)
         {
             if (extensions == null || extensions.Length == 0)
                 throw new ArgumentException("Empty extensions collection", nameof(extensions));

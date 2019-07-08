@@ -76,5 +76,13 @@ namespace VeldridGlTF.Viewer.Resources
         {
             return Id.ToString();
         }
+
+        public void Reset()
+        {
+            if (_taskSource == null) throw CreateObjectDisposedException();
+            _taskSource.TrySetCanceled();
+            _taskSource = new TaskCompletionSource<T>();
+            ResourceChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

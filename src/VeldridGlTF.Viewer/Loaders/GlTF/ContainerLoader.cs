@@ -5,7 +5,7 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
-    public class ContainerLoader : ResourceLoader<IResourceContainer>
+    public class ContainerLoader : IResourceLoader<IResourceContainer>
     {
         private ReadSettings _readSettings;
 
@@ -14,7 +14,7 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             _readSettings = new ReadSettings();
         }
 
-        public override async Task<IResourceContainer> LoadAsync(ResourceContext context)
+        public async Task<IResourceContainer> LoadAsync(ResourceContext context)
         {
             if (context.Id.Id != null)
                 throw new ArgumentException("Resource id value should be null", nameof(context));

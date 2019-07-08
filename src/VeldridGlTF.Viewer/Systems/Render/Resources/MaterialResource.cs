@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using Veldrid;
 using VeldridGlTF.Viewer.Data;
@@ -9,8 +10,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
     public class MaterialResource : AbstractResource, IMaterial
     {
         private readonly VeldridRenderSystem _renderSystem;
-        private Vector4 _baseColor;
+        public Vector4 _baseColor;
         private ResourceSet _resourceSet;
+        private IResourceHandler<ITexture> _diffuseTexture;
 
 
         public MaterialResource(ResourceId id, VeldridRenderSystem renderSystem) : base(id)
@@ -28,28 +30,10 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             }
         }
 
-        public IResourceHandler<ITexture> DiffuseTexture { get; private set; }
-
-        public Task SetDiffuseTextureAsync(IResourceHandler<ITexture> texture)
+        public IResourceHandler<ITexture> DiffuseTexture 
         {
-            DiffuseTexture = texture;
-            if (ResourceSet == null) return Task.CompletedTask;
-            return Task.CompletedTask;
-        }
-
-        public async Task UpdateAsync(IMaterialDescription description)
-        {
-            DiffuseTexture = description.DiffuseTexture;
-            _baseColor = description.BaseColor;
-            var diffuse = (TextureResource) await DiffuseTexture.GetAsyncOrDefault();
-            var resourceFactory = await _renderSystem.ResourceFactory;
-            var graphicsDevice = await _renderSystem.GraphicsDevice;
-            ResourceSet = resourceFactory.CreateResourceSet(new ResourceSetDescription(
-                _renderSystem.MaterialLayout,
-                diffuse?.View ?? _renderSystem.DefaultTextureView,
-                graphicsDevice.Aniso4xSampler,
-                _renderSystem.MaterialBuffer
-            ));
+            get { return _diffuseTexture; }
+            set { _diffuseTexture = value; }
         }
 
         public void UpdateBuffer(CommandList _cl, DeviceBuffer materialBuffer)

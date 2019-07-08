@@ -8,7 +8,7 @@ using PrimitiveTopology = Veldrid.PrimitiveTopology;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
-    public class MeshLoader : ResourceLoader<IMesh>
+    public class MeshLoader : IResourceLoader<IMesh>
     {
         private readonly VeldridRenderSystem _renderSystem;
 
@@ -17,7 +17,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             _renderSystem = renderSystem;
         }
 
-        public override async Task<IMesh> LoadAsync(ResourceContext context)
+        public async Task<IMesh> LoadAsync(ResourceContext context)
         {
             var geometry = await context.ResolveDependencyAsync<IGeometry>(context.Id);
 
@@ -41,8 +41,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             }
 
             var _vertices = memory.ToArray();
-            var graphicsDevice = await _renderSystem.GraphicsDevice;
-            var factory = await _renderSystem.ResourceFactory;
+            var graphicsDevice = await context.ResolveDependencyAsync(_renderSystem.GraphicsDevice);
+            var factory = await context.ResolveDependencyAsync(_renderSystem.ResourceFactory);
 
             var vertexBuffer =
                 factory.CreateBuffer(new BufferDescription(

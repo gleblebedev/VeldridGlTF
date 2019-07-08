@@ -30,17 +30,35 @@ namespace VeldridGlTF.Viewer.Resources
     public class ResourceHandler<T> : ResourceHandler, IResourceHandler<T>
     {
         private readonly object _gate;
-        private readonly ResourceLoader<T> _loader;
-        private readonly ResourceManager _manager;
+        private readonly IResourceLoader<T> _loader;
+        private readonly IResourceContainer _resourceContainer;
         private ResourceContext<T> _context;
 
-        public ResourceHandler(ResourceId id, ResourceLoader<T> loader, ResourceManager manager) : base(id)
+        public ResourceHandler(ResourceId id, IResourceLoader<T> loader, IResourceContainer resourceContainer) : base(id)
         {
             _loader = loader;
-            _manager = manager;
+            _resourceContainer = resourceContainer;
             _gate = new object();
         }
 
+        public ResourceHandler(ResourceId id, Func<ResourceContext,Task<T>> loader, IResourceContainer resourceContainer) : this(id, new Loader(loader), resourceContainer)
+        {
+        }
+
+        private class Loader: IResourceLoader<T>
+        {
+            private readonly Func<ResourceContext, Task<T>> _func;
+
+            public Loader(Func<ResourceContext, Task<T>> func)
+            {
+                _func = func;
+            }
+
+            public Task<T> LoadAsync(ResourceContext context)
+            {
+                return _func(context);
+            }
+        }
         private ResourceContext<T> Context
         {
             get => _context;
@@ -75,7 +93,7 @@ namespace VeldridGlTF.Viewer.Resources
                 {
                     if (_context == null)
                     {
-                        Context = new ResourceContext<T>(Id, _manager, _loader);
+                        Context = new ResourceContext<T>(Id, _resourceContainer, _loader);
                         return _context.Task;
                     }
                 }
