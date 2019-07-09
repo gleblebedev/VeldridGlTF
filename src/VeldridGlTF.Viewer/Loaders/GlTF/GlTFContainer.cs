@@ -65,45 +65,18 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             var container = context.Id.Path;
 
             {
-                var index = 0;
-                foreach (var texture in modelRoot.LogicalTextures)
-                {
-                    var id = string.IsNullOrWhiteSpace(texture.Name) ? "@" + index : texture.Name;
-                    var resourceId = new ResourceId(container, id);
-                    Textures.Add(texture, id,
-                        new ManualResourceHandler<IImage>(resourceId, new EmbeddedImage(resourceId, texture)));
-                    ++index;
-                }
+                RegisterTextures(modelRoot, container);
             }
 
             {
-                var index = 0;
-                var m = new HashSet<Material>(modelRoot.LogicalMaterials);
-                Debug.WriteLine("Unique materials: " + m.Count + " of " + modelRoot.LogicalMaterials.Count);
-                foreach (var material in modelRoot.LogicalMaterials)
-                {
-                    var id = string.IsNullOrWhiteSpace(material.Name) ? "@" + index : material.Name;
-                    while (Materials.ContainsId(id)) id += "_";
-                    var resourceId = new ResourceId(container, id);
-                    var result = new MaterialDescription(resourceId);
-                    result.BaseColor = material.GetDiffuseColor(Vector4.One);
-                    var resourceHandler = Textures[material.GetDiffuseTexture()];
-                    if (resourceHandler != null) result.DiffuseTexture = context.Resolve<ITexture>(resourceHandler.Id);
+                RegisterAnimations(modelRoot, container);
+            }
 
-                    Materials.Add(material, id, new ManualResourceHandler<IMaterialDescription>(resourceId, result));
-                    ++index;
-                }
+            {
+                RegisterMaterials(context, modelRoot, container);
             }
             {
-                var index = 0;
-                foreach (var mesh in modelRoot.LogicalMeshes)
-                {
-                    var id = string.IsNullOrWhiteSpace(mesh.Name) ? "@" + index : mesh.Name;
-                    var resourceId = new ResourceId(container, id);
-                    Meshes.Add(mesh, id,
-                        new ManualResourceHandler<IGeometry>(resourceId, new MeshGeometry(resourceId, mesh)));
-                    ++index;
-                }
+                RegisterMeshes(modelRoot, container);
             }
             {
                 var index = 0;
@@ -125,7 +98,6 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                         foreach (var meshPrimitive in node.Mesh.Primitives)
                             prefab.Materials.Add(context.Resolve<IMaterial>(Materials[meshPrimitive.Material].Id));
                     }
-
                     ++index;
                 }
 
@@ -145,6 +117,63 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                     Root = new EntityPrefab(new ResourceId(container, null), rootElements);
 
                 Entities.Add(null, null, new ManualResourceHandler<EntityPrefab>(new ResourceId(container), Root));
+            }
+        }
+
+        private void RegisterMeshes(ModelRoot modelRoot, string container)
+        {
+            var index = 0;
+            foreach (var mesh in modelRoot.LogicalMeshes)
+            {
+                var id = string.IsNullOrWhiteSpace(mesh.Name) ? "@" + index : mesh.Name;
+                var resourceId = new ResourceId(container, id);
+                Meshes.Add(mesh, id,
+                    new ManualResourceHandler<IGeometry>(resourceId, new MeshGeometry(resourceId, mesh)));
+                ++index;
+            }
+        }
+
+        private void RegisterMaterials(ResourceContext context, ModelRoot modelRoot, string container)
+        {
+            var index = 0;
+            var m = new HashSet<Material>(modelRoot.LogicalMaterials);
+            Debug.WriteLine("Unique materials: " + m.Count + " of " + modelRoot.LogicalMaterials.Count);
+            foreach (var material in modelRoot.LogicalMaterials)
+            {
+                var id = string.IsNullOrWhiteSpace(material.Name) ? "@" + index : material.Name;
+                while (Materials.ContainsId(id)) id += "_";
+                var resourceId = new ResourceId(container, id);
+                var result = new MaterialDescription(resourceId);
+                result.BaseColor = material.GetDiffuseColor(Vector4.One);
+                var resourceHandler = Textures[material.GetDiffuseTexture()];
+                if (resourceHandler != null) result.DiffuseTexture = context.Resolve<ITexture>(resourceHandler.Id);
+
+                Materials.Add(material, id, new ManualResourceHandler<IMaterialDescription>(resourceId, result));
+                ++index;
+            }
+        }
+
+        private void RegisterTextures(ModelRoot modelRoot, string container)
+        {
+            var index = 0;
+            foreach (var texture in modelRoot.LogicalTextures)
+            {
+                var id = string.IsNullOrWhiteSpace(texture.Name) ? "@" + index : texture.Name;
+                var resourceId = new ResourceId(container, id);
+                Textures.Add(texture, id,
+                    new ManualResourceHandler<IImage>(resourceId, new EmbeddedImage(resourceId, texture)));
+                ++index;
+            }
+        }
+
+        private static void RegisterAnimations(ModelRoot modelRoot, string container)
+        {
+            var index = 0;
+            foreach (var animnation in modelRoot.LogicalAnimations)
+            {
+                var id = string.IsNullOrWhiteSpace(animnation.Name) ? "@" + index : animnation.Name;
+                var resourceId = new ResourceId(container, id);
+                ++index;
             }
         }
 

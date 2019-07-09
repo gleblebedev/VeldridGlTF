@@ -1,27 +1,9 @@
-[submodule "src/modules/veldrid"]
-	path = src/modules/veldrid
-	url = https://github.com/mellinoe/veldrid.git
 [submodule "src/modules/SharpGLTF"]
 	path = src/modules/SharpGLTF
 	url = https://github.com/VPenades/SharpGLTF
 [submodule "src/modules/glTF-Sample-Models"]
 	path = src/modules/glTF-Sample-Models
 	url = https://github.com/KhronosGroup/glTF-Sample-Models.git
-[submodule "src/modules/veldrid-samples"]
-	path = src/modules/veldrid-samples
-	url = https://github.com/mellinoe/veldrid-samples.git
-[submodule "src/modules/ShaderGen"]
-	path = src/modules/ShaderGen
-	url = https://github.com/mellinoe/ShaderGen.git
-[submodule "src/modules/veldrid-spirv"]
-	path = src/modules/veldrid-spirv
-	url = https://github.com/mellinoe/veldrid-spirv
-[submodule "src/modules/Veldrid.TinyDemo"]
-	path = src/modules/Veldrid.TinyDemo
-	url = https://github.com/mellinoe/Veldrid.TinyDemo
 [submodule "src/modules/ecs"]
 	path = src/modules/ecs
 	url = https://github.com/Leopotam/ecs.git
-[submodule "src/modules/nativelibraryloader"]
-	path = src/modules/nativelibraryloader
-	url = https://github.com/mellinoe/nativelibraryloader.git
