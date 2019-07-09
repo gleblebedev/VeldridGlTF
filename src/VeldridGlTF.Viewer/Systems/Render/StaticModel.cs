@@ -73,10 +73,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 var material = materials[index];
                 if (material != null)
                 {
-                    var shaderKey = new ShaderKey {VertexLayout = indexRange.Elements};
+                    var shaderKey = new ShaderKey();
+                    shaderKey.SetLayout(indexRange.Elements);
+                    if (shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "NORMAL"))
+                    {
+                        shaderKey.Flags |= ShaderFlag.HAS_DIFFUSE_MAP;
+                    }
                     if (material.DiffuseTexture != null &&
                         shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "TEXCOORD_0"))
-                        shaderKey.Flags |= ShaderFlag.DiffuseMap;
+                        shaderKey.Flags |= ShaderFlag.HAS_DIFFUSE_MAP;
                     var pipeline = RenderSystem.GetPipeline(new PipelineKey
                     {
                         Shader = shaderKey,

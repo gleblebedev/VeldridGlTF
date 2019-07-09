@@ -32,7 +32,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 
 #line 14 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
-            if (ShaderKey.IsFlagSet(ShaderFlag.DiffuseMap))
+            if (ShaderKey.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP))
             {
 #line default
 #line hidden
@@ -61,7 +61,7 @@ void main()
 
 #line 35 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
-            if (ShaderKey.IsFlagSet(ShaderFlag.DiffuseMap))
+            if (ShaderKey.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP))
             {
 #line default
 #line hidden

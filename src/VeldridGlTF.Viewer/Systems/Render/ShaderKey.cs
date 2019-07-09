@@ -46,5 +46,31 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             return flag == (Flags & flag);
         }
+
+        public void SetLayout(RenderVertexLayout layout)
+        {
+            VertexLayout = layout;
+            foreach (var element in VertexLayout.VertexLayoutDescription.Elements)
+            {
+                switch (element.Name)
+                {
+                    case "NORMAL":
+                        Flags |= ShaderFlag.HAS_NORMALS;
+                        break;
+                    case "TANGENT":
+                        Flags |= ShaderFlag.HAS_TANGENTS;
+                        break;
+                    case "TEXCOORD_0":
+                        Flags |= ShaderFlag.HAS_UV_SET1;
+                        break;
+                    case "TEXCOORD_1":
+                        Flags |= ShaderFlag.HAS_UV_SET2;
+                        break;
+                    case "COLOR_0":
+                        Flags |= ShaderFlag.HAS_VERTEX_COLOR;
+                        break;
+                }
+            }
+        }
     }
 }
