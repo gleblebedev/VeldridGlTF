@@ -1,48 +1,134 @@
 ﻿using System;
+using System.Collections.Generic;
+using SharpDX.Direct3D11;
 using Veldrid;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 {
     public class DefaultShaderGenerator : IShaderGenerator
     {
-        public string GetVertexShader(ShaderKey key)
+        private readonly ShaderKey _shaderKey;
+        private IList<VaryingDescription> _varyings = new List<VaryingDescription>();
+
+        public DefaultShaderGenerator(ShaderKey shaderKey)
         {
-            return new VertexShader(key).TransformText();
+            _shaderKey = shaderKey;
+            if (_shaderKey.IsFlagSet(ShaderFlag.HAS_NORMALS))
+            {
+
+                if (_shaderKey.IsFlagSet(ShaderFlag.HAS_TANGENTS))
+                {
+                    _varyings.Add(TBN = new VaryingDescription("v_TBN", VaryingFormat.Mat3));
+                }
+                else
+                {
+                    _varyings.Add(Normal = new VaryingDescription("v_NORMAL", VaryingFormat.Float3));
+                }
+            }
+            if (_shaderKey.IsFlagSet(ShaderFlag.HAS_UV_SET1))
+            {
+                _varyings.Add(TexCoord0 = new VaryingDescription("v_TEXCOORD_0", VaryingFormat.Float2));
+            }
+            if (_shaderKey.IsFlagSet(ShaderFlag.HAS_UV_SET2))
+            {
+                _varyings.Add(TexCoord1 = new VaryingDescription("v_TEXCOORD_1", VaryingFormat.Float2));
+            }
+
+            int location = 0;
+            foreach (var varying in _varyings)
+            {
+                varying.Location = location;
+                location += GetLocationSize(varying);
+            }
         }
 
-        public string GetFragmentShader(ShaderKey key)
+        private int GetLocationSize(VaryingDescription varying)
         {
-            return new FragmentShader(key).TransformText();
+            switch (varying.Format)
+            {
+                case VaryingFormat.Mat3:
+                    return 3;
+                default:
+                    return 1;
+            }
         }
 
-        public AbstractShaderKey GetShaderKey(PipelineKey pipelineKey)
+        public VaryingDescription Normal { get; set; }
+        public VaryingDescription TBN { get; set; }
+
+        public VaryingDescription TexCoord0 { get; set; }
+
+        public VaryingDescription TexCoord1 { get; set; }
+
+
+        public IList<VaryingDescription> Varyings
         {
-            throw new NotImplementedException();
+            get { return _varyings; }
+        }
+
+        public IList<VertexElementDescription> VertexElements
+        {
+            get { return _shaderKey.VertexLayout.VertexLayoutDescription.Elements; }
+        }
+
+        public bool IsFlagSet(ShaderFlag flag)
+        {
+            return _shaderKey.IsFlagSet(flag);
+        }
+
+        public string GetVertexShader()
+        {
+            return new VertexShader(this).TransformText();
+        }
+
+        public string GetFragmentShader()
+        {
+            return new FragmentShader(this).TransformText();
         }
     }
 
     partial class FragmentShader
     {
-        public FragmentShader(ShaderKey key)
+        public FragmentShader(DefaultShaderGenerator key)
         {
-            ShaderKey = key;
+            Context = key;
         }
 
-        public ShaderKey ShaderKey { get; set; }
+        public DefaultShaderGenerator Context { get; set; }
     }
 
     partial class VertexShader
     {
-        public VertexShader(ShaderKey key)
+        public VertexShader(DefaultShaderGenerator key)
         {
-            ShaderKey = key;
+            Context = key;
         }
 
-        public ShaderKey ShaderKey { get; set; }
+        public DefaultShaderGenerator Context { get; set; }
     }
 
     public static class Glsl
     {
+        public static string NameOf(VaryingFormat format)
+        {
+            switch (format)
+            {
+                case VaryingFormat.Float1:
+                    return "float";
+                case VaryingFormat.Float2:
+                    return "vec2";
+                case VaryingFormat.Float3:
+                    return "vec3";
+                case VaryingFormat.Float4:
+                    return "vec4";
+                case VaryingFormat.Mat3:
+                    return "mat3";
+                case VaryingFormat.Mat4:
+                    return "mat4";
+            }
+            throw new NotImplementedException(format.ToString());
+        }
+
         public static string NameOf(VertexElementFormat format)
         {
             switch (format)

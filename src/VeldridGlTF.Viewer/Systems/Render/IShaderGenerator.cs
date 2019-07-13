@@ -2,7 +2,7 @@
 {
     public interface IShaderGenerator
     {
-        string GetVertexShader(ShaderKey key);
-        string GetFragmentShader(ShaderKey key);
+        string GetVertexShader();
+        string GetFragmentShader();
     }
 }

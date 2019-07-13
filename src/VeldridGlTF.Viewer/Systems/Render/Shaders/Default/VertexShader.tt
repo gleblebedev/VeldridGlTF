@@ -21,36 +21,45 @@ layout(set = 1, binding = 0) uniform WorldBuffer
 };
 
 <#
-	var elements = ShaderKey.VertexLayout.VertexLayoutDescription.Elements;
-	for (int location=0; location<elements.Length; ++location)
+	for (int location=0; location<Context.VertexElements.Count; ++location)
 	{
-		WriteLine(string.Format("layout(location = {0}) in {1} {2};", location, Glsl.NameOf(elements[location].Format), elements[location].Name));
+		WriteLine(string.Format("layout(location = {0}) in {1} {2};", location, Glsl.NameOf(Context.VertexElements[location].Format), Context.VertexElements[location].Name));
 	}
 #>
 <#
-    if (ShaderKey.IsFlagSet(ShaderFlag.DiffuseMap))
+	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
-#>
-layout(location = 0) out vec2 fsin_texCoords;
-<#
+		WriteLine(string.Format("layout(location = {0}) out {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
 	}
 #>
-layout(location = 1) out vec3 fsin_normal;
 
 void main()
 {
     vec4 worldPosition = World * vec4(POSITION, 1);
     vec4 viewPosition = View * worldPosition;
+	mat3 normalMatix = mat3(World);
     vec4 clipPosition = Projection * viewPosition;
     gl_Position = clipPosition;
 <#
-    if (ShaderKey.IsFlagSet(ShaderFlag.DiffuseMap))
+	if (Context.Normal != null)
 	{
-#>
-    fsin_texCoords = TEXCOORD_0;
-<#
+		WriteLine(string.Format("{0} = normalize(normalMatix * NORMAL);", Context.Normal.Name));
+	}
+	if (Context.TBN != null)
+	{
+		WriteLine("vec4 tangent = TANGENT;");
+		WriteLine("vec3 normalW = normalize(normalMatix * NORMAL);");
+		WriteLine("vec3 tangentW = normalize(normalMatix * TANGENT.xyz);");
+		WriteLine("vec3 bitangentW = cross(normalW, tangentW) * TANGENT.w;");
+		WriteLine(string.Format("{0} = mat3(tangentW, bitangentW, normalW);", Context.TBN.Name));
+	}
+	if (Context.TexCoord0 != null)
+	{
+		WriteLine(string.Format("{0} = TEXCOORD_0;", Context.TexCoord0.Name));
+	}
+	if (Context.TexCoord1 != null)
+	{
+		WriteLine(string.Format("{0} = TEXCOORD_1;", Context.TexCoord1.Name));
 	}
 #>
-    mat3 InverseWorld = mat3(World);
-    fsin_normal = normalize(InverseWorld * NORMAL);
 }

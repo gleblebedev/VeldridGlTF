@@ -12,31 +12,42 @@ struct MaterialPropertiesInfo
 
 
 <#
-    if (ShaderKey.IsFlagSet(ShaderFlag.DiffuseMap))
+    if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP))
 	{
 #>
-layout(location = 0) in vec2 fsin_texCoords;
 layout(set = 2, binding = 0) uniform texture2D SurfaceTexture;
 layout(set = 2, binding = 1) uniform sampler SurfaceSampler;
-<#
-	}
-#>
-layout(location = 1) in vec3 fsin_normal;
-layout(location = 0) out vec4 fsout_color;
-
 layout(set = 2, binding = 2) uniform MaterialProperties
 {
     MaterialPropertiesInfo _MaterialProperties;
 };
 
+<#
+	}
+	for (int location=0; location<Context.Varyings.Count; ++location)
+	{
+		WriteLine(string.Format("layout(location = {0}) in {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
+	}
+#>
+layout(location = 0) out vec4 fsout_color;
+
 void main()
 {
-    float light = normalize(fsin_normal).y*0.5+0.5;
+    float light = 1.0f;
 <#
-    if (ShaderKey.IsFlagSet(ShaderFlag.DiffuseMap))
+	
+    if (Context.Normal != null)
+	{
+		WriteLine("light = normalize({0}).y*0.5+0.5;", Context.Normal.Name);
+	}
+    else if (Context.TBN != null)
+	{
+		WriteLine("light = normalize({0}[2]).y*0.5+0.5;", Context.TBN.Name);
+	}
+    if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP) && Context.TexCoord0 != null)
 	{
 #>
-    fsout_color = texture(sampler2D(SurfaceTexture, SurfaceSampler), fsin_texCoords) * vec4(light,light,light,light);
+    fsout_color = texture(sampler2D(SurfaceTexture, SurfaceSampler), <#=Context.TexCoord0.Name #>) * vec4(light,light,light,light);
 <#
 	}
 	else
