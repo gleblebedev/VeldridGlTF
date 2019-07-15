@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Veldrid;
 using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Data.Geometry;
 using VeldridGlTF.Viewer.Resources;
 using PrimitiveTopology = Veldrid.PrimitiveTopology;
 
@@ -21,6 +22,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         {
             var geometry = await context.ResolveDependencyAsync<IGeometry>(context.Id);
 
+            return await CreateMesh(context, geometry);
+        }
+
+        public async Task<IMesh> CreateMesh(ResourceContext context, IGeometry geometry)
+        {
             var indices = new List<ushort>();
             var memory = new VertexBufferStream(1024);
             var primitives = new List<RenderPrimitive>(geometry.Primitives.Count);
@@ -71,7 +77,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             return index;
         }
 
-        private PrimitiveTopology GetPrimitiveTopology(Data.PrimitiveTopology meshPrimitiveTopology)
+        private PrimitiveTopology GetPrimitiveTopology(Data.Geometry.PrimitiveTopology meshPrimitiveTopology)
         {
             return (PrimitiveTopology) (int) meshPrimitiveTopology;
         }

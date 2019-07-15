@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SharpGLTF.Schema2;
 using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Data.Geometry;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
 {

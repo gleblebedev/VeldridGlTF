@@ -132,6 +132,36 @@
       <Name>VeldridGlTF.Viewer</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\assets\Textures\BrightDay1_NegX.dds">
+      <Link>Assets\Textures\BrightDay1_NegX.dds</Link>
+    </AndroidAsset>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\assets\Textures\BrightDay1_NegY.dds">
+      <Link>Assets\Textures\BrightDay1_NegY.dds</Link>
+    </AndroidAsset>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\assets\Textures\BrightDay1_NegZ.dds">
+      <Link>Assets\Textures\BrightDay1_NegZ.dds</Link>
+    </AndroidAsset>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\assets\Textures\BrightDay1_PosX.dds">
+      <Link>Assets\Textures\BrightDay1_PosX.dds</Link>
+    </AndroidAsset>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\assets\Textures\BrightDay1_PosY.dds">
+      <Link>Assets\Textures\BrightDay1_PosY.dds</Link>
+    </AndroidAsset>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="..\assets\Textures\BrightDay1_PosZ.dds">
+      <Link>Assets\Textures\BrightDay1_PosZ.dds</Link>
+    </AndroidAsset>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
     Other similar extension points exist, see Microsoft.Common.targets.

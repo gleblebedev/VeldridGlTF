@@ -8,7 +8,6 @@ using Veldrid.ImageSharp;
 using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
-using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -43,6 +42,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
+        private Texture _environmentTexture;
+        private TextureView _defaultEnvironmentTextureView;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
         {
@@ -226,12 +227,20 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _surfaceTexture = _defaultTexture.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
             _defaultDiffuseTextureView = factory.CreateTextureView(_surfaceTexture);
 
+            _environmentTexture = _defaultTexture.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
+            _defaultEnvironmentTextureView = factory.CreateTextureView(_surfaceTexture);
+
             _environmentLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer,
                         ShaderStages.Vertex),
                     new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex)));
+                        ShaderStages.Vertex),
+                    new ResourceLayoutElementDescription("EnvironmentTexture", ResourceKind.TextureReadOnly,
+                        ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("EnvironmentSampler", ResourceKind.Sampler,
+                        ShaderStages.Fragment)
+                    ));
 
             _meshLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
@@ -252,7 +261,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _environmentSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _environmentLayout,
                 _projectionBuffer,
-                _viewBuffer));
+                _viewBuffer,
+                _defaultEnvironmentTextureView,
+                _graphicsDevice.LinearSampler));
 
             _meshSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _meshLayout,

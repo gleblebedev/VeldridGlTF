@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using SharpGLTF.Schema2;
 using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Data.Geometry;
 using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
