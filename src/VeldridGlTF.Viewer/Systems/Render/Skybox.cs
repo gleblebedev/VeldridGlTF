@@ -73,6 +73,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
 
         }
+
+        public BindableResource TextureView
+        {
+            get { return _cubemapView; }
+        }
+
         public void Dispose()
         {
             

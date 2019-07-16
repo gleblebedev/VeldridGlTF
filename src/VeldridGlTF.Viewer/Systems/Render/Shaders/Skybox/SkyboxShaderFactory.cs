@@ -35,7 +35,7 @@ void main()
     vec4 pos = _Proj * view3x3 * vec4(POSITION, 1.0f);
     gl_Position = vec4(pos.x, pos.y, pos.w, pos.w);
     if (ReverseDepthRange) { gl_Position.z = 0; }
-    fsin_0 = vsin_Position;
+    fsin_0 = POSITION;
 }";
         }
 

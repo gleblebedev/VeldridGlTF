@@ -10,7 +10,7 @@ namespace VeldridGlTF.Viewer.Resources
         private object _gate = new object();
         private DependencyPropertyFlags _flags;
 
-        public DependencyProperty(DependencyPropertyFlags flags = DependencyPropertyFlags.None)
+        public DependencyProperty(DependencyPropertyFlags flags = DependencyPropertyFlags.StickyValue)
         {
             _task = Task.FromResult(default(T));
             _flags = flags;

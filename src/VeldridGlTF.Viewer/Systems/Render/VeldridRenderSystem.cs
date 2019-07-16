@@ -42,8 +42,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
-        private Texture _environmentTexture;
-        private TextureView _defaultEnvironmentTextureView;
         private Skybox _skybox;
         private ImageSharpCubemapTexture _skyTexture;
 
@@ -270,9 +268,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _surfaceTexture = _defaultTexture.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
             _defaultDiffuseTextureView = factory.CreateTextureView(_surfaceTexture);
 
-            _environmentTexture = _defaultTexture.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
-            _defaultEnvironmentTextureView = factory.CreateTextureView(_surfaceTexture);
-
             _environmentLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer,
@@ -301,11 +296,13 @@ namespace VeldridGlTF.Viewer.Systems.Render
                         ShaderStages.Vertex | ShaderStages.Fragment, ResourceLayoutElementOptions.None)
                 ));
 
+            _skybox = new Skybox(this, _skyTexture);
+
             _environmentSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _environmentLayout,
                 _projectionBuffer,
                 _viewBuffer,
-                _defaultEnvironmentTextureView,
+                _skybox.TextureView,
                 _graphicsDevice.LinearSampler));
 
             _meshSet = factory.CreateResourceSet(new ResourceSetDescription(
@@ -319,8 +316,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 _graphicsDevice.Aniso4xSampler,
                 MaterialBuffer
             ));
-
-            _skybox = new Skybox(this, _skyTexture);
 
             _cl = factory.CreateCommandList();
         }
