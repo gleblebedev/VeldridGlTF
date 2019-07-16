@@ -21,12 +21,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             material._baseColor = description.BaseColor;
             material.DiffuseTexture = description.DiffuseTexture;
             var diffuse = await context.ResolveDependencyAsync(description.DiffuseTexture) as TextureResource;
-            var resourceFactory = await context.ResolveDependencyAsync(_renderSystem.ResourceFactory);
-            var graphicsDevice = await context.ResolveDependencyAsync(_renderSystem.GraphicsDevice);
-            material.ResourceSet = resourceFactory.CreateResourceSet(new ResourceSetDescription(
+            var renderContext = await context.ResolveDependencyAsync(_renderSystem.RenderContext);
+            material.ResourceSet = renderContext.Factory.CreateResourceSet(new ResourceSetDescription(
                 _renderSystem.MaterialLayout,
                 diffuse?.View ?? _renderSystem.DefaultTextureView,
-                graphicsDevice.Aniso4xSampler,
+                renderContext.Device.Aniso4xSampler,
                 _renderSystem.MaterialBuffer
             ));
             return material;

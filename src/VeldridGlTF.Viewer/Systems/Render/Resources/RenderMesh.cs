@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Veldrid;
+using Veldrid.Utilities;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 
@@ -10,16 +11,24 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         public readonly List<RenderPrimitive> _primitives;
         public DeviceBuffer _indexBuffer;
         public DeviceBuffer _vertexBuffer;
+        private BoundingBox _boundingBox;
 
-        public RenderMesh(ResourceId id, DeviceBuffer vertexBuffer, DeviceBuffer indexBuffer,
+        public RenderMesh(ResourceId id, DeviceBuffer vertexBuffer, DeviceBuffer indexBuffer, BoundingBox boundingBox,
             List<RenderPrimitive> primitives) : base(id)
         {
             _vertexBuffer = vertexBuffer;
             _indexBuffer = indexBuffer;
             _primitives = primitives;
+            _boundingBox = boundingBox;
         }
 
         public List<RenderPrimitive> Primitives => _primitives;
+
+        public BoundingBox BoundingBox
+        {
+            get { return _boundingBox; }
+            set { _boundingBox = value; }
+        }
 
 
         //private static VertexPositionTexture[] GetCubeVertices()

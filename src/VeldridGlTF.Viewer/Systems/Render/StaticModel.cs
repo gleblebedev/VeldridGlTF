@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using Veldrid;
 using VeldridGlTF.Viewer.Components;
@@ -49,7 +50,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         private async Task<ModelRenderCache> CreateRenderCache(ResourceContext context)
         {
-            var device = await context.ResolveDependencyAsync(RenderSystem.GraphicsDevice);
+            var device = await context.ResolveDependencyAsync(RenderSystem.RenderContext);
             var mesh = await context.ResolveDependencyAsync(_mesh);
             var model = mesh as RenderMesh;
             var materialSet = await context.ResolveDependencyAsync(_materials);
@@ -67,6 +68,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             cache.DrawCalls = new List<DrawCall>(numDrawCalls);
             cache.IndexBuffer = model._indexBuffer;
             cache.VertexBuffer = model._vertexBuffer;
+            cache.BoundingBox = model.BoundingBox;
             for (var index = 0; index < numDrawCalls; index++)
             {
                 var indexRange = model.Primitives[index];

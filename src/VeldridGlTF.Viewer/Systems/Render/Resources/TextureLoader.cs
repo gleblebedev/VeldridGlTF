@@ -17,12 +17,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         public async Task<ITexture> LoadAsync(ResourceContext context)
         {
             var image = await context.ResolveDependencyAsync<IImage>(context.Id);
-            var graphicsDevice = await context.ResolveDependencyAsync(_renderSystem.GraphicsDevice);
-            var resourceFactory = await context.ResolveDependencyAsync(_renderSystem.ResourceFactory);
+            var renderContext = await context.ResolveDependencyAsync(_renderSystem.RenderContext);
             using (var stream = image.Open())
             {
-                var deviceTexture = new ImageSharpTexture(stream).CreateDeviceTexture(graphicsDevice, resourceFactory);
-                var view = resourceFactory.CreateTextureView(deviceTexture);
+                var deviceTexture = new ImageSharpTexture(stream).CreateDeviceTexture(renderContext.Device, renderContext.Factory);
+                var view = renderContext.Factory.CreateTextureView(deviceTexture);
                 return new TextureResource(context.Id, deviceTexture, view);
             }
         }

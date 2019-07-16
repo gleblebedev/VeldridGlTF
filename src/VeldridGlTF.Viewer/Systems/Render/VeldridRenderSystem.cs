@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
 using Veldrid;
 using Veldrid.ImageSharp;
+using Veldrid.Utilities;
 using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
@@ -26,17 +29,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private ResourceLayout _environmentLayout;
         private ResourceSet _environmentSet;
         private GraphicsDevice _graphicsDevice;
-        private ManualResourceHandler<GraphicsDevice> _graphicsDeviceTask = new ManualResourceHandler<GraphicsDevice>(ResourceId.Null);
+        private ManualResourceHandler<RenderContext> _renderContext = new ManualResourceHandler<RenderContext>(ResourceId.Null);
         private ResourceLayout _meshLayout;
         private ResourceSet _meshSet;
         private DeviceBuffer _projectionBuffer;
         private ResourceFactory _resourceFactory;
 
-        private ManualResourceHandler<ResourceFactory> _resourceFactoryTask = new ManualResourceHandler<ResourceFactory>(ResourceId.Null);
-
         private ShaderManager _shaderManager;
         private Texture _surfaceTexture;
-        private float _ticks;
 
         private DeviceBuffer _viewBuffer;
 
@@ -44,6 +44,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private DeviceBuffer _worldBuffer;
         private Texture _environmentTexture;
         private TextureView _defaultEnvironmentTextureView;
+        private Skybox _skybox;
+        private ImageSharpCubemapTexture _skyTexture;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
         {
@@ -54,9 +56,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             Window.GraphicsDeviceDestroyed += OnDeviceDestroyed;
         }
 
-        public IResourceHandler<GraphicsDevice> GraphicsDevice => _graphicsDeviceTask;
-
-        public IResourceHandler<ResourceFactory> ResourceFactory => _resourceFactoryTask;
+        public IResourceHandler<RenderContext> RenderContext => _renderContext;
 
         public Swapchain MainSwapchain { get; private set; }
 
@@ -72,6 +72,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             _camera = new Camera(Window.Width, Window.Height);
             _defaultTexture = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Diffuse.png");
+            _skyTexture = LoadCubemapTexture(GetType().Assembly
+                , "VeldridGlTF.Viewer.Assets.Sky.PosX.png"
+                , "VeldridGlTF.Viewer.Assets.Sky.NegX.png"
+                , "VeldridGlTF.Viewer.Assets.Sky.PosY.png"
+                , "VeldridGlTF.Viewer.Assets.Sky.NegY.png"
+                , "VeldridGlTF.Viewer.Assets.Sky.PosZ.png"
+                , "VeldridGlTF.Viewer.Assets.Sky.NegZ.png"
+                );
         }
 
         public void Destroy()
@@ -90,30 +98,52 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             //float depthClear = GraphicsDevice.IsDepthRangeZeroToOne ? 0f : 1f;
             var deltaSeconds = _stepContext.DeltaSeconds;
-            _ticks += deltaSeconds * 1000f;
-
-            _camera.Pitch = -0.5f;
-            _camera.Yaw += deltaSeconds;
-            _camera.Position = _camera.Forward * -200;
+            //_ticks += deltaSeconds * 1000f;
 
             _cl.Begin();
 
             _cl.SetFramebuffer(MainSwapchain.Framebuffer);
             //_cl.SetFullViewports();
-            _cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
             _cl.ClearDepthStencil(1f);
+            _skybox.Render(_cl);
 
             //var perspectiveFieldOfView = Matrix4x4.CreatePerspectiveFieldOfView(
             //    1.0f,
             //    (float)Window.Width / Window.Height,
             //    0.5f,
             //    100f);
-            var perspectiveFieldOfView = _camera.ProjectionMatrix;
-            _cl.UpdateBuffer(_projectionBuffer, 0, perspectiveFieldOfView);
+
+            BoundingBox sceneBbox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
+            foreach (var modelIndex in _staticModels)
+            {
+                var worldTransform = _staticModels.Components1[modelIndex];
+                var model = _staticModels.Components2[modelIndex];
+                if (model.GetRenderCache().TryGet(out var renderCache) && renderCache != null)
+                {
+                    var bbox = BoundingBox.Transform(renderCache.BoundingBox, worldTransform.WorldMatrix);
+                    sceneBbox = BoundingBox.Combine(sceneBbox, bbox);
+                }
+            }
+
+            _camera.Pitch = -0.5f;
+            _camera.Yaw += deltaSeconds;
+            _camera.Position = _camera.Forward * -200;
+            if (sceneBbox.Max.X > sceneBbox.Min.X)
+            {
+                var sceneCenter = sceneBbox.GetCenter();
+                var sceneRadius = (sceneBbox.Max - sceneCenter).Length();
+                if (sceneRadius < 1e-3f)
+                    sceneRadius = 1e-3f;
+                _camera.Position = sceneCenter + _camera.Forward * -sceneRadius*2.0f;
+                _camera.NearDistance = sceneRadius / 16.0f;
+                _camera.FarDistance = sceneRadius * 4.0f;
+            }
 
             //var lookAt = Matrix4x4.CreateLookAt(Vector3.UnitZ * 2.5f, Vector3.Zero, Vector3.UnitY);
             var lookAt = _camera.ViewMatrix;
             _cl.UpdateBuffer(_viewBuffer, 0, lookAt);
+            var perspectiveFieldOfView = _camera.ProjectionMatrix;
+            _cl.UpdateBuffer(_projectionBuffer, 0, perspectiveFieldOfView);
 
             foreach (var modelIndex in _staticModels)
             {
@@ -187,8 +217,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _graphicsDevice = gd;
             _resourceFactory = factory;
             MainSwapchain = sc;
-            _graphicsDeviceTask.SetValue(gd);
-            _resourceFactoryTask.SetValue(factory);
+            _renderContext.SetValue(new RenderContext(gd, factory, sc));
             CreateResources(factory);
             CreateSwapchainResources(factory);
         }
@@ -212,7 +241,21 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             return null;
         }
+        private ImageSharpCubemapTexture LoadCubemapTexture(Assembly assembly, string posX, string negX, string posY, string negY, string posZ, string negZ)
+        {
+            var assets = new[] { posX, negX, posY, negY, posZ, negZ }
+                .Select(_=>assembly.GetManifestResourceStream(_))
+                .ToList();
 
+            var cubemapTexture = new ImageSharpCubemapTexture(assets[0], assets[1], assets[2], assets[3], assets[4], assets[5],true);
+
+            foreach (var stream in assets)
+            {
+                stream.Dispose();
+            }
+
+            return cubemapTexture;
+        }
         protected void CreateResources(ResourceFactory factory)
         {
             _shaderManager = new ShaderManager(factory);
@@ -277,6 +320,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 MaterialBuffer
             ));
 
+            _skybox = new Skybox(this, _skyTexture);
+
             _cl = factory.CreateCommandList();
         }
 
@@ -285,16 +330,13 @@ namespace VeldridGlTF.Viewer.Systems.Render
             if (_graphicsDevice != null)
                 _graphicsDevice = null;
             else
-                _graphicsDeviceTask.SetException(new Exception("Device wasn't created."));
+                _renderContext.SetException(new Exception("Device wasn't created."));
 
             if (_resourceFactory != null)
                 _resourceFactory = null;
-            else
-                _resourceFactoryTask.SetException(new Exception("Resource factory wasn't created."));
 
             MainSwapchain = null;
-            _graphicsDeviceTask.Reset();
-            _resourceFactoryTask.Reset();
+            _renderContext.Reset();
         }
 
         protected virtual string GetTitle()

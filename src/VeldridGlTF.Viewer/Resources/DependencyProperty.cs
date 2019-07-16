@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace VeldridGlTF.Viewer.Resources
@@ -9,10 +8,12 @@ namespace VeldridGlTF.Viewer.Resources
         private Task<T> _task;
         private IResourceHandler<T> _parent;
         private object _gate = new object();
+        private DependencyPropertyFlags _flags;
 
-        public DependencyProperty()
+        public DependencyProperty(DependencyPropertyFlags flags = DependencyPropertyFlags.None)
         {
             _task = Task.FromResult(default(T));
+            _flags = flags;
         }
 
         public Task<T> GetAsync()
@@ -85,7 +86,14 @@ namespace VeldridGlTF.Viewer.Resources
                 }
                 else
                 {
-                    task.ContinueWith(_ => SetTaskResult(_, handler));
+                    if (DependencyPropertyFlags.StickyValue == (_flags & DependencyPropertyFlags.StickyValue))
+                    {
+                        task.ContinueWith(_ => SetTaskResult(_, handler));
+                    }
+                    else
+                    {
+                        _task = task;
+                    }
                 }
             }
             ResourceChanged?.Invoke(this, EventArgs.Empty);

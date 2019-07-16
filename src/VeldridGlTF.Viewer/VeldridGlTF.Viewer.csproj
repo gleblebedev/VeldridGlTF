@@ -14,10 +14,22 @@
 
   <ItemGroup>
     <None Remove="Assets\Diffuse.png" />
+    <None Remove="Assets\Sky\NegX.png" />
+    <None Remove="Assets\Sky\NegY.png" />
+    <None Remove="Assets\Sky\NegZ.png" />
+    <None Remove="Assets\Sky\PosX.png" />
+    <None Remove="Assets\Sky\PosY.png" />
+    <None Remove="Assets\Sky\PosZ.png" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\Diffuse.png" />
+    <EmbeddedResource Include="Assets\Sky\NegX.png" />
+    <EmbeddedResource Include="Assets\Sky\NegY.png" />
+    <EmbeddedResource Include="Assets\Sky\NegZ.png" />
+    <EmbeddedResource Include="Assets\Sky\PosX.png" />
+    <EmbeddedResource Include="Assets\Sky\PosY.png" />
+    <EmbeddedResource Include="Assets\Sky\PosZ.png" />
   </ItemGroup>
 
   <ItemGroup>
