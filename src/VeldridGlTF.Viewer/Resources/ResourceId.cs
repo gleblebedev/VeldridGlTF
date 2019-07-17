@@ -52,7 +52,7 @@ namespace VeldridGlTF.Viewer.Resources
 
         public override string ToString()
         {
-            if (Id == null) return $"{Path}";
+            if (Id == null) return Path;
             return $"{Path}#{Id}";
         }
     }

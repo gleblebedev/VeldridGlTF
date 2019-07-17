@@ -1,6 +1,4 @@
-﻿using System;
-using System.Numerics;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 using Veldrid;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
@@ -12,7 +10,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         private readonly VeldridRenderSystem _renderSystem;
         public Vector4 _baseColor;
         private ResourceSet _resourceSet;
-        private IResourceHandler<ITexture> _diffuseTexture;
+
+        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
 
 
         public MaterialResource(ResourceId id, VeldridRenderSystem renderSystem) : base(id)
@@ -30,11 +29,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             }
         }
 
-        public IResourceHandler<ITexture> DiffuseTexture 
-        {
-            get { return _diffuseTexture; }
-            set { _diffuseTexture = value; }
-        }
+        public IResourceHandler<ITexture> DiffuseTexture { get; set; }
+
+        public string ShaderName { get; set; } = "Default";
 
         public void UpdateBuffer(CommandList _cl, DeviceBuffer materialBuffer)
         {

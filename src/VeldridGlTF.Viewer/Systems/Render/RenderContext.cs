@@ -4,30 +4,17 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class RenderContext
     {
-        private readonly GraphicsDevice _device;
-        private readonly ResourceFactory _factory;
-        private readonly Swapchain _swapchain;
-
         public RenderContext(GraphicsDevice device, ResourceFactory factory, Swapchain swapchain)
         {
-            _device = device;
-            _factory = factory;
-            _swapchain = swapchain;
+            Device = device;
+            Factory = factory;
+            Swapchain1 = swapchain;
         }
 
-        public GraphicsDevice Device
-        {
-            get { return _device; }
-        }
+        public GraphicsDevice Device { get; }
 
-        public ResourceFactory Factory
-        {
-            get { return _factory; }
-        }
+        public ResourceFactory Factory { get; }
 
-        public Swapchain Swapchain1
-        {
-            get { return _swapchain; }
-        }
+        public Swapchain Swapchain1 { get; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -50,6 +51,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             if (Position == _data.Length)
                 return _data;
+#if DEBUG
+            Debug.WriteLine(
+                "VertexBufferStream.ToArray() reallocates memory for the array. Try to estimate capacity of the VertexBufferStream when it's created.");
+#endif
             return new ArraySegment<byte>(_data, 0, Position).ToArray();
         }
     }

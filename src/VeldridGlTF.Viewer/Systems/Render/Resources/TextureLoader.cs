@@ -20,8 +20,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             var renderContext = await context.ResolveDependencyAsync(_renderSystem.RenderContext);
             using (var stream = image.Open())
             {
-                var deviceTexture = new ImageSharpTexture(stream).CreateDeviceTexture(renderContext.Device, renderContext.Factory);
+                var deviceTexture =
+                    new ImageSharpTexture(stream).CreateDeviceTexture(renderContext.Device, renderContext.Factory);
+                deviceTexture.Name = context.Id.ToString();
                 var view = renderContext.Factory.CreateTextureView(deviceTexture);
+                view.Name = deviceTexture.Name;
                 return new TextureResource(context.Id, deviceTexture, view);
             }
         }

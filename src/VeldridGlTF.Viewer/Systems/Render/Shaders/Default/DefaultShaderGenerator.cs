@@ -1,45 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using SharpDX.Direct3D11;
 using Veldrid;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 {
     public class DefaultShaderGenerator : IShaderGenerator
     {
-        private readonly ShaderKey _shaderKey;
-        private IList<VaryingDescription> _varyings = new List<VaryingDescription>();
+        private readonly DefaultShaderKey _shaderKey;
 
-        public DefaultShaderGenerator(ShaderKey shaderKey)
+        public DefaultShaderGenerator(DefaultShaderKey shaderKey)
         {
             _shaderKey = shaderKey;
             if (_shaderKey.IsFlagSet(ShaderFlag.HAS_NORMALS))
             {
-
                 if (_shaderKey.IsFlagSet(ShaderFlag.HAS_TANGENTS))
-                {
-                    _varyings.Add(TBN = new VaryingDescription("v_TBN", VaryingFormat.Mat3));
-                }
+                    Varyings.Add(TBN = new VaryingDescription("v_TBN", VaryingFormat.Mat3));
                 else
-                {
-                    _varyings.Add(Normal = new VaryingDescription("v_NORMAL", VaryingFormat.Float3));
-                }
-            }
-            if (_shaderKey.IsFlagSet(ShaderFlag.HAS_UV_SET1))
-            {
-                _varyings.Add(TexCoord0 = new VaryingDescription("v_TEXCOORD_0", VaryingFormat.Float2));
-            }
-            if (_shaderKey.IsFlagSet(ShaderFlag.HAS_UV_SET2))
-            {
-                _varyings.Add(TexCoord1 = new VaryingDescription("v_TEXCOORD_1", VaryingFormat.Float2));
+                    Varyings.Add(Normal = new VaryingDescription("v_NORMAL", VaryingFormat.Float3));
             }
 
-            int location = 0;
-            foreach (var varying in _varyings)
+            if (_shaderKey.IsFlagSet(ShaderFlag.HAS_UV_SET1))
+                Varyings.Add(TexCoord0 = new VaryingDescription("v_TEXCOORD_0", VaryingFormat.Float2));
+            if (_shaderKey.IsFlagSet(ShaderFlag.HAS_UV_SET2))
+                Varyings.Add(TexCoord1 = new VaryingDescription("v_TEXCOORD_1", VaryingFormat.Float2));
+
+            var location = 0;
+            foreach (var varying in Varyings)
             {
                 varying.Location = location;
                 location += GetLocationSize(varying);
             }
+        }
+
+        public VaryingDescription Normal { get; set; }
+        public VaryingDescription TBN { get; set; }
+
+        public VaryingDescription TexCoord0 { get; set; }
+
+        public VaryingDescription TexCoord1 { get; set; }
+
+
+        public IList<VaryingDescription> Varyings { get; } = new List<VaryingDescription>();
+
+        public IList<VertexElementDescription> VertexElements =>
+            _shaderKey.VertexLayout.VertexLayoutDescription.Elements;
+
+        public string GetVertexShader()
+        {
+            return new VertexShader(this).TransformText();
+        }
+
+        public string GetFragmentShader()
+        {
+            return new FragmentShader(this).TransformText();
         }
 
         private int GetLocationSize(VaryingDescription varying)
@@ -53,37 +66,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             }
         }
 
-        public VaryingDescription Normal { get; set; }
-        public VaryingDescription TBN { get; set; }
-
-        public VaryingDescription TexCoord0 { get; set; }
-
-        public VaryingDescription TexCoord1 { get; set; }
-
-
-        public IList<VaryingDescription> Varyings
-        {
-            get { return _varyings; }
-        }
-
-        public IList<VertexElementDescription> VertexElements
-        {
-            get { return _shaderKey.VertexLayout.VertexLayoutDescription.Elements; }
-        }
-
         public bool IsFlagSet(ShaderFlag flag)
         {
             return _shaderKey.IsFlagSet(flag);
-        }
-
-        public string GetVertexShader()
-        {
-            return new VertexShader(this).TransformText();
-        }
-
-        public string GetFragmentShader()
-        {
-            return new FragmentShader(this).TransformText();
         }
     }
 
@@ -126,6 +111,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
                 case VaryingFormat.Mat4:
                     return "mat4";
             }
+
             throw new NotImplementedException(format.ToString());
         }
 

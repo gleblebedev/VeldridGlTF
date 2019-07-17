@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox
 {
@@ -10,14 +8,14 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox
         {
             return @"#version 450
 
-layout(set = 0, binding = 0) uniform Projection
+layout(set = 0, binding = 0) uniform ProjectionBuffer
 {
-    mat4 _Proj;
+    mat4 Projection;
 };
 
-layout(set = 0, binding = 1) uniform View
+layout(set = 0, binding = 1) uniform ViewBuffer
 {
-    mat4 _View;
+    mat4 View;
 };
 
 layout(location = 0) in vec3 POSITION;
@@ -28,11 +26,11 @@ layout(constant_id = 102) const bool ReverseDepthRange = true;
 void main()
 {
     mat4 view3x3 = mat4(
-        _View[0][0], _View[0][1], _View[0][2], 0,
-        _View[1][0], _View[1][1], _View[1][2], 0,
-        _View[2][0], _View[2][1], _View[2][2], 0,
+        View[0][0], View[0][1], View[0][2], 0,
+        View[1][0], View[1][1], View[1][2], 0,
+        View[2][0], View[2][1], View[2][2], 0,
         0, 0, 0, 1);
-    vec4 pos = _Proj * view3x3 * vec4(POSITION, 1.0f);
+    vec4 pos = Projection * view3x3 * vec4(POSITION, 1.0f);
     gl_Position = vec4(pos.x, pos.y, pos.w, pos.w);
     if (ReverseDepthRange) { gl_Position.z = 0; }
     fsin_0 = POSITION;
@@ -43,23 +41,29 @@ void main()
         {
             return @"#version 450
 
-layout(set = 0, binding = 2) uniform textureCube CubeTexture;
-layout(set = 0, binding = 3) uniform sampler CubeSampler;
+layout(set = 2, binding = 0) uniform textureCube SurfaceTexture;
+layout(set = 2, binding = 1) uniform sampler SurfaceSampler;
 
 layout(location = 0) in vec3 fsin_0;
 layout(location = 0) out vec4 OutputColor;
 
 void main()
 {
-    OutputColor = texture(samplerCube(CubeTexture, CubeSampler), fsin_0);
+    OutputColor = texture(samplerCube(SurfaceTexture, SurfaceSampler), fsin_0);
 }";
         }
     }
-    public class SkyboxShaderFactory: IShaderFactory
+
+    public class SkyboxShaderFactory : IShaderFactory
     {
         public IShaderGenerator ResolveGenerator(ShaderKey key)
         {
             return new SkyboxShaderGenerator();
+        }
+
+        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material)
+        {
+            return new ShaderKey(this);
         }
     }
 }

@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
+using VeldridGlTF.Viewer.Systems.Render.Resources;
+using VeldridGlTF.Viewer.Systems.Render.Shaders;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
+using VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -10,12 +14,16 @@ namespace VeldridGlTF.Viewer.Systems.Render
     {
         private readonly Dictionary<ShaderKey, Shader[]> _compiledShaders = new Dictionary<ShaderKey, Shader[]>();
         private readonly ResourceFactory _factory;
-        private readonly DefaultShaderFactory _generator;
+        private readonly Dictionary<string, IShaderFactory> _generators = new Dictionary<string, IShaderFactory>();
+        private readonly SkyboxShaderFactory _skyboxShaderFactory;
+        private readonly DefaultShaderFactory _defaultShaderFactory;
 
         public ShaderManager(ResourceFactory factory)
         {
             _factory = factory;
-            _generator = new DefaultShaderFactory();
+            _defaultShaderFactory = new DefaultShaderFactory();
+            _generators["Default"] = _defaultShaderFactory;
+            _generators["Skybox"] = new SkyboxShaderFactory();
         }
 
         public Shader[] GetShaders(ShaderKey shaderKey)
@@ -23,7 +31,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             Shader[] shaders;
             if (_compiledShaders.TryGetValue(shaderKey, out shaders)) return shaders;
 
-            var generator = _generator.ResolveGenerator(shaderKey);
+            var generatorFactory = shaderKey.Factory;
+
+            var generator = generatorFactory.ResolveGenerator(shaderKey);
             var vertexShader = generator.GetVertexShader();
             var fragmentShader = generator.GetFragmentShader();
             var compiledShader = _factory.CreateFromSpirv(
@@ -33,6 +43,17 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _compiledShaders[shaderKey] = compiledShader;
 
             return compiledShader;
+        }
+
+        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material)
+        {
+            if (!_generators.TryGetValue(material.ShaderName, out var generatorFactory))
+            {
+                Trace.WriteLine("Shader " + material.ShaderName + " not found. Falling back to default shader.");
+                generatorFactory = _defaultShaderFactory;
+            }
+
+            return generatorFactory.GetShaderKey(primitive, material);
         }
     }
 }

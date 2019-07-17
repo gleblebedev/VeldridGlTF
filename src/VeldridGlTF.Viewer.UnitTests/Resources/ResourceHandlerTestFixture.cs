@@ -19,7 +19,7 @@ namespace VeldridGlTF.Viewer1.Resources
             public bool IsDisposed { get; private set; }
         }
         [Test]
-        public async Task Resolve_TypeWithDependencies_SuccessfulyResolved()
+        public void Resolve_TypeWithDependencies_SuccessfulyResolved()
         {
             var source = new ManualResourceHandler<int>(ResourceId.Null);
             var values = new List<Disposable>();

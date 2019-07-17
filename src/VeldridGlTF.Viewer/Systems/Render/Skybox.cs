@@ -1,92 +1,45 @@
 ﻿using System;
-using System.Numerics;
-using Veldrid;
-using Veldrid.ImageSharp;
+using System.Threading.Tasks;
+using VeldridGlTF.Viewer.Components;
+using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Resources;
+using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
-    public class Skybox: IDisposable
+    public class Skybox : AbstractRenderable, ISkybox, IDisposable
     {
-        const float halfSize = 1.0f;
-        private static Vector3[] _vertices = new Vector3[]
-        {
-        
-        new Vector3(-halfSize, +halfSize, -halfSize),
-        new Vector3(+halfSize, +halfSize, -halfSize),
-        new Vector3(+halfSize, +halfSize, +halfSize),
-        new Vector3(-halfSize, +halfSize, +halfSize),
-                                                    
-        new Vector3(-halfSize, -halfSize, +halfSize),
-        new Vector3(+halfSize, -halfSize, +halfSize),
-        new Vector3(+halfSize, -halfSize, -halfSize),
-        new Vector3(-halfSize, -halfSize, -halfSize),
-                                                    
-        new Vector3(-halfSize, +halfSize, -halfSize),
-        new Vector3(-halfSize, +halfSize, +halfSize),
-        new Vector3(-halfSize, -halfSize, +halfSize),
-        new Vector3(-halfSize, -halfSize, -halfSize),
-                                                    
-        new Vector3(+halfSize, +halfSize, +halfSize),
-        new Vector3(+halfSize, +halfSize, -halfSize),
-        new Vector3(+halfSize, -halfSize, -halfSize),
-        new Vector3(+halfSize, -halfSize, +halfSize),
-                                                    
-        new Vector3(+halfSize, +halfSize, -halfSize),
-        new Vector3(-halfSize, +halfSize, -halfSize),
-        new Vector3(-halfSize, -halfSize, -halfSize),
-        new Vector3(+halfSize, -halfSize, -halfSize),
-                                                    
-        new Vector3(-halfSize, +halfSize, +halfSize),
-        new Vector3(+halfSize, +halfSize, +halfSize),
-        new Vector3(+halfSize, -halfSize, +halfSize),
-        new Vector3(-halfSize, -halfSize, +halfSize),
-        };
-        private static ushort[] indices = new ushort[]
-        {
-            0, 1, 2, 0, 2, 3,
-            4, 5, 6, 4, 6, 7,
-            8, 9, 10, 8, 10, 11,
-            12, 13, 14, 12, 14, 15,
-            16, 17, 18, 16, 18, 19,
-            20, 21, 22, 20, 22, 23
-        };
+        private readonly DependencyProperty<IMaterial> _material = new DependencyProperty<IMaterial>();
+        private IResourceHandler<IMesh> _mesh;
 
-        private Texture _cubemap;
-        private TextureView _cubemapView;
-
-        public Skybox(VeldridRenderSystem render, ImageSharpCubemapTexture cubemapTexture)
-        {
-            var context = render.RenderContext.GetAsync().Result;
-            var factory = context.Factory;
-            _cubemap = cubemapTexture.CreateDeviceTexture(context.Device, factory);
-            _cubemapView = factory.CreateTextureView(_cubemap);
-
-            var vertexBuffer =
-                factory.CreateBuffer(new BufferDescription(
-                    (uint)_vertices.Length*12, BufferUsage.VertexBuffer));
-            context.Device.UpdateBuffer(vertexBuffer, 0, _vertices);
-
-            var indexBuffer =
-                factory.CreateBuffer(new BufferDescription(sizeof(ushort) * (uint)indices.Length,
-                    BufferUsage.IndexBuffer));
-            context.Device.UpdateBuffer(indexBuffer, 0, indices);
-
-
-        }
-
-        public BindableResource TextureView
-        {
-            get { return _cubemapView; }
-        }
+        public IResourceHandler<IMesh> Mesh => _mesh ?? (_mesh = CreateMesh());
 
         public void Dispose()
         {
-            
+            throw new NotImplementedException();
         }
 
-        public void Render(CommandList cl)
+        public IResourceHandler<IMaterial> Material
         {
-            cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
+            get => _material;
+            set => _material.SetValue(value);
+        }
+
+        private IResourceHandler<IMesh> CreateMesh()
+        {
+            return new ResourceHandler<IMesh>(ResourceId.Null,
+                _ => Resources.Mesh.Create(RenderSystem, _, SkyboxGeometry.Handler), null);
+        }
+
+        protected override async Task<DrawCallCollection> CreateRenderCache(ResourceContext context)
+        {
+            var mesh = await context.ResolveDependencyAsync(Mesh) as Mesh;
+            if (mesh == null)
+                return null;
+            var material = await context.ResolveDependencyAsync(_material) as MaterialResource;
+            if (material == null)
+                return null;
+            return CreateDrawCallCollection(mesh, material);
         }
     }
 }

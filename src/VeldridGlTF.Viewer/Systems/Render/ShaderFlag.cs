@@ -22,6 +22,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         MATERIAL_SPECULARGLOSSINESS = 1 << 13,
         MATERIAL_METALLICROUGHNESS = 1 << 14,
         ALPHAMODE_MASK = 1 << 15,
-        MATERIAL_UNLIT = 1 << 16,
+        MATERIAL_UNLIT = 1 << 16
     }
 }

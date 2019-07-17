@@ -17,16 +17,25 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         public async Task<IMaterial> LoadAsync(ResourceContext context)
         {
             var description = await context.ResolveDependencyAsync<IMaterialDescription>(context.Id);
-            var material = new MaterialResource(context.Id, _renderSystem);
+            return await CreateMaterial(_renderSystem, context, description);
+        }
+
+        public static async Task<IMaterial> CreateMaterial(VeldridRenderSystem renderSystem, ResourceContext context,
+            IMaterialDescription description)
+        {
+            var material = new MaterialResource(context.Id, renderSystem);
+            material.ShaderName = description.ShaderName;
             material._baseColor = description.BaseColor;
             material.DiffuseTexture = description.DiffuseTexture;
+            material.DepthStencilState.DepthTestEnabled = description.DepthTestEnabled;
+            material.DepthStencilState.DepthWriteEnabled = description.DepthWriteEnabled;
             var diffuse = await context.ResolveDependencyAsync(description.DiffuseTexture) as TextureResource;
-            var renderContext = await context.ResolveDependencyAsync(_renderSystem.RenderContext);
+            var renderContext = await context.ResolveDependencyAsync(renderSystem.RenderContext);
             material.ResourceSet = renderContext.Factory.CreateResourceSet(new ResourceSetDescription(
-                _renderSystem.MaterialLayout,
-                diffuse?.View ?? _renderSystem.DefaultTextureView,
+                renderSystem.MaterialLayout,
+                diffuse?.View ?? renderSystem.DefaultTextureView,
                 renderContext.Device.Aniso4xSampler,
-                _renderSystem.MaterialBuffer
+                renderSystem.MaterialBuffer
             ));
             return material;
         }

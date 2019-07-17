@@ -9,8 +9,11 @@ using Veldrid;
 using Veldrid.ImageSharp;
 using Veldrid.Utilities;
 using VeldridGlTF.Viewer.Components;
+using VeldridGlTF.Viewer.Data;
+using VeldridGlTF.Viewer.Loaders.GlTF;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
+using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -18,32 +21,37 @@ namespace VeldridGlTF.Viewer.Systems.Render
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IRenderSystem
     {
         private readonly Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
-        private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
+
+        private readonly ManualResourceHandler<RenderContext> _renderContext =
+            new ManualResourceHandler<RenderContext>(ResourceId.Null);
+
         private readonly StepContext _stepContext;
+        private ImageSharpTexture _albedoImage;
 
         protected Camera _camera;
         private CommandList _cl;
         private TextureView _defaultDiffuseTextureView;
         private ResourceSet _defaultMaterialSet;
-        private ImageSharpTexture _defaultTexture;
         private ResourceLayout _environmentLayout;
         private ResourceSet _environmentSet;
         private GraphicsDevice _graphicsDevice;
-        private ManualResourceHandler<RenderContext> _renderContext = new ManualResourceHandler<RenderContext>(ResourceId.Null);
         private ResourceLayout _meshLayout;
         private ResourceSet _meshSet;
         private DeviceBuffer _projectionBuffer;
+
         private ResourceFactory _resourceFactory;
 
         private ShaderManager _shaderManager;
+        private Skybox _skybox;
+        private ImageSharpCubemapTexture _skyImage;
+
+        private Texture _skyTexture;
+        private TextureView _skyTextureView;
         private Texture _surfaceTexture;
 
         private DeviceBuffer _viewBuffer;
 
-        private EcsWorld _world = null;
         private DeviceBuffer _worldBuffer;
-        private Skybox _skybox;
-        private ImageSharpCubemapTexture _skyTexture;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
         {
@@ -69,15 +77,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public void Initialize()
         {
             _camera = new Camera(Window.Width, Window.Height);
-            _defaultTexture = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Diffuse.png");
-            _skyTexture = LoadCubemapTexture(GetType().Assembly
+            _albedoImage = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Diffuse.png");
+            _skyImage = LoadCubemapTexture(GetType().Assembly
                 , "VeldridGlTF.Viewer.Assets.Sky.PosX.png"
                 , "VeldridGlTF.Viewer.Assets.Sky.NegX.png"
                 , "VeldridGlTF.Viewer.Assets.Sky.PosY.png"
                 , "VeldridGlTF.Viewer.Assets.Sky.NegY.png"
                 , "VeldridGlTF.Viewer.Assets.Sky.PosZ.png"
                 , "VeldridGlTF.Viewer.Assets.Sky.NegZ.png"
-                );
+            );
         }
 
         public void Destroy()
@@ -103,7 +111,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _cl.SetFramebuffer(MainSwapchain.Framebuffer);
             //_cl.SetFullViewports();
             _cl.ClearDepthStencil(1f);
-            _skybox.Render(_cl);
+
+            RenderSkybox();
+
 
             //var perspectiveFieldOfView = Matrix4x4.CreatePerspectiveFieldOfView(
             //    1.0f,
@@ -111,12 +121,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
             //    0.5f,
             //    100f);
 
-            BoundingBox sceneBbox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
+            var sceneBbox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
             foreach (var modelIndex in _staticModels)
             {
                 var worldTransform = _staticModels.Components1[modelIndex];
                 var model = _staticModels.Components2[modelIndex];
-                if (model.GetRenderCache().TryGet(out var renderCache) && renderCache != null)
+                if (model.GetDrawCalls().TryGet(out var renderCache) && renderCache != null)
                 {
                     var bbox = BoundingBox.Transform(renderCache.BoundingBox, worldTransform.WorldMatrix);
                     sceneBbox = BoundingBox.Combine(sceneBbox, bbox);
@@ -132,7 +142,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 var sceneRadius = (sceneBbox.Max - sceneCenter).Length();
                 if (sceneRadius < 1e-3f)
                     sceneRadius = 1e-3f;
-                _camera.Position = sceneCenter + _camera.Forward * -sceneRadius*2.0f;
+                _camera.Position = sceneCenter + _camera.Forward * -sceneRadius * 2.0f;
                 _camera.NearDistance = sceneRadius / 16.0f;
                 _camera.FarDistance = sceneRadius * 4.0f;
             }
@@ -148,30 +158,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 var worldTransform = _staticModels.Components1[modelIndex];
                 var model = _staticModels.Components2[modelIndex];
 
-                if (model.GetRenderCache().TryGet(out var renderCache) && renderCache != null)
-                {
-                    _cl.SetIndexBuffer(renderCache.IndexBuffer, IndexFormat.UInt16);
-                    _cl.UpdateBuffer(_worldBuffer, 0, ref worldTransform.WorldMatrix);
-                    for (var index = 0; index < renderCache.DrawCalls.Count; index++)
-                    {
-                        var drawCall = renderCache.DrawCalls[index];
-                        if (drawCall != null)
-                        {
-                            var indexRange = renderCache.DrawCalls[index].Primitive;
-                            var material = drawCall.Material;
-                            if (material != null)
-                            {
-                                _cl.SetPipeline(drawCall.Pipeline);
-                                _cl.SetGraphicsResourceSet(0, _environmentSet);
-                                _cl.SetGraphicsResourceSet(1, _meshSet);
-                                _cl.SetGraphicsResourceSet(2, material.ResourceSet);
-                                _cl.SetVertexBuffer(0, renderCache.VertexBuffer, indexRange.DataOffset);
-                                material.UpdateBuffer(_cl, MaterialBuffer);
-                                _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
-                            }
-                        }
-                    }
-                }
+                if (model.GetDrawCalls().TryGet(out var drawCallCollection) && drawCallCollection != null)
+                    ScheduleDrawCalls(drawCallCollection, ref worldTransform.WorldMatrix);
             }
 
             _cl.End();
@@ -180,21 +168,94 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _graphicsDevice.SwapBuffers(MainSwapchain);
         }
 
-        public Pipeline GetPipeline(PipelineKey pipelineKey)
+        public IStaticModel AddStaticModel(EcsEntity entity)
         {
+            var model = _world.AddComponent<StaticModel>(entity);
+            model.RenderSystem = this;
+            return model;
+        }
+
+        public ISkybox AddSkybox(EcsEntity entity)
+        {
+            var skybox = _world.AddComponent<Skybox>(entity);
+            skybox.RenderSystem = this;
+            return skybox;
+        }
+
+        public IZone AddZone(EcsEntity entity)
+        {
+            var zone = _world.AddComponent<Zone>(entity);
+            zone.RenderSystem = this;
+            return zone;
+        }
+
+        private void RenderSkybox()
+        {
+            var identity = Matrix4x4.Identity;
+            DrawCallCollection drawCallCollection;
+
+            foreach (var index in _skyboxes)
+            {
+                var skybox = _skyboxes.Components2[index];
+                if (skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
+                {
+                    ScheduleDrawCalls(drawCallCollection, ref identity);
+                    return;
+                }
+            }
+
+            if (_skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
+            {
+                ScheduleDrawCalls(drawCallCollection, ref identity);
+                return;
+            }
+
+            _cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
+        }
+
+        private void ScheduleDrawCalls(DrawCallCollection renderCache, ref Matrix4x4 worldMatrix)
+        {
+            _cl.SetIndexBuffer(renderCache.IndexBuffer, IndexFormat.UInt16);
+            _cl.UpdateBuffer(_worldBuffer, 0, ref worldMatrix);
+            for (var index = 0; index < renderCache.DrawCalls.Count; index++)
+            {
+                var drawCall = renderCache.DrawCalls[index];
+                if (drawCall != null)
+                {
+                    var indexRange = renderCache.DrawCalls[index].Primitive;
+                    var material = drawCall.Material;
+                    if (material != null)
+                    {
+                        _cl.SetPipeline(drawCall.Pipeline);
+                        _cl.SetGraphicsResourceSet(0, _environmentSet);
+                        _cl.SetGraphicsResourceSet(1, _meshSet);
+                        _cl.SetGraphicsResourceSet(2, material.ResourceSet);
+                        _cl.SetVertexBuffer(0, renderCache.VertexBuffer, indexRange.DataOffset);
+                        material.UpdateBuffer(_cl, MaterialBuffer);
+                        _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
+                    }
+                }
+            }
+        }
+
+        public Pipeline GetPipeline(RenderPrimitive primitive, MaterialResource material)
+        {
+            var pipelineKey = EvaulatePipelineKey(primitive, material);
+
             Pipeline pipeline;
+
             if (_pipelines.TryGetValue(pipelineKey, out pipeline)) return pipeline;
 
             var shaderSet = new ShaderSetDescription(
                 new[]
                 {
-                    pipelineKey.Shader.VertexLayout.VertexLayoutDescription
+                    primitive.Elements.VertexLayoutDescription
                 },
                 _shaderManager.GetShaders(pipelineKey.Shader));
 
             pipeline = _resourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
-                DepthStencilStateDescription.DepthOnlyLessEqual,
+                pipelineKey.DepthStencilState,
                 new RasterizerStateDescription
                 {
                     CullMode = FaceCullMode.Back,
@@ -208,6 +269,18 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 new[] {_environmentLayout, _meshLayout, MaterialLayout},
                 MainSwapchain.Framebuffer.OutputDescription));
             return pipeline;
+        }
+
+        private PipelineKey EvaulatePipelineKey(RenderPrimitive primitive, MaterialResource material)
+        {
+            var shaderKey = _shaderManager.GetShaderKey(primitive, material);
+            var pipelineKey = new PipelineKey
+            {
+                Shader = shaderKey,
+                PrimitiveTopology = primitive.PrimitiveTopology
+            };
+            pipelineKey.DepthStencilState = material.DepthStencilState;
+            return pipelineKey;
         }
 
         public void OnGraphicsDeviceCreated(GraphicsDevice gd, ResourceFactory factory, Swapchain sc)
@@ -239,21 +312,22 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             return null;
         }
-        private ImageSharpCubemapTexture LoadCubemapTexture(Assembly assembly, string posX, string negX, string posY, string negY, string posZ, string negZ)
+
+        private ImageSharpCubemapTexture LoadCubemapTexture(Assembly assembly, string posX, string negX, string posY,
+            string negY, string posZ, string negZ)
         {
-            var assets = new[] { posX, negX, posY, negY, posZ, negZ }
-                .Select(_=>assembly.GetManifestResourceStream(_))
+            var assets = new[] {posX, negX, posY, negY, posZ, negZ}
+                .Select(_ => assembly.GetManifestResourceStream(_))
                 .ToList();
 
-            var cubemapTexture = new ImageSharpCubemapTexture(assets[0], assets[1], assets[2], assets[3], assets[4], assets[5],true);
+            var cubemapTexture =
+                new ImageSharpCubemapTexture(assets[0], assets[1], assets[2], assets[3], assets[4], assets[5], true);
 
-            foreach (var stream in assets)
-            {
-                stream.Dispose();
-            }
+            foreach (var stream in assets) stream.Dispose();
 
             return cubemapTexture;
         }
+
         protected void CreateResources(ResourceFactory factory)
         {
             _shaderManager = new ShaderManager(factory);
@@ -265,8 +339,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             MaterialBuffer = CreateMaterialBuffer();
 
-            _surfaceTexture = _defaultTexture.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
+            _surfaceTexture = _albedoImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
+            _surfaceTexture.Name = "DefaultDiffuseTexture";
             _defaultDiffuseTextureView = factory.CreateTextureView(_surfaceTexture);
+            _defaultDiffuseTextureView.Name = _surfaceTexture.Name;
+
+            _skyTexture = _skyImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
+            _skyTexture.Name = "DefaultSkyboxTexture";
+            _skyTextureView = factory.CreateTextureView(_skyTexture);
+            _skyTextureView.Name = _surfaceTexture.Name;
 
             _environmentLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
@@ -278,7 +359,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                         ShaderStages.Fragment),
                     new ResourceLayoutElementDescription("EnvironmentSampler", ResourceKind.Sampler,
                         ShaderStages.Fragment)
-                    ));
+                ));
 
             _meshLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
@@ -296,13 +377,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
                         ShaderStages.Vertex | ShaderStages.Fragment, ResourceLayoutElementOptions.None)
                 ));
 
-            _skybox = new Skybox(this, _skyTexture);
-
             _environmentSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _environmentLayout,
                 _projectionBuffer,
                 _viewBuffer,
-                _skybox.TextureView,
+                _skyTextureView,
                 _graphicsDevice.LinearSampler));
 
             _meshSet = factory.CreateResourceSet(new ResourceSetDescription(
@@ -318,6 +397,18 @@ namespace VeldridGlTF.Viewer.Systems.Render
             ));
 
             _cl = factory.CreateCommandList();
+
+            _skybox = new Skybox {RenderSystem = this};
+            var skyboxMaterial = new MaterialDescription(ResourceId.Null)
+            {
+                ShaderName = "Skybox",
+                DiffuseTexture = new ManualResourceHandler<ITexture>(ResourceId.Null,
+                    new TextureResource(ResourceId.Null, _skyTexture, _skyTextureView)),
+                DepthWriteEnabled = false
+            };
+            var materialHandler = new ResourceHandler<IMaterial>(ResourceId.Null,
+                _ => MaterialLoader.CreateMaterial(this, _, skyboxMaterial), null);
+            _skybox.Material = materialHandler;
         }
 
         protected virtual void OnDeviceDestroyed()
@@ -356,11 +447,18 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return materialBuffer;
         }
 
-        public IStaticModel AddStaticModel(EcsEntity entity)
+        internal StaticModel CreateStaticModel()
         {
-            var model = _world.AddComponent<StaticModel>(entity);
-            model.RenderSystem = this;
-            return model;
+            return new StaticModel {RenderSystem = this};
         }
+
+        #region ECS
+
+        private EcsWorld _world = null;
+        private EcsFilter<WorldTransform, Skybox> _skyboxes = null;
+        private EcsFilter<WorldTransform, StaticModel> _staticModels = null;
+        private EcsFilter<WorldTransform, Zone> _zones = null;
+
+        #endregion
     }
 }

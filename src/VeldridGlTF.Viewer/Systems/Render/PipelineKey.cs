@@ -1,10 +1,12 @@
 ﻿using System;
 using Veldrid;
+using VeldridGlTF.Viewer.Systems.Render.Shaders;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class PipelineKey : IEquatable<PipelineKey>
     {
+        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
         public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
         public ShaderKey Shader;
 
