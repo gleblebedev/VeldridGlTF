@@ -9,8 +9,6 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
     {
         public TextureResource(ResourceId id, Texture deviceTexture, TextureView view) : base(id)
         {
-            if (deviceTexture.Name == null)
-                throw new InvalidOperationException();
             DeviceTexture = deviceTexture;
             View = view;
         }

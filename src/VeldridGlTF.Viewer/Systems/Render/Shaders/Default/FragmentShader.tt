@@ -10,9 +10,6 @@ struct MaterialPropertiesInfo
     vec4 BaseColor;
 };
 
-layout(set = 0, binding = 2) uniform textureCube CubeTexture;
-layout(set = 0, binding = 3) uniform sampler CubeSampler;
-
 <#
     if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP))
 	{
@@ -51,7 +48,6 @@ void main()
     if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP) && Context.TexCoord0 != null)
 	{
 #>
-	//fsout_color = texture(samplerCube(CubeTexture, CubeSampler), normal);
     fsout_color = texture(sampler2D(SurfaceTexture, SurfaceSampler), <#=Context.TexCoord0.Name #>) * vec4(light,light,light,light);
 <#
 	}

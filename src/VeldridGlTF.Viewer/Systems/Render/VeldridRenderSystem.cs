@@ -33,6 +33,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private TextureView _defaultDiffuseTextureView;
         private ResourceSet _defaultMaterialSet;
         private ResourceLayout _environmentLayout;
+        private ResourceLayout _zoneLayout;
         private ResourceSet _environmentSet;
         private GraphicsDevice _graphicsDevice;
         private ResourceLayout _meshLayout;
@@ -354,7 +355,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer,
                         ShaderStages.Vertex),
                     new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex),
+                        ShaderStages.Vertex)
+                ));
+
+            _zoneLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("EnvironmentTexture", ResourceKind.TextureReadOnly,
                         ShaderStages.Fragment),
                     new ResourceLayoutElementDescription("EnvironmentSampler", ResourceKind.Sampler,
@@ -380,9 +385,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _environmentSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _environmentLayout,
                 _projectionBuffer,
-                _viewBuffer,
-                _skyTextureView,
-                _graphicsDevice.LinearSampler));
+                _viewBuffer));
 
             _meshSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _meshLayout,
