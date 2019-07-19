@@ -22,9 +22,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             {
                 var deviceTexture =
                     new ImageSharpTexture(stream).CreateDeviceTexture(renderContext.Device, renderContext.Factory);
-                deviceTexture.Name = context.Id.ToString();
+                //deviceTexture.Name = context.Id.ToString();
                 var view = renderContext.Factory.CreateTextureView(deviceTexture);
-                view.Name = deviceTexture.Name;
+                //view.Name = deviceTexture.Name;
                 return new TextureResource(context.Id, deviceTexture, view);
             }
         }

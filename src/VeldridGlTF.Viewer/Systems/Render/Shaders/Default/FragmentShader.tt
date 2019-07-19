@@ -10,19 +10,20 @@ struct MaterialPropertiesInfo
     vec4 BaseColor;
 };
 
-<#
-    if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP))
-	{
-#>
-layout(set = 2, binding = 0) uniform texture2D SurfaceTexture;
-layout(set = 2, binding = 1) uniform sampler SurfaceSampler;
-layout(set = 2, binding = 2) uniform MaterialProperties
+layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
+layout(set = 0, binding = 2) uniform sampler BRDFSampler;
+
+layout(set = 1, binding = 0) uniform textureCube ReflectionTexture;
+layout(set = 1, binding = 1) uniform sampler ReflectionSampler;
+
+layout(set = 3, binding = 0) uniform MaterialProperties
 {
     MaterialPropertiesInfo _MaterialProperties;
 };
+layout(set = 3, binding = 1) uniform texture2D SurfaceTexture;
+layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
 
 <#
-	}
 	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
 		WriteLine(string.Format("layout(location = {0}) in {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
@@ -48,7 +49,11 @@ void main()
     if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP) && Context.TexCoord0 != null)
 	{
 #>
-    fsout_color = texture(sampler2D(SurfaceTexture, SurfaceSampler), <#=Context.TexCoord0.Name #>) * vec4(light,light,light,light);
+	vec4 diffuse = texture(sampler2D(SurfaceTexture, SurfaceSampler), vec2(0.0, 0.0));
+	vec4 brdf = texture(sampler2D(BRDFTexture, BRDFSampler), vec2(0.0, 0.0));
+	vec4 reflection = texture(samplerCube(ReflectionTexture, ReflectionSampler), reflect(<#= Context.CameraPosition #> - <#= Context.WorldPosition #>, normal));
+	fsout_color = reflection+brdf+diffuse;
+    //fsout_color = texture(sampler2D(SurfaceTexture, SurfaceSampler), <#=Context.TexCoord0 #>) * vec4(light,light,light,light);
 <#
 	}
 	else

@@ -13,16 +13,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\brdfLUT.png" />
     <None Remove="Assets\Diffuse.png" />
+    <None Remove="Assets\Sky\NegX.dds" />
     <None Remove="Assets\Sky\NegX.png" />
+    <None Remove="Assets\Sky\NegY.dds" />
     <None Remove="Assets\Sky\NegY.png" />
+    <None Remove="Assets\Sky\NegZ.dds" />
     <None Remove="Assets\Sky\NegZ.png" />
+    <None Remove="Assets\Sky\PosX.dds" />
     <None Remove="Assets\Sky\PosX.png" />
+    <None Remove="Assets\Sky\PosY.dds" />
     <None Remove="Assets\Sky\PosY.png" />
+    <None Remove="Assets\Sky\PosZ.dds" />
     <None Remove="Assets\Sky\PosZ.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets\brdfLUT.png" />
     <EmbeddedResource Include="Assets\Diffuse.png" />
     <EmbeddedResource Include="Assets\Sky\NegX.png" />
     <EmbeddedResource Include="Assets\Sky\NegY.png" />
@@ -43,8 +51,9 @@
     <PackageReference Include="System.CodeDom" Version="4.5.0" />
     <PackageReference Include="Veldrid" Version="4.6.1" />
     <PackageReference Include="Veldrid.ImageSharp" Version="4.6.1" />
+    <PackageReference Include="Veldrid.RenderDoc" Version="1.0.0" />
     <PackageReference Include="Veldrid.SDL2" Version="4.6.1" />
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.9" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.11" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.6.1" />
     <PackageReference Include="Veldrid.Utilities" Version="4.6.1" />
   </ItemGroup>

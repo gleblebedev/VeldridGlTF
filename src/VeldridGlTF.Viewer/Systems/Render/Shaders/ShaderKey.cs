@@ -4,12 +4,20 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
 {
     public class ShaderKey : IEquatable<ShaderKey>
     {
-        public ShaderKey(IShaderFactory factory)
+        private readonly RenderPass _renderPass;
+
+        public ShaderKey(IShaderFactory factory, RenderPass renderPass)
         {
+            _renderPass = renderPass;
             Factory = factory;
         }
 
         public IShaderFactory Factory { get; }
+
+        public RenderPass RenderPass
+        {
+            get { return _renderPass; }
+        }
 
         public virtual bool Equals(ShaderKey other)
         {
@@ -17,7 +25,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
             if (ReferenceEquals(this, other)) return true;
             if (other.GetType() != GetType()) return false;
             if (other.Factory != Factory) return false;
-            return Equals(other);
+            if (other._renderPass != _renderPass) return false;
+            return true;
         }
 
 

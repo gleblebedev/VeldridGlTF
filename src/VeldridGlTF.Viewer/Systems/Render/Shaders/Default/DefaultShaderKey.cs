@@ -4,7 +4,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 {
     public class DefaultShaderKey : ShaderKey, IEquatable<DefaultShaderKey>
     {
-        public DefaultShaderKey(IShaderFactory factory, RenderVertexLayout layout) : base(factory)
+        public DefaultShaderKey(IShaderFactory factory, RenderPass renderPass, RenderVertexLayout layout) : base(factory, renderPass)
         {
             VertexLayout = layout;
             foreach (var element in VertexLayout.VertexLayoutDescription.Elements)
@@ -34,8 +34,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 
         public bool Equals(DefaultShaderKey other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (!base.Equals((ShaderKey) other))
+                return false;
             return Equals(VertexLayout, other.VertexLayout) && Flags == other.Flags;
         }
 

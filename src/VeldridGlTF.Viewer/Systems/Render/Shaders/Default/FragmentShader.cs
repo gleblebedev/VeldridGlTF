@@ -28,24 +28,30 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write("#version 450\r\n\r\nstruct MaterialPropertiesInfo\r\n{\r\n    vec4 BaseColor;\r\n};\r\n\r\n");
-            
-            #line 13 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            this.Write(@"#version 450
 
-    if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP))
-	{
+struct MaterialPropertiesInfo
+{
+    vec4 BaseColor;
+};
 
-            
-            #line default
-            #line hidden
-            this.Write("layout(set = 2, binding = 0) uniform texture2D SurfaceTexture;\r\nlayout(set = 2, b" +
-                    "inding = 1) uniform sampler SurfaceSampler;\r\nlayout(set = 2, binding = 2) unifor" +
-                    "m MaterialProperties\r\n{\r\n    MaterialPropertiesInfo _MaterialProperties;\r\n};\r\n\r\n" +
-                    "");
-            
-            #line 24 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
+layout(set = 0, binding = 2) uniform sampler BRDFSampler;
 
-	}
+layout(set = 1, binding = 0) uniform textureCube ReflectionTexture;
+layout(set = 1, binding = 1) uniform sampler ReflectionSampler;
+
+layout(set = 3, binding = 0) uniform MaterialProperties
+{
+    MaterialPropertiesInfo _MaterialProperties;
+};
+layout(set = 3, binding = 1) uniform texture2D SurfaceTexture;
+layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
+
+");
+            
+            #line 26 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+
 	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
 		WriteLine(string.Format("layout(location = {0}) in {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
@@ -57,7 +63,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             this.Write("layout(location = 0) out vec4 fsout_color;\r\n\r\nvoid main()\r\n{\r\n    float light = 1" +
                     ".0;\r\n\tvec3 normal = vec3(0.0,1.0,0.0);\r\n");
             
-            #line 37 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
 	
     if (Context.Normal != null)
@@ -75,16 +81,34 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             
             #line default
             #line hidden
-            this.Write("    fsout_color = texture(sampler2D(SurfaceTexture, SurfaceSampler), ");
+            this.Write("\tvec4 diffuse = texture(sampler2D(SurfaceTexture, SurfaceSampler), vec2(0.0, 0.0)" +
+                    ");\r\n\tvec4 brdf = texture(sampler2D(BRDFTexture, BRDFSampler), vec2(0.0, 0.0));\r\n" +
+                    "\tvec4 reflection = texture(samplerCube(ReflectionTexture, ReflectionSampler), re" +
+                    "flect(");
             
-            #line 51 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.TexCoord0.Name));
+            #line 54 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Context.CameraPosition));
+            
+            #line default
+            #line hidden
+            this.Write(" - ");
+            
+            #line 54 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Context.WorldPosition));
+            
+            #line default
+            #line hidden
+            this.Write(", normal));\r\n\tfsout_color = reflection+brdf+diffuse;\r\n    //fsout_color = texture" +
+                    "(sampler2D(SurfaceTexture, SurfaceSampler), ");
+            
+            #line 56 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Context.TexCoord0));
             
             #line default
             #line hidden
             this.Write(") * vec4(light,light,light,light);\r\n");
             
-            #line 52 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 57 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
 	}
 	else
@@ -96,7 +120,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             this.Write("    fsout_color = _MaterialProperties.BaseColor * vec4(light,light,light,light);\r" +
                     "\n");
             
-            #line 58 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 63 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
 	}
 

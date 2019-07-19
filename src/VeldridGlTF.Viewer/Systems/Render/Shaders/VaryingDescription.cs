@@ -19,6 +19,11 @@
             Name = name;
             Format = format;
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 
     /// <summary>

@@ -16,7 +16,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public IResourceHandler<IMaterial> Material
@@ -39,7 +38,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var material = await context.ResolveDependencyAsync(_material) as MaterialResource;
             if (material == null)
                 return null;
-            return CreateDrawCallCollection(mesh, material);
+            return CreateDrawCallCollection(mesh, material, RenderSystem.MainPass);
         }
     }
 }

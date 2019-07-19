@@ -49,7 +49,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var materials = new List<MaterialResource>(materialSet.Count);
             foreach (var material in materialSet)
                 materials.Add(await context.ResolveDependencyAsync(material) as MaterialResource);
-            return CreateDrawCallCollection(model, materials);
+            return CreateDrawCallCollection(model, materials, RenderSystem.MainPass);
         }
     }
 }

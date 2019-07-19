@@ -1,11 +1,12 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Veldrid;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
-    public class MaterialResource : AbstractResource, IMaterial
+    public class MaterialResource : AbstractResource, IMaterial, IDisposable
     {
         private readonly VeldridRenderSystem _renderSystem;
         public Vector4 _baseColor;
@@ -27,6 +28,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                 if (_resourceSet != null) _resourceSet.Dispose();
                 _resourceSet = value;
             }
+        }
+
+        public override void Dispose()
+        {
+            ResourceSet?.Dispose();
+            base.Dispose();
         }
 
         public IResourceHandler<ITexture> DiffuseTexture { get; set; }

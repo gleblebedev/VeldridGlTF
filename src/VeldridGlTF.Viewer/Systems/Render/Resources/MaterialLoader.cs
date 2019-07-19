@@ -33,9 +33,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             var renderContext = await context.ResolveDependencyAsync(renderSystem.RenderContext);
             material.ResourceSet = renderContext.Factory.CreateResourceSet(new ResourceSetDescription(
                 renderSystem.MaterialLayout,
+                renderSystem.MaterialBuffer,
                 diffuse?.View ?? renderSystem.DefaultTextureView,
-                renderContext.Device.Aniso4xSampler,
-                renderSystem.MaterialBuffer
+                renderContext.Device.Aniso4xSampler
             ));
             return material;
         }

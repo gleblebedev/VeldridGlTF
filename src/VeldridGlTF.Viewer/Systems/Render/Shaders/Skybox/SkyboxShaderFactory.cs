@@ -8,15 +8,13 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox
         {
             return @"#version 450
 
-layout(set = 0, binding = 0) uniform ProjectionBuffer
-{
-    mat4 Projection;
-};
-
-layout(set = 0, binding = 1) uniform ViewBuffer
+layout(set = 0, binding = 0) uniform EnvironmentProperties
 {
     mat4 View;
+    mat4 Projection;
+	vec3 CameraPos;
 };
+
 
 layout(location = 0) in vec3 POSITION;
 layout(location = 0) out vec3 fsin_0;
@@ -41,15 +39,24 @@ void main()
         {
             return @"#version 450
 
-layout(set = 2, binding = 0) uniform textureCube SurfaceTexture;
-layout(set = 2, binding = 1) uniform sampler SurfaceSampler;
+layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
+layout(set = 0, binding = 2) uniform sampler BRDFSampler;
+
+layout(set = 1, binding = 0) uniform textureCube ReflectionTexture;
+layout(set = 1, binding = 1) uniform sampler ReflectionSampler;
+
+layout(set = 3, binding = 1) uniform textureCube SurfaceTexture;
+layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
 
 layout(location = 0) in vec3 fsin_0;
 layout(location = 0) out vec4 OutputColor;
 
 void main()
 {
-    OutputColor = texture(samplerCube(SurfaceTexture, SurfaceSampler), fsin_0);
+	vec4 reflection = texture(samplerCube(ReflectionTexture, ReflectionSampler), vec3(0,0,0));
+	vec4 brdf = texture(sampler2D(BRDFTexture, BRDFSampler), vec2(0.0, 0.0));
+    vec4 skybox = texture(samplerCube(SurfaceTexture, SurfaceSampler), fsin_0);
+    OutputColor = skybox;
 }";
         }
     }
@@ -61,9 +68,9 @@ void main()
             return new SkyboxShaderGenerator();
         }
 
-        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material)
+        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
         {
-            return new ShaderKey(this);
+            return new ShaderKey(this, pass);
         }
     }
 }

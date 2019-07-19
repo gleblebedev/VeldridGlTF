@@ -15,7 +15,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private readonly Dictionary<ShaderKey, Shader[]> _compiledShaders = new Dictionary<ShaderKey, Shader[]>();
         private readonly ResourceFactory _factory;
         private readonly Dictionary<string, IShaderFactory> _generators = new Dictionary<string, IShaderFactory>();
-        private readonly SkyboxShaderFactory _skyboxShaderFactory;
         private readonly DefaultShaderFactory _defaultShaderFactory;
 
         public ShaderManager(ResourceFactory factory)
@@ -26,7 +25,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _generators["Skybox"] = new SkyboxShaderFactory();
         }
 
-        public Shader[] GetShaders(ShaderKey shaderKey)
+        public Shader[] GetShaders(ShaderKey shaderKey, RenderPass pass)
         {
             Shader[] shaders;
             if (_compiledShaders.TryGetValue(shaderKey, out shaders)) return shaders;
@@ -45,7 +44,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return compiledShader;
         }
 
-        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material)
+        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
         {
             if (!_generators.TryGetValue(material.ShaderName, out var generatorFactory))
             {
@@ -53,7 +52,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 generatorFactory = _defaultShaderFactory;
             }
 
-            return generatorFactory.GetShaderKey(primitive, material);
+            return generatorFactory.GetShaderKey(primitive, material, renderPass);
         }
     }
 }

@@ -5,17 +5,14 @@
 <#@ import namespace="System.Collections.Generic" #>
 #version 450
 
-layout(set = 0, binding = 0) uniform ProjectionBuffer
-{
-    mat4 Projection;
-};
-
-layout(set = 0, binding = 1) uniform ViewBuffer
+layout(set = 0, binding = 0) uniform EnvironmentProperties
 {
     mat4 View;
+    mat4 Projection;
+	vec3 CameraPos;
 };
 
-layout(set = 1, binding = 0) uniform WorldBuffer
+layout(set = 2, binding = 0) uniform WorldBuffer
 {
     mat4 World;
 };
@@ -36,6 +33,8 @@ layout(set = 1, binding = 0) uniform WorldBuffer
 void main()
 {
     vec4 worldPosition = World * vec4(POSITION, 1);
+	<#= Context.WorldPosition #> = worldPosition.xyz;
+	<#= Context.CameraPosition #> = CameraPos;
     vec4 viewPosition = View * worldPosition;
 	mat3 normalMatix = mat3(World);
     vec4 clipPosition = Projection * viewPosition;

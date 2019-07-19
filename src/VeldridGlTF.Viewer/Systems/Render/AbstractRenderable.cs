@@ -21,23 +21,23 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         protected abstract Task<DrawCallCollection> CreateRenderCache(ResourceContext context);
 
-        protected DrawCallCollection CreateDrawCallCollection(Mesh mesh, MaterialResource material)
+        protected DrawCallCollection CreateDrawCallCollection(Mesh mesh, MaterialResource material, RenderPass renderPass)
         {
             return new DrawCallCollection(mesh, mesh.Primitives.Count,
-                Enumerable.Range(0, mesh.Primitives.Count).Select(_ => CreateDrawCall(mesh.Primitives[_], material)));
+                Enumerable.Range(0, mesh.Primitives.Count).Select(_ => CreateDrawCall(mesh.Primitives[_], material, renderPass)));
         }
 
-        protected DrawCallCollection CreateDrawCallCollection(Mesh mesh, IEnumerable<MaterialResource> materials)
+        protected DrawCallCollection CreateDrawCallCollection(Mesh mesh, IEnumerable<MaterialResource> materials, RenderPass renderPass)
         {
             return new DrawCallCollection(mesh, mesh.Primitives.Count,
-                materials.Take(mesh.Primitives.Count).Select((_, i) => CreateDrawCall(mesh.Primitives[i], _)));
+                materials.Take(mesh.Primitives.Count).Select((_, i) => CreateDrawCall(mesh.Primitives[i], _, renderPass)));
         }
 
-        protected DrawCall CreateDrawCall(RenderPrimitive primitive, MaterialResource material)
+        protected DrawCall CreateDrawCall(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
         {
             if (material == null) return null;
 
-            var pipeline = RenderSystem.GetPipeline(primitive, material);
+            var pipeline = RenderSystem.GetPipeline(primitive, material, renderPass);
             var drawCall = new DrawCall
             {
                 Pipeline = pipeline,

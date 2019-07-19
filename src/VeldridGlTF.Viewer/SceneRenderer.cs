@@ -30,7 +30,7 @@ namespace VeldridGlTF.Viewer
             Window = window;
 
             _stepContext = new StepContext();
-            _veldridRenderSystem = new VeldridRenderSystem(_stepContext, window);
+            _veldridRenderSystem = new VeldridRenderSystem(_stepContext, window, options.RenderDoc);
             _scene.Systems
                 .Add(new LocalToWorldSystem(_scene))
                 .Add(_veldridRenderSystem);

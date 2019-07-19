@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Veldrid;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
@@ -24,6 +25,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             if (_shaderKey.IsFlagSet(ShaderFlag.HAS_UV_SET2))
                 Varyings.Add(TexCoord1 = new VaryingDescription("v_TEXCOORD_1", VaryingFormat.Float2));
 
+            Varyings.Add(WorldPosition = new VaryingDescription("v_WorldPosition", VaryingFormat.Float3));
+            Varyings.Add(CameraPosition = new VaryingDescription("v_CameraPosition", VaryingFormat.Float3));
+
             var location = 0;
             foreach (var varying in Varyings)
             {
@@ -32,6 +36,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             }
         }
 
+        public VaryingDescription WorldPosition { get; set; }
+        public VaryingDescription CameraPosition { get; set; }
         public VaryingDescription Normal { get; set; }
         public VaryingDescription TBN { get; set; }
 

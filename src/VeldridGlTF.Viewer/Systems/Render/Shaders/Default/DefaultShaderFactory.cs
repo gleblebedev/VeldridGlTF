@@ -10,9 +10,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             return new DefaultShaderGenerator((DefaultShaderKey) key);
         }
 
-        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material)
+        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
         {
-            var shaderKey = new DefaultShaderKey(this, primitive.Elements);
+            var shaderKey = new DefaultShaderKey(this, renderPass, primitive.Elements);
             if (shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "NORMAL"))
                 shaderKey.Flags |= ShaderFlag.HAS_DIFFUSE_MAP;
 

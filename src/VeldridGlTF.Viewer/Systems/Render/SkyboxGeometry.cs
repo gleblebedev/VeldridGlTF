@@ -32,12 +32,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         private static readonly IReadOnlyList<IGeometryPrimitive> _primitives = new[] {new SkyboxPrimitive()};
 
-        private Texture _cubemap;
-        private TextureView _cubemapView;
-        private Mesh _mesh;
-        private StaticModel _model;
-        private Pipeline _pipeline;
-
         public IReadOnlyList<IGeometryPrimitive> Primitives => _primitives;
 
         internal class SkyboxPrimitive : IGeometryPrimitive

@@ -26,7 +26,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             new ManualResourceHandler<RenderContext>(ResourceId.Null);
 
         private readonly StepContext _stepContext;
+        private readonly bool _enableRenderDoc;
         private ImageSharpTexture _albedoImage;
+        private Texture _surfaceTexture;
 
         protected Camera _camera;
         private CommandList _cl;
@@ -35,32 +37,45 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private ResourceLayout _environmentLayout;
         private ResourceLayout _zoneLayout;
         private ResourceSet _environmentSet;
+        private ResourceSet _zoneSet;
         private GraphicsDevice _graphicsDevice;
         private ResourceLayout _meshLayout;
         private ResourceSet _meshSet;
-        private DeviceBuffer _projectionBuffer;
+        //private DeviceBuffer _projectionBuffer;
 
         private ResourceFactory _resourceFactory;
 
         private ShaderManager _shaderManager;
+
+        #region SKY
+
         private Skybox _skybox;
         private ImageSharpCubemapTexture _skyImage;
-
         private Texture _skyTexture;
         private TextureView _skyTextureView;
-        private Texture _surfaceTexture;
+
+        #endregion
+
+        private ImageSharpTexture _brdfLUTImage;
+        private Texture _brdfLUTTexture;
+        private TextureView _brdfLUTTextureView;
 
         private DeviceBuffer _viewBuffer;
 
         private DeviceBuffer _worldBuffer;
 
-        public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window)
+        public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window, bool enableRenderDoc)
         {
             _stepContext = stepContext;
+            _enableRenderDoc = enableRenderDoc;
             Window = window;
             Window.Resized += HandleWindowResize;
             Window.GraphicsDeviceCreated += OnGraphicsDeviceCreated;
             Window.GraphicsDeviceDestroyed += OnDeviceDestroyed;
+            if (_enableRenderDoc)
+            {
+                RenderDoc.Load(out _renderDoc);
+            }
         }
 
         public IResourceHandler<RenderContext> RenderContext => _renderContext;
@@ -87,6 +102,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 , "VeldridGlTF.Viewer.Assets.Sky.PosZ.png"
                 , "VeldridGlTF.Viewer.Assets.Sky.NegZ.png"
             );
+            _brdfLUTImage = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.brdfLUT.png");
         }
 
         public void Destroy()
@@ -152,7 +168,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var lookAt = _camera.ViewMatrix;
             _cl.UpdateBuffer(_viewBuffer, 0, lookAt);
             var perspectiveFieldOfView = _camera.ProjectionMatrix;
-            _cl.UpdateBuffer(_projectionBuffer, 0, perspectiveFieldOfView);
+            _cl.UpdateBuffer(_viewBuffer, 16*4, perspectiveFieldOfView);
+            _cl.UpdateBuffer(_viewBuffer, 16 * 4+ 16 * 4, new []{_camera.Position});
+            //_cl.UpdateBuffer(_projectionBuffer, 0, perspectiveFieldOfView);
 
             foreach (var modelIndex in _staticModels)
             {
@@ -229,8 +247,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     {
                         _cl.SetPipeline(drawCall.Pipeline);
                         _cl.SetGraphicsResourceSet(0, _environmentSet);
-                        _cl.SetGraphicsResourceSet(1, _meshSet);
-                        _cl.SetGraphicsResourceSet(2, material.ResourceSet);
+                        _cl.SetGraphicsResourceSet(1, _zoneSet);
+                        _cl.SetGraphicsResourceSet(2, _meshSet);
+                        _cl.SetGraphicsResourceSet(3, material.ResourceSet);
                         _cl.SetVertexBuffer(0, renderCache.VertexBuffer, indexRange.DataOffset);
                         material.UpdateBuffer(_cl, MaterialBuffer);
                         _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
@@ -239,9 +258,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             }
         }
 
-        public Pipeline GetPipeline(RenderPrimitive primitive, MaterialResource material)
+        public Pipeline GetPipeline(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
         {
-            var pipelineKey = EvaulatePipelineKey(primitive, material);
+            var pipelineKey = EvaulatePipelineKey(primitive, material, pass);
 
             Pipeline pipeline;
 
@@ -252,7 +271,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 {
                     primitive.Elements.VertexLayoutDescription
                 },
-                _shaderManager.GetShaders(pipelineKey.Shader));
+                _shaderManager.GetShaders(pipelineKey.Shader, MainPass));
 
             pipeline = _resourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
@@ -267,14 +286,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 },
                 pipelineKey.PrimitiveTopology,
                 shaderSet,
-                new[] {_environmentLayout, _meshLayout, MaterialLayout},
+                MainPass.ResourceLayouts,
                 MainSwapchain.Framebuffer.OutputDescription));
             return pipeline;
         }
+        public RenderPass MainPass { get; set; }
 
-        private PipelineKey EvaulatePipelineKey(RenderPrimitive primitive, MaterialResource material)
+        private PipelineKey EvaulatePipelineKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
         {
-            var shaderKey = _shaderManager.GetShaderKey(primitive, material);
+            var shaderKey = _shaderManager.GetShaderKey(primitive, material, renderPass);
             var pipelineKey = new PipelineKey
             {
                 Shader = shaderKey,
@@ -332,37 +352,42 @@ namespace VeldridGlTF.Viewer.Systems.Render
         protected void CreateResources(ResourceFactory factory)
         {
             _shaderManager = new ShaderManager(factory);
-            _projectionBuffer =
-                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            //_projectionBuffer =
+            //    factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             _viewBuffer =
-                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+                factory.CreateBuffer(new BufferDescription(64+64+16, BufferUsage.UniformBuffer));
             _worldBuffer =
                 factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             MaterialBuffer = CreateMaterialBuffer();
 
+            _brdfLUTTexture = _brdfLUTImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
+            _brdfLUTTextureView = factory.CreateTextureView(_brdfLUTTexture);
+
             _surfaceTexture = _albedoImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
-            _surfaceTexture.Name = "DefaultDiffuseTexture";
+            //_surfaceTexture.Name = "DefaultDiffuseTexture";
             _defaultDiffuseTextureView = factory.CreateTextureView(_surfaceTexture);
-            _defaultDiffuseTextureView.Name = _surfaceTexture.Name;
+            //_defaultDiffuseTextureView.Name = _surfaceTexture.Name;
 
             _skyTexture = _skyImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
-            _skyTexture.Name = "DefaultSkyboxTexture";
+            //_skyTexture.Name = "DefaultSkyboxTexture";
             _skyTextureView = factory.CreateTextureView(_skyTexture);
-            _skyTextureView.Name = _surfaceTexture.Name;
+            //_skyTextureView.Name = _surfaceTexture.Name;
 
             _environmentLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer,
+                    new ResourceLayoutElementDescription("EnvironmentProperties", ResourceKind.UniformBuffer,
                         ShaderStages.Vertex),
-                    new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex)
+                    new ResourceLayoutElementDescription("BRDFTexture", ResourceKind.TextureReadOnly,
+                        ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("BRDFSampler", ResourceKind.Sampler,
+                        ShaderStages.Fragment)
                 ));
 
             _zoneLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("EnvironmentTexture", ResourceKind.TextureReadOnly,
+                    new ResourceLayoutElementDescription("ReflectionTexture", ResourceKind.TextureReadOnly,
                         ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("EnvironmentSampler", ResourceKind.Sampler,
+                    new ResourceLayoutElementDescription("ReflectionSampler", ResourceKind.Sampler,
                         ShaderStages.Fragment)
                 ));
 
@@ -374,18 +399,24 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             MaterialLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.UniformBuffer,
+                        ShaderStages.Vertex | ShaderStages.Fragment, ResourceLayoutElementOptions.None),
                     new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly,
                         ShaderStages.Fragment),
                     new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler,
-                        ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex | ShaderStages.Fragment, ResourceLayoutElementOptions.None)
+                        ShaderStages.Fragment)
                 ));
 
             _environmentSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _environmentLayout,
-                _projectionBuffer,
-                _viewBuffer));
+                _viewBuffer,
+                _brdfLUTTextureView,
+                _graphicsDevice.LinearSampler));
+
+            _zoneSet = factory.CreateResourceSet(new ResourceSetDescription(
+                _zoneLayout,
+                _skyTextureView,
+                _graphicsDevice.Aniso4xSampler));
 
             _meshSet = factory.CreateResourceSet(new ResourceSetDescription(
                 _meshLayout,
@@ -394,12 +425,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             _defaultMaterialSet = factory.CreateResourceSet(new ResourceSetDescription(
                 MaterialLayout,
+                MaterialBuffer,
                 _defaultDiffuseTextureView,
-                _graphicsDevice.Aniso4xSampler,
-                MaterialBuffer
+                _graphicsDevice.Aniso4xSampler
             ));
 
             _cl = factory.CreateCommandList();
+
+            MainPass = new RenderPass("Main") { ResourceLayouts= new[] {_environmentLayout, _zoneLayout, _meshLayout, MaterialLayout}};
 
             _skybox = new Skybox {RenderSystem = this};
             var skyboxMaterial = new MaterialDescription(ResourceId.Null)
@@ -461,6 +494,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private EcsFilter<WorldTransform, Skybox> _skyboxes = null;
         private EcsFilter<WorldTransform, StaticModel> _staticModels = null;
         private EcsFilter<WorldTransform, Zone> _zones = null;
+        private RenderDoc _renderDoc;
 
         #endregion
     }
