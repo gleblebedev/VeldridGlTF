@@ -1,0 +1,34 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace Veldrid.SPIRV.Instructions
+{
+    internal class TypeVector : TypeInstruction
+    {
+        public uint ComponentType { get; set; }
+        public uint ComponentCount { get; set; }
+
+        public override Op OpCode => Op.OpTypeVector;
+
+        public override void Parse(BinaryReader reader, uint wordCount)
+        {
+            base.Parse(reader, wordCount);
+            ComponentType = reader.ReadUInt32();
+            ComponentCount = reader.ReadUInt32();
+        }
+
+        public override ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types)
+        {
+            if (!types.TryGetValue(ComponentType, out var componentType))
+                return EmptyEvaulation;
+            string name = null;
+            var (componentName, componentSize) = componentType.Evaluate(types);
+            if (componentName == "float") name = "vec" + ComponentCount;
+
+            if (componentSize.HasValue)
+                return ValueTuple.Create<string, uint?>(name, componentSize.Value * ComponentCount);
+            return ValueTuple.Create<string, uint?>(name, null);
+        }
+    }
+}
