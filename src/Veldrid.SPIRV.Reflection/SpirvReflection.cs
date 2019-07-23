@@ -37,6 +37,7 @@ namespace Veldrid.SPIRV
                 var names = new Dictionary<uint, Name>();
                 var uniforms = new List<Variable>();
                 var inputs = new List<Variable>();
+                var memberNames = new List<MemberName>();
 
                 while (reader.BaseStream.Position != spirvBytes.Length)
                 {
@@ -64,7 +65,12 @@ namespace Veldrid.SPIRV
                                 names.Add(name.Target, name);
                                 break;
                             }
-
+                            case Op.OpMemberName:
+                            {
+                                var name = (MemberName)i;
+                                memberNames.Add(name);
+                                break;
+                            }
                             case Op.OpDecorate:
                             {
                                 var decorate = (Decorate) i;
@@ -215,6 +221,13 @@ namespace Veldrid.SPIRV
                 case Op.OpName:
                 {
                     var name = new Name();
+                    name.Parse(reader, wordCount);
+                    return name;
+                }
+
+                case Op.OpMemberName:
+                {
+                    var name = new MemberName();
                     name.Parse(reader, wordCount);
                     return name;
                 }

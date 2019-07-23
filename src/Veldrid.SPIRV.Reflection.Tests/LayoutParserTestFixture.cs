@@ -6,6 +6,7 @@ namespace Veldrid.SPIRV
     [TestFixture]
     public class LayoutParserTestFixture
     {
+        static readonly GlslCompileOptions glslCompileOptions = new GlslCompileOptions(true);
         [Test]
         public void FloatParameter()
         {
@@ -25,7 +26,7 @@ void main()
             #endregion
 
             var bytecode = SpirvCompilation
-                .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, GlslCompileOptions.Default)
+                .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, glslCompileOptions)
                 .SpirvBytes;
 
             var reflection = SpirvReflection.Parse(bytecode);
@@ -71,7 +72,7 @@ void main()
             #endregion
 
             var bytecode = SpirvCompilation
-                .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, GlslCompileOptions.Default)
+                .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, glslCompileOptions)
                 .SpirvBytes;
 
             var reflection = SpirvReflection.Parse(bytecode);
@@ -109,7 +110,7 @@ void main()
             #endregion
 
             var bytecode = SpirvCompilation
-                .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, GlslCompileOptions.Default)
+                .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, glslCompileOptions)
                 .SpirvBytes;
 
             var reflection = SpirvReflection.Parse(bytecode);
