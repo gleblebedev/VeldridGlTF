@@ -15,6 +15,9 @@ namespace Veldrid.SPIRV.Instructions
             IdResult = reader.ReadUInt32();
         }
 
-        public abstract ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types);
+        public virtual ResourceKind EvaluateKind(IDictionary<uint, TypeInstruction> types)
+        {
+            return ResourceKind.UniformBuffer;
+        }
     }
 }

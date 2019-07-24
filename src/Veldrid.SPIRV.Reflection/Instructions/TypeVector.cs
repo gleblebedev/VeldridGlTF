@@ -17,18 +17,9 @@ namespace Veldrid.SPIRV.Instructions
             ComponentType = reader.ReadUInt32();
             ComponentCount = reader.ReadUInt32();
         }
-
-        public override ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types)
+        public override ResourceKind EvaluateKind(IDictionary<uint, TypeInstruction> types)
         {
-            if (!types.TryGetValue(ComponentType, out var componentType))
-                return EmptyEvaulation;
-            string name = null;
-            var (componentName, componentSize) = componentType.Evaluate(types);
-            if (componentName == "float") name = "vec" + ComponentCount;
-
-            if (componentSize.HasValue)
-                return ValueTuple.Create<string, uint?>(name, componentSize.Value * ComponentCount);
-            return ValueTuple.Create<string, uint?>(name, null);
+            return ResourceKind.UniformBuffer;
         }
     }
 }

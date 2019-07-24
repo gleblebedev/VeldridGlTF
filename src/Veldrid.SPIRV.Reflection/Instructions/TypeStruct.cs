@@ -18,24 +18,9 @@ namespace Veldrid.SPIRV.Instructions
             for (var index = 0; index < MemberTypes.Length; index++) MemberTypes[index] = reader.ReadUInt32();
         }
 
-        public override ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types)
+        public override ResourceKind EvaluateKind(IDictionary<uint, TypeInstruction> types)
         {
-            var stringBuilder = new StringBuilder();
-            uint totalSize = 0;
-            foreach (var type in MemberTypes)
-            {
-                if (!types.TryGetValue(type, out var memberType))
-                    return EmptyEvaulation;
-                var (memberName, memberSize) = memberType.Evaluate(types);
-                if (memberSize == null)
-                    return EmptyEvaulation;
-                if (stringBuilder.Length != 0)
-                    stringBuilder.Append(",");
-                stringBuilder.Append(memberName);
-                totalSize += memberSize.Value;
-            }
-
-            return ValueTuple.Create<string, uint?>(stringBuilder.ToString(), totalSize);
+            return ResourceKind.UniformBuffer;
         }
     }
 }

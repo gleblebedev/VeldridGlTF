@@ -13,9 +13,9 @@ namespace Veldrid.SPIRV.Instructions
             base.Parse(reader, wordCount);
         }
 
-        public override ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types)
+        public override ResourceKind EvaluateKind(IDictionary<uint, TypeInstruction> types)
         {
-            return ValueTuple.Create("void", (uint?) 0);
+            return ResourceKind.UniformBuffer;
         }
     }
 }

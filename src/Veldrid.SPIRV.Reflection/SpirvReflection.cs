@@ -6,31 +6,75 @@ using Veldrid.SPIRV.Instructions;
 
 namespace Veldrid.SPIRV
 {
-    public class SpirvReflection
+    public static class SpirvReflection
     {
         public const uint MagicNumber = 0x07230203;
 
-        public uint Reserved { get; set; }
-
-        public uint Bound { get; set; }
-
-        public uint Generator { get; set; }
-
-        public uint Version { get; set; }
-
-        public uint Magic { get; set; }
-
-        public List<Uniform> Uniforms { get; } = new List<Uniform>();
-
-        public List<Input> Inputs { get; } = new List<Input>();
-
-        public static SpirvReflection Parse(byte[] spirvBytes)
+        public static SpirvCompilationResultEx[] CompileGlslToSpirv(params ShaderArgs[] shaders)
         {
-            var spirvReflection = new SpirvReflection();
+            var res = new SpirvCompilationResultEx[shaders.Length];
 
+            for (var index = 0; index < shaders.Length; index++)
+            {
+                var shader = shaders[index];
+                var compilationResult = SpirvCompilation.CompileGlslToSpirv(shader.Source, shader.FileName,
+                    shader.Stage,
+                    new GlslCompileOptions(true));
+                var layout = Parse(compilationResult.SpirvBytes, shader.Stage);
+                res[index] = new SpirvCompilationResultEx(compilationResult.SpirvBytes, layout.ToArray());
+
+                //for (var index = 0; index < layout.Count; index++)
+                //{
+                //    if (sets.Count <= index)
+                //    {
+                //        sets.Add(new List<ResourceLayoutElementDescription>());
+                //    }
+
+                //    var resSet = sets[index];
+                //    var set = layout[index];
+                //    for (var elementIndex = 0; elementIndex < set.Count; elementIndex++)
+                //    {
+                //        var elementDescription = set[elementIndex];
+                //        if (resSet.Count <= elementIndex)
+                //        {
+                //            resSet.Add(new ResourceLayoutElementDescription());
+                //        }
+
+                //        if (elementDescription.Name != null)
+                //        {
+                //            var prevElement = resSet[elementIndex];
+                //            if (prevElement.Name != null)
+                //            {
+                //                if (prevElement.Name != elementDescription.Name)
+                //                    throw new Exception("Resource name doesn't match up at set=" + index + " binding=" +
+                //                                    elementIndex);
+                //                if (prevElement.Kind != elementDescription.Kind)
+                //                    throw new Exception("Resource kind doesn't match up at set=" + index + " binding=" +
+                //                                        elementIndex);
+                //            }
+                //            resSet[elementIndex] = new ResourceLayoutElementDescription(elementDescription.Name, elementDescription.Kind, elementDescription.Stages | prevElement.Stages, ResourceLayoutElementOptions.None );
+                //        }
+                //    }
+                //}
+            }
+
+            return res;
+        }
+        public static SpirvCompilationResultEx[] CompileGlslToSpirv(string vertex, string fragment)
+        {
+            return CompileGlslToSpirv(
+                new[] {
+                    new ShaderArgs {FileName = "vert.glsl", Source = vertex, Stage = ShaderStages.Vertex},
+                    new ShaderArgs {FileName = "frag.glsl", Source = fragment, Stage = ShaderStages.Fragment}
+                });
+        }
+
+        public static IList<ResourceLayoutDescription> Parse(byte[] spirvBytes, ShaderStages stage)
+        {
+            var sets = new List<IList<ResourceLayoutElementDescription>>();
             using (var reader = new BinaryReader(new MemoryStream(spirvBytes)))
             {
-                ParseHeader(spirvReflection, reader);
+                ParseHeader(reader);
 
                 var decorations = new List<Decorate>();
                 var types = new Dictionary<uint, TypeInstruction>();
@@ -41,7 +85,7 @@ namespace Veldrid.SPIRV
 
                 while (reader.BaseStream.Position != spirvBytes.Length)
                 {
-                    var i = ReadInstruction(reader, spirvReflection);
+                    var i = ReadInstruction(reader);
                     if (i != null)
                         switch (i.OpCode)
                         {
@@ -102,57 +146,65 @@ namespace Veldrid.SPIRV
                 var decorationLookup = decorations.ToLookup(_ => _.Target);
                 foreach (var variable in uniforms)
                 {
-                    var uniform = new Uniform();
-                    spirvReflection.Uniforms.Add(uniform);
-                    if (names.TryGetValue(variable.IdResult, out var name)) uniform.Name = name.TargetName;
-                    if (types.TryGetValue(variable.IdResultType, out var type))
-                        (uniform.TypeName, uniform.Size) = type.Evaluate(types);
+                    string uniformName = null;
+                    uint set = 0;
+                    uint binding = 0;
+                    if (names.TryGetValue(variable.IdResult, out var name)) uniformName = name.TargetName;
                     foreach (var decorate in decorationLookup[variable.IdResult])
+                    {
                         switch (decorate.Decoration)
                         {
                             case Decoration.DescriptorSet:
-                                uniform.Set = decorate.DescriptorSet;
+                                set = decorate.DescriptorSet.Value;
                                 break;
                             case Decoration.Binding:
-                                uniform.Binding = decorate.BindingPoint;
+                                binding = decorate.BindingPoint.Value;
                                 break;
                         }
-                }
+                    }
 
-                foreach (var variable in inputs)
-                {
-                    var input = new Input();
-                    spirvReflection.Inputs.Add(input);
-                    if (names.TryGetValue(variable.IdResult, out var name)) input.Name = name.TargetName;
+                    var kind = ResourceKind.UniformBuffer;
                     if (types.TryGetValue(variable.IdResultType, out var type))
-                        (input.TypeName, input.Size) = type.Evaluate(types);
+                    {
+                        kind = type.EvaluateKind(types);
+                        if (string.IsNullOrEmpty(uniformName))
+                            uniformName = GetTypeName(type, types, names);
+                    }
+                    var element = new ResourceLayoutElementDescription(uniformName, kind, stage, ResourceLayoutElementOptions.None);
 
-                    foreach (var decorate in decorationLookup[variable.IdResult])
-                        switch (decorate.Decoration)
-                        {
-                            case Decoration.Location:
-                                input.Location = decorate.Location;
-                                break;
-                        }
+                    while (sets.Count <= set) sets.Add(new List<ResourceLayoutElementDescription>());
+                    var setCollection = sets[(int)set];
+                    while (setCollection.Count <= binding) setCollection.Add(default);
+                    setCollection[(int)binding] = element;
                 }
             }
 
-            return spirvReflection;
+            return sets.Select(_=>new ResourceLayoutDescription(_.ToArray())).ToList();
         }
 
-        private static void ParseHeader(SpirvReflection spirvReflection, BinaryReader reader)
+        private static string GetTypeName(TypeInstruction type, Dictionary<uint, TypeInstruction> types, Dictionary<uint, Name> names)
         {
-            spirvReflection.Magic = reader.ReadUInt32();
-            if (spirvReflection.Magic != MagicNumber) throw new FormatException("Not a SPIRV byte code");
-            spirvReflection.Version = reader.ReadUInt32();
-            if (spirvReflection.Version != 0x00010000)
-                throw new FormatException("Unsupported SPIRV byte code version");
-            spirvReflection.Generator = reader.ReadUInt32();
-            spirvReflection.Bound = reader.ReadUInt32();
-            spirvReflection.Reserved = reader.ReadUInt32();
+            if (names.TryGetValue(type.IdResult, out var name))
+                return name.TargetName;
+            var pointer = type as TypePointer;
+            if (pointer != null && types.TryGetValue(pointer.Type, out var valueType))
+                return GetTypeName(valueType, types, names);
+            return null;
         }
 
-        private static Instruction ReadInstruction(BinaryReader reader, SpirvReflection spirvReflection)
+        private static void ParseHeader(BinaryReader reader)
+        {
+            var Magic = reader.ReadUInt32();
+            if (Magic != MagicNumber) throw new FormatException("Not a SPIRV byte code");
+            var Version = reader.ReadUInt32();
+            if (Version != 0x00010000)
+                throw new FormatException("Unsupported SPIRV byte code version");
+            var Generator = reader.ReadUInt32();
+            var Bound = reader.ReadUInt32();
+            var Reserved = reader.ReadUInt32();
+        }
+
+        private static Instruction ReadInstruction(BinaryReader reader)
         {
             var instruction = reader.ReadUInt32();
             var opCode = (Op) (instruction & 0x0FFFF);

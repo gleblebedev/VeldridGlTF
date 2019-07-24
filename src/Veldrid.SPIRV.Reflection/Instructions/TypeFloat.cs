@@ -16,17 +16,9 @@ namespace Veldrid.SPIRV.Instructions
             Width = reader.ReadUInt32();
         }
 
-        public override ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types)
+        public override ResourceKind EvaluateKind(IDictionary<uint, TypeInstruction> types)
         {
-            switch (Width)
-            {
-                case 32:
-                    return ValueTuple.Create("float", (uint?) Width / 8);
-                case 64:
-                    return ValueTuple.Create("double", (uint?) Width / 8);
-                default:
-                    return ValueTuple.Create((string) null, (uint?) Width / 8);
-            }
+            return ResourceKind.UniformBuffer;
         }
     }
 }

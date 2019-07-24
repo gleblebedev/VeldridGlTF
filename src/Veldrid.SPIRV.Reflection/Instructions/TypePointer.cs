@@ -17,12 +17,11 @@ namespace Veldrid.SPIRV.Instructions
             StorageClass = (StorageClass) reader.ReadUInt32();
             Type = reader.ReadUInt32();
         }
-
-        public override ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types)
+        public override ResourceKind EvaluateKind(IDictionary<uint, TypeInstruction> types)
         {
             if (!types.TryGetValue(Type, out var valueType))
-                return EmptyEvaulation;
-            return valueType.Evaluate(types);
+                return base.EvaluateKind(types);
+            return valueType.EvaluateKind(types);
         }
     }
 }

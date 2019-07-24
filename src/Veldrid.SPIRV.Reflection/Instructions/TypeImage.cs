@@ -20,21 +20,9 @@ namespace Veldrid.SPIRV.Instructions
             reader.BaseStream.Position = end;
         }
 
-        public override ValueTuple<string, uint?> Evaluate(IDictionary<uint, TypeInstruction> types)
+        public override ResourceKind EvaluateKind(IDictionary<uint, TypeInstruction> types)
         {
-            switch (Dim)
-            {
-                case Dim.Dim1D:
-                    return ValueTuple.Create<string, uint?>("texture1D", null);
-                case Dim.Dim2D:
-                    return ValueTuple.Create<string, uint?>("texture2D", null);
-                case Dim.Dim3D:
-                    return ValueTuple.Create<string, uint?>("texture3D", null);
-                case Dim.Cube:
-                    return ValueTuple.Create<string, uint?>("textureCube", null);
-            }
-
-            return EmptyEvaulation;
+            return ResourceKind.TextureReadOnly;
         }
     }
 }
