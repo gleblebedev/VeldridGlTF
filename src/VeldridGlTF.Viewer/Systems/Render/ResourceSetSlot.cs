@@ -17,7 +17,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public ResourceSetSlot(string name, ResourceKind resourceKind, ResourceLayoutElementOptions options, BindableResource bindableResource)
         {
-            _name = name;
+            _name = name ?? "";
             _resourceKind = resourceKind;
             _options = options;
             _bindableResource = bindableResource;

@@ -293,7 +293,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             {
                 BuildLayoutAndSet(setBuilder, layouts[index], out var layout, out var set);
                 pipelineBinder.ResourceLayouts[index] = layout;
-                if (layouts[index].Elements.Length > 0)
+                //if (layouts[index].Elements.Length > 0)
                 {
                     pipelineBinder.Sets[index] = set;
                 }

@@ -176,7 +176,7 @@ namespace Veldrid.SPIRV
 
                     while (sets.Count <= set) sets.Add(new List<ResourceLayoutElementDescription>());
                     var setCollection = sets[(int)set];
-                    while (setCollection.Count <= binding) setCollection.Add(default);
+                    while (setCollection.Count <= binding) setCollection.Add(new ResourceLayoutElementDescription("", ResourceKind.UniformBuffer, ShaderStages.None));
                     setCollection[(int)binding] = element;
                 }
             }
