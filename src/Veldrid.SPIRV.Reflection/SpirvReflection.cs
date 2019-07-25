@@ -60,13 +60,15 @@ namespace Veldrid.SPIRV
 
             return res;
         }
-        public static SpirvCompilationResultEx[] CompileGlslToSpirv(string vertex, string fragment)
+  
+        public static ValueTuple<SpirvCompilationResultEx, SpirvCompilationResultEx> CompileGlslToSpirv(string vertex, string fragment)
         {
-            return CompileGlslToSpirv(
+            var res = CompileGlslToSpirv(
                 new[] {
                     new ShaderArgs {FileName = "vert.glsl", Source = vertex, Stage = ShaderStages.Vertex},
                     new ShaderArgs {FileName = "frag.glsl", Source = fragment, Stage = ShaderStages.Fragment}
                 });
+            return ValueTuple.Create(res[0], res[1]);
         }
 
         public static IList<ResourceLayoutDescription> Parse(byte[] spirvBytes, ShaderStages stage)

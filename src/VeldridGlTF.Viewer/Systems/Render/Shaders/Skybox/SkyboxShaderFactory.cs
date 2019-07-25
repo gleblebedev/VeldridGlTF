@@ -39,11 +39,11 @@ void main()
         {
             return @"#version 450
 
-layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
-layout(set = 0, binding = 2) uniform sampler BRDFSampler;
+//layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
+//layout(set = 0, binding = 2) uniform sampler BRDFSampler;
 
-layout(set = 1, binding = 0) uniform textureCube ReflectionTexture;
-layout(set = 1, binding = 1) uniform sampler ReflectionSampler;
+//layout(set = 1, binding = 0) uniform textureCube ReflectionTexture;
+//layout(set = 1, binding = 1) uniform sampler ReflectionSampler;
 
 layout(set = 3, binding = 1) uniform textureCube SurfaceTexture;
 layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
@@ -53,8 +53,8 @@ layout(location = 0) out vec4 OutputColor;
 
 void main()
 {
-	vec4 reflection = texture(samplerCube(ReflectionTexture, ReflectionSampler), vec3(0,0,0));
-	vec4 brdf = texture(sampler2D(BRDFTexture, BRDFSampler), vec2(0.0, 0.0));
+	//vec4 reflection = texture(samplerCube(ReflectionTexture, ReflectionSampler), vec3(0,0,0));
+	//vec4 brdf = texture(sampler2D(BRDFTexture, BRDFSampler), vec2(0.0, 0.0));
     vec4 skybox = texture(samplerCube(SurfaceTexture, SurfaceSampler), fsin_0);
     OutputColor = skybox;
 }";

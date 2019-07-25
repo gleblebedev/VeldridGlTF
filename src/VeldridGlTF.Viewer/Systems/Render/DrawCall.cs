@@ -6,7 +6,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
     public class DrawCall
     {
         public MaterialResource Material;
-        public Pipeline Pipeline;
+        public PipelineBinder Pipeline;
         public RenderPrimitive Primitive;
     }
 }

@@ -20,7 +20,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
     [EcsInject]
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IRenderSystem
     {
-        private readonly Dictionary<PipelineKey, Pipeline> _pipelines = new Dictionary<PipelineKey, Pipeline>();
+        private readonly Dictionary<PipelineKey, PipelineBinder> _pipelines = new Dictionary<PipelineKey, PipelineBinder>();
 
         private readonly ManualResourceHandler<RenderContext> _renderContext =
             new ManualResourceHandler<RenderContext>(ResourceId.Null);
@@ -33,15 +33,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
         protected Camera _camera;
         private CommandList _cl;
         private TextureView _defaultDiffuseTextureView;
-        private ResourceSet _defaultMaterialSet;
-        private ResourceLayout _environmentLayout;
-        private ResourceLayout _zoneLayout;
-        private ResourceSet _environmentSet;
-        private ResourceSet _zoneSet;
         private GraphicsDevice _graphicsDevice;
-        private ResourceLayout _meshLayout;
-        private ResourceSet _meshSet;
         //private DeviceBuffer _projectionBuffer;
+        private RenderDoc _renderDoc;
+        private ResourceSetBuilder _resourceSetBuilder;
 
         private ResourceFactory _resourceFactory;
 
@@ -61,6 +56,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private TextureView _brdfLUTTextureView;
 
         private DeviceBuffer _viewBuffer;
+        private DeviceBuffer _emptyUniform;
 
         private DeviceBuffer _worldBuffer;
 
@@ -83,8 +79,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public Swapchain MainSwapchain { get; private set; }
 
         public IApplicationWindow Window { get; }
-
-        public ResourceLayout MaterialLayout { get; private set; }
 
         public DeviceBuffer MaterialBuffer { get; private set; }
 
@@ -245,11 +239,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     var material = drawCall.Material;
                     if (material != null)
                     {
-                        _cl.SetPipeline(drawCall.Pipeline);
-                        _cl.SetGraphicsResourceSet(0, _environmentSet);
-                        _cl.SetGraphicsResourceSet(1, _zoneSet);
-                        _cl.SetGraphicsResourceSet(2, _meshSet);
-                        _cl.SetGraphicsResourceSet(3, material.ResourceSet);
+                        drawCall.Pipeline.Set(_cl, this, material);
                         _cl.SetVertexBuffer(0, renderCache.VertexBuffer, indexRange.DataOffset);
                         material.UpdateBuffer(_cl, MaterialBuffer);
                         _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
@@ -258,22 +248,25 @@ namespace VeldridGlTF.Viewer.Systems.Render
             }
         }
 
-        public Pipeline GetPipeline(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
+        public PipelineBinder GetPipeline(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
         {
             var pipelineKey = EvaulatePipelineKey(primitive, material, pass);
 
-            Pipeline pipeline;
+            PipelineBinder pipelineBinder;
 
-            if (_pipelines.TryGetValue(pipelineKey, out pipeline)) return pipeline;
+            if (_pipelines.TryGetValue(pipelineKey, out pipelineBinder)) return pipelineBinder;
 
+            var shaderAndLayout = _shaderManager.GetShaders(pipelineKey.Shader, MainPass);
             var shaderSet = new ShaderSetDescription(
                 new[]
                 {
                     primitive.Elements.VertexLayoutDescription
                 },
-                _shaderManager.GetShaders(pipelineKey.Shader, MainPass));
+                shaderAndLayout.Shaders);
 
-            pipeline = _resourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+            pipelineBinder = BuildResourceBinder(material.ResourceSetBuilder, shaderAndLayout.Layouts);
+
+            pipelineBinder.Pipeline = _resourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 pipelineKey.DepthStencilState,
                 new RasterizerStateDescription
@@ -286,11 +279,41 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 },
                 pipelineKey.PrimitiveTopology,
                 shaderSet,
-                MainPass.ResourceLayouts,
+                pipelineBinder.ResourceLayouts,
                 MainSwapchain.Framebuffer.OutputDescription));
-            return pipeline;
+            return pipelineBinder;
         }
+
+        private PipelineBinder BuildResourceBinder(ResourceSetBuilder setBuilder, ResourceLayoutDescription[] layouts)
+        {
+            var pipelineBinder = new PipelineBinder();
+            pipelineBinder.ResourceLayouts = new ResourceLayout[layouts.Length];
+            pipelineBinder.Sets = new ResourceSet[layouts.Length];
+            for (var index = 0; index < layouts.Length; index++)
+            {
+                BuildLayoutAndSet(setBuilder, layouts[index], out var layout, out var set);
+                pipelineBinder.ResourceLayouts[index] = layout;
+                if (layouts[index].Elements.Length > 0)
+                {
+                    pipelineBinder.Sets[index] = set;
+                }
+            }
+
+            return pipelineBinder;
+        }
+
+        private void BuildLayoutAndSet(ResourceSetBuilder resourceSetBuilder, ResourceLayoutDescription layout, out ResourceLayout resLayout, out ResourceSet resSet)
+        {
+            resLayout = _resourceFactory.CreateResourceLayout(layout);
+            resSet = _resourceFactory.CreateResourceSet(new ResourceSetDescription(resLayout, resourceSetBuilder.Resolve(_emptyUniform, layout.Elements)));
+        }
+
         public RenderPass MainPass { get; set; }
+
+        public ResourceSetBuilder ResourceSetBuilder
+        {
+            get { return _resourceSetBuilder; }
+        }
 
         private PipelineKey EvaulatePipelineKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
         {
@@ -309,9 +332,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _graphicsDevice = gd;
             _resourceFactory = factory;
             MainSwapchain = sc;
-            _renderContext.SetValue(new RenderContext(gd, factory, sc));
             CreateResources(factory);
             CreateSwapchainResources(factory);
+            _renderContext.SetValue(new RenderContext(gd, factory, sc, this));
         }
 
         protected virtual void HandleWindowResize()
@@ -352,6 +375,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         protected void CreateResources(ResourceFactory factory)
         {
             _shaderManager = new ShaderManager(factory);
+            _emptyUniform = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
             //_projectionBuffer =
             //    factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             _viewBuffer =
@@ -373,66 +397,20 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _skyTextureView = factory.CreateTextureView(_skyTexture);
             //_skyTextureView.Name = _surfaceTexture.Name;
 
-            _environmentLayout = factory.CreateResourceLayout(
-                new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("EnvironmentProperties", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex),
-                    new ResourceLayoutElementDescription("BRDFTexture", ResourceKind.TextureReadOnly,
-                        ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("BRDFSampler", ResourceKind.Sampler,
-                        ShaderStages.Fragment)
-                ));
-
-            _zoneLayout = factory.CreateResourceLayout(
-                new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ReflectionTexture", ResourceKind.TextureReadOnly,
-                        ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("ReflectionSampler", ResourceKind.Sampler,
-                        ShaderStages.Fragment)
-                ));
-
-            _meshLayout = factory.CreateResourceLayout(
-                new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex, ResourceLayoutElementOptions.None)
-                ));
-
-            MaterialLayout = factory.CreateResourceLayout(
-                new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("MaterialProperties", ResourceKind.UniformBuffer,
-                        ShaderStages.Vertex | ShaderStages.Fragment, ResourceLayoutElementOptions.None),
-                    new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly,
-                        ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler,
-                        ShaderStages.Fragment)
-                ));
-
-            _environmentSet = factory.CreateResourceSet(new ResourceSetDescription(
-                _environmentLayout,
-                _viewBuffer,
-                _brdfLUTTextureView,
-                _graphicsDevice.LinearSampler));
-
-            _zoneSet = factory.CreateResourceSet(new ResourceSetDescription(
-                _zoneLayout,
-                _skyTextureView,
-                _graphicsDevice.Aniso4xSampler));
-
-            _meshSet = factory.CreateResourceSet(new ResourceSetDescription(
-                _meshLayout,
-                _worldBuffer
-            ));
-
-            _defaultMaterialSet = factory.CreateResourceSet(new ResourceSetDescription(
-                MaterialLayout,
-                MaterialBuffer,
-                _defaultDiffuseTextureView,
-                _graphicsDevice.Aniso4xSampler
-            ));
+            _resourceSetBuilder = new ResourceSetBuilder(
+                _resourceFactory,
+                new ResourceSetSlot("EnvironmentProperties", ResourceKind.UniformBuffer,  _viewBuffer),
+                new ResourceSetSlot("BRDFTexture", ResourceKind.TextureReadOnly,  _brdfLUTTextureView), 
+                new ResourceSetSlot("BRDFSampler", ResourceKind.Sampler,  _graphicsDevice.LinearSampler),
+                new ResourceSetSlot("WorldBuffer", ResourceKind.UniformBuffer, _worldBuffer),
+                new ResourceSetSlot(null, ResourceKind.UniformBuffer, _worldBuffer),
+                new ResourceSetSlot("ReflectionTexture", ResourceKind.TextureReadOnly, _skyTextureView),
+                new ResourceSetSlot("ReflectionSampler", ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler)
+                );
 
             _cl = factory.CreateCommandList();
 
-            MainPass = new RenderPass("Main") { ResourceLayouts= new[] {_environmentLayout, _zoneLayout, _meshLayout, MaterialLayout}};
+            MainPass = new RenderPass("Main");
 
             _skybox = new Skybox {RenderSystem = this};
             var skyboxMaterial = new MaterialDescription(ResourceId.Null)
@@ -494,7 +472,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private EcsFilter<WorldTransform, Skybox> _skyboxes = null;
         private EcsFilter<WorldTransform, StaticModel> _staticModels = null;
         private EcsFilter<WorldTransform, Zone> _zones = null;
-        private RenderDoc _renderDoc;
 
         #endregion
     }

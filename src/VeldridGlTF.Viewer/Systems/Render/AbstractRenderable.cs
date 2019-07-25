@@ -37,10 +37,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             if (material == null) return null;
 
-            var pipeline = RenderSystem.GetPipeline(primitive, material, renderPass);
+            var PipelineBinder = RenderSystem.GetPipeline(primitive, material, renderPass);
             var drawCall = new DrawCall
             {
-                Pipeline = pipeline,
+                Pipeline = PipelineBinder,
                 Material = material,
                 Primitive = primitive
             };

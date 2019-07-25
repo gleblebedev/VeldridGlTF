@@ -31,12 +31,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             material.DepthStencilState.DepthWriteEnabled = description.DepthWriteEnabled;
             var diffuse = await context.ResolveDependencyAsync(description.DiffuseTexture) as TextureResource;
             var renderContext = await context.ResolveDependencyAsync(renderSystem.RenderContext);
-            material.ResourceSet = renderContext.Factory.CreateResourceSet(new ResourceSetDescription(
-                renderSystem.MaterialLayout,
-                renderSystem.MaterialBuffer,
-                diffuse?.View ?? renderSystem.DefaultTextureView,
-                renderContext.Device.Aniso4xSampler
-            ));
+            material.ResourceSetBuilder = new ResourceSetBuilder(renderContext.Factory, renderContext.RenderSystem.ResourceSetBuilder,
+                new ResourceSetSlot("MaterialProperties", ResourceKind.UniformBuffer, renderContext.RenderSystem.MaterialBuffer),
+                new ResourceSetSlot("SurfaceTexture", ResourceKind.TextureReadOnly, diffuse?.View ?? renderSystem.DefaultTextureView),
+                new ResourceSetSlot("SurfaceSampler", ResourceKind.Sampler, renderContext.Device.Aniso4xSampler)
+                );
+                
             return material;
         }
     }

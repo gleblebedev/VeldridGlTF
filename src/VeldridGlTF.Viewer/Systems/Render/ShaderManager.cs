@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Shaders;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox;
+using ShaderDescription = Veldrid.ShaderDescription;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class ShaderManager
     {
-        private readonly Dictionary<ShaderKey, Shader[]> _compiledShaders = new Dictionary<ShaderKey, Shader[]>();
+        private readonly Dictionary<ShaderKey, ShaderAndLayout> _compiledShaders = new Dictionary<ShaderKey, ShaderAndLayout>();
         private readonly ResourceFactory _factory;
         private readonly Dictionary<string, IShaderFactory> _generators = new Dictionary<string, IShaderFactory>();
         private readonly DefaultShaderFactory _defaultShaderFactory;
@@ -25,23 +25,24 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _generators["Skybox"] = new SkyboxShaderFactory();
         }
 
-        public Shader[] GetShaders(ShaderKey shaderKey, RenderPass pass)
+        public ShaderAndLayout GetShaders(ShaderKey shaderKey, RenderPass pass)
         {
-            Shader[] shaders;
+            ShaderAndLayout shaders;
             if (_compiledShaders.TryGetValue(shaderKey, out shaders)) return shaders;
 
             var generatorFactory = shaderKey.Factory;
 
             var generator = generatorFactory.ResolveGenerator(shaderKey);
-            var vertexShader = generator.GetVertexShader();
-            var fragmentShader = generator.GetFragmentShader();
+            (var vertexShader, var fragmentShader) = SpirvReflection.CompileGlslToSpirv(generator.GetVertexShader(), generator.GetFragmentShader());
+
             var compiledShader = _factory.CreateFromSpirv(
-                new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(vertexShader), "main"),
-                new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(fragmentShader), "main"));
+                new ShaderDescription(ShaderStages.Vertex, vertexShader.SpirvBytes, "main"),
+                new ShaderDescription(ShaderStages.Fragment, fragmentShader.SpirvBytes, "main"));
 
-            _compiledShaders[shaderKey] = compiledShader;
-
-            return compiledShader;
+            var shaderAndLayout = new ShaderAndLayout();
+            shaderAndLayout.Shaders = compiledShader;
+            shaderAndLayout.Layouts = SpirvCompilationResultEx.Merge(vertexShader.Layouts, fragmentShader.Layouts);
+            return shaderAndLayout;
         }
 
         public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)

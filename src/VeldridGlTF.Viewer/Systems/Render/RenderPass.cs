@@ -12,12 +12,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
             Name = name;
         }
         public string Name { get; private set; }
-
-        public ResourceLayout[] ResourceLayouts
-        {
-            get { return _resourceLayouts; }
-            set { _resourceLayouts = value; }
-        }
     }
 
     public class PassResourceLayout

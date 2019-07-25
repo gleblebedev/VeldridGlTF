@@ -10,7 +10,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
     {
         private readonly VeldridRenderSystem _renderSystem;
         public Vector4 _baseColor;
-        private ResourceSet _resourceSet;
+        private ResourceSetBuilder _resourceSet;
 
         public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
 
@@ -20,7 +20,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             _renderSystem = renderSystem;
         }
 
-        public ResourceSet ResourceSet
+        public ResourceSetBuilder ResourceSetBuilder
         {
             get => _resourceSet;
             internal set
@@ -32,7 +32,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
 
         public override void Dispose()
         {
-            ResourceSet?.Dispose();
+            ResourceSetBuilder?.Dispose();
             base.Dispose();
         }
 
