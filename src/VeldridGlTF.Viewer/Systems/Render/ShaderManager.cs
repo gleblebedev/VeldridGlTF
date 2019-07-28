@@ -27,8 +27,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public ShaderAndLayout GetShaders(ShaderKey shaderKey, RenderPass pass)
         {
-            ShaderAndLayout shaders;
-            if (_compiledShaders.TryGetValue(shaderKey, out shaders)) return shaders;
+            ShaderAndLayout shaderAndLayout;
+            if (_compiledShaders.TryGetValue(shaderKey, out shaderAndLayout)) return shaderAndLayout;
 
             var generatorFactory = shaderKey.Factory;
 
@@ -39,9 +39,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 new ShaderDescription(ShaderStages.Vertex, vertexShader.SpirvBytes, "main"),
                 new ShaderDescription(ShaderStages.Fragment, fragmentShader.SpirvBytes, "main"));
 
-            var shaderAndLayout = new ShaderAndLayout();
+            shaderAndLayout = new ShaderAndLayout();
             shaderAndLayout.Shaders = compiledShader;
             shaderAndLayout.Layouts = SpirvCompilationResultEx.Merge(vertexShader.Layouts, fragmentShader.Layouts);
+            _compiledShaders.Add(shaderKey, shaderAndLayout);
             return shaderAndLayout;
         }
 
