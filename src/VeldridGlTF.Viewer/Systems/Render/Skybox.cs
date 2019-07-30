@@ -38,7 +38,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var material = await context.ResolveDependencyAsync(_material) as MaterialResource;
             if (material == null)
                 return null;
-            return CreateDrawCallCollection(mesh, material, RenderSystem.MainPass);
+            return await CreateDrawCallCollection(mesh, material, RenderSystem.MainPass);
         }
     }
 }

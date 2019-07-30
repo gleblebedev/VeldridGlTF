@@ -5,13 +5,22 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class RenderPass
     {
-        private ResourceLayout[] _resourceLayouts;
+        private PassResourceLayout[] _resourceLayouts;
 
         public RenderPass(string name)
         {
             Name = name;
         }
         public string Name { get; private set; }
+
+        public string ResolveName(uint set, uint binding, ResourceKind kind)
+        {
+            if (_resourceLayouts == null || _resourceLayouts.Length <= set)
+                return null;
+            var layout = _resourceLayouts[set];
+            return layout.ResolveName(binding);
+        }
+
     }
 
     public class PassResourceLayout
@@ -19,6 +28,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public PassResourceLayout()
         {
             
+        }
+
+        public string ResolveName(uint binding)
+        {
+            return null;
         }
     }
 
@@ -40,4 +54,5 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _valueType = valueType;
         }
     }
+
 }

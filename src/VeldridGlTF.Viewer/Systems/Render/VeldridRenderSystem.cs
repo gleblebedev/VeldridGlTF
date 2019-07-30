@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -20,7 +19,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
     [EcsInject]
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IRenderSystem
     {
-        private readonly Dictionary<PipelineKey, PipelineBinder> _pipelines = new Dictionary<PipelineKey, PipelineBinder>();
+        private readonly LazyAsyncCollection<PipelineKey, PipelineAndLayouts> _pipelines;
 
         private readonly ManualResourceHandler<RenderContext> _renderContext =
             new ManualResourceHandler<RenderContext>(ResourceId.Null);
@@ -62,6 +61,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window, bool enableRenderDoc)
         {
+            _pipelines = new LazyAsyncCollection<PipelineKey, PipelineAndLayouts>(CreatePipelineAsync);
             _stepContext = stepContext;
             _enableRenderDoc = enableRenderDoc;
             Window = window;
@@ -247,26 +247,18 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 }
             }
         }
-
-        public PipelineBinder GetPipeline(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
+        private async Task<PipelineAndLayouts> CreatePipelineAsync(PipelineKey pipelineKey)
         {
-            var pipelineKey = EvaulatePipelineKey(primitive, material, pass);
+            var shaderAndLayout = await _shaderManager.GetShaders(pipelineKey.Shader);
 
-            PipelineBinder pipelineBinder;
-
-            if (_pipelines.TryGetValue(pipelineKey, out pipelineBinder)) return pipelineBinder;
-
-            var shaderAndLayout = _shaderManager.GetShaders(pipelineKey.Shader, MainPass);
             var shaderSet = new ShaderSetDescription(
-                new[]
-                {
-                    primitive.Elements.VertexLayoutDescription
-                },
+                new []{pipelineKey.VertexLayout.VertexLayoutDescription},
                 shaderAndLayout.Shaders);
 
-            pipelineBinder = BuildResourceBinder(material.ResourceSetBuilder, shaderAndLayout.Layouts);
+            //BuildResourceBinder(material.ResourceSetBuilder, shaderAndLayout.Layouts,);
 
-            pipelineBinder.Pipeline = _resourceFactory.CreateGraphicsPipeline(new GraphicsPipelineDescription(
+            var resourceLayouts = shaderAndLayout.Layouts.Select(_=>_resourceFactory.CreateResourceLayout(_)).ToArray();
+            var graphicsPipelineDescription = new GraphicsPipelineDescription(
                 BlendStateDescription.SingleOverrideBlend,
                 pipelineKey.DepthStencilState,
                 new RasterizerStateDescription
@@ -279,34 +271,31 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 },
                 pipelineKey.PrimitiveTopology,
                 shaderSet,
-                pipelineBinder.ResourceLayouts,
-                MainSwapchain.Framebuffer.OutputDescription));
-            return pipelineBinder;
-        }
+                resourceLayouts,
+                MainSwapchain.Framebuffer.OutputDescription);
+            var graphicsPipeline = _resourceFactory.CreateGraphicsPipeline(graphicsPipelineDescription);
 
-        private PipelineBinder BuildResourceBinder(ResourceSetBuilder setBuilder, ResourceLayoutDescription[] layouts)
+            return new PipelineAndLayouts(){Pipeline = graphicsPipeline, ResourceLayouts = resourceLayouts, Layouts = shaderAndLayout.Layouts};
+        }
+        public async Task<PipelineBinder> GetPipeline(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
         {
-            var pipelineBinder = new PipelineBinder();
-            pipelineBinder.ResourceLayouts = new ResourceLayout[layouts.Length];
-            pipelineBinder.Sets = new ResourceSet[layouts.Length];
-            for (var index = 0; index < layouts.Length; index++)
+            var pipelineKey = EvaulatePipelineKey(primitive, material, pass);
+            var pipelineAndLayout = await _pipelines[pipelineKey];
+
+            var sets = new ResourceSet[pipelineAndLayout.Layouts.Length];
+            for (var index = 0; index < sets.Length; index++)
             {
-                BuildLayoutAndSet(setBuilder, layouts[index], out var layout, out var set);
-                pipelineBinder.ResourceLayouts[index] = layout;
-                //if (layouts[index].Elements.Length > 0)
-                {
-                    pipelineBinder.Sets[index] = set;
-                }
+                var resourceSetDescription = new ResourceSetDescription(pipelineAndLayout.ResourceLayouts[index], material.ResourceSetBuilder.Resolve(_emptyUniform, pipelineAndLayout.Layouts[index].Elements));
+                sets[index] = _resourceFactory.CreateResourceSet(resourceSetDescription);
             }
-
-            return pipelineBinder;
+            return new PipelineBinder()
+            {
+                Pipeline = pipelineAndLayout.Pipeline,
+                ResourceLayouts = pipelineAndLayout.ResourceLayouts,
+                Sets = sets
+            };
         }
 
-        private void BuildLayoutAndSet(ResourceSetBuilder resourceSetBuilder, ResourceLayoutDescription layout, out ResourceLayout resLayout, out ResourceSet resSet)
-        {
-            resLayout = _resourceFactory.CreateResourceLayout(layout);
-            resSet = _resourceFactory.CreateResourceSet(new ResourceSetDescription(resLayout, resourceSetBuilder.Resolve(_emptyUniform, layout.Elements)));
-        }
 
         public RenderPass MainPass { get; set; }
 
@@ -321,7 +310,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var pipelineKey = new PipelineKey
             {
                 Shader = shaderKey,
-                PrimitiveTopology = primitive.PrimitiveTopology
+                PrimitiveTopology = primitive.PrimitiveTopology,
+                VertexLayout = primitive.Elements
             };
             pipelineKey.DepthStencilState = material.DepthStencilState;
             return pipelineKey;

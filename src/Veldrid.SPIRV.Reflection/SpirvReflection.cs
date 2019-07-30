@@ -6,11 +6,18 @@ using Veldrid.SPIRV.Instructions;
 
 namespace Veldrid.SPIRV
 {
+    public delegate string NameResolver(uint set, uint binding, ResourceKind kind);
+
     public static class SpirvReflection
     {
         public const uint MagicNumber = 0x07230203;
 
         public static SpirvCompilationResultEx[] CompileGlslToSpirv(params ShaderArgs[] shaders)
+        {
+            return CompileGlslToSpirv((NameResolver)null, shaders);
+        }
+
+        public static SpirvCompilationResultEx[] CompileGlslToSpirv(NameResolver nameResolver, params ShaderArgs[] shaders)
         {
             var res = new SpirvCompilationResultEx[shaders.Length];
 
@@ -20,50 +27,17 @@ namespace Veldrid.SPIRV
                 var compilationResult = SpirvCompilation.CompileGlslToSpirv(shader.Source, shader.FileName,
                     shader.Stage,
                     new GlslCompileOptions(true));
-                var layout = Parse(compilationResult.SpirvBytes, shader.Stage);
+                var layout = Parse(compilationResult.SpirvBytes, shader.Stage, nameResolver);
                 res[index] = new SpirvCompilationResultEx(compilationResult.SpirvBytes, layout.ToArray());
-
-                //for (var index = 0; index < layout.Count; index++)
-                //{
-                //    if (sets.Count <= index)
-                //    {
-                //        sets.Add(new List<ResourceLayoutElementDescription>());
-                //    }
-
-                //    var resSet = sets[index];
-                //    var set = layout[index];
-                //    for (var elementIndex = 0; elementIndex < set.Count; elementIndex++)
-                //    {
-                //        var elementDescription = set[elementIndex];
-                //        if (resSet.Count <= elementIndex)
-                //        {
-                //            resSet.Add(new ResourceLayoutElementDescription());
-                //        }
-
-                //        if (elementDescription.Name != null)
-                //        {
-                //            var prevElement = resSet[elementIndex];
-                //            if (prevElement.Name != null)
-                //            {
-                //                if (prevElement.Name != elementDescription.Name)
-                //                    throw new Exception("Resource name doesn't match up at set=" + index + " binding=" +
-                //                                    elementIndex);
-                //                if (prevElement.Kind != elementDescription.Kind)
-                //                    throw new Exception("Resource kind doesn't match up at set=" + index + " binding=" +
-                //                                        elementIndex);
-                //            }
-                //            resSet[elementIndex] = new ResourceLayoutElementDescription(elementDescription.Name, elementDescription.Kind, elementDescription.Stages | prevElement.Stages, ResourceLayoutElementOptions.None );
-                //        }
-                //    }
-                //}
             }
 
             return res;
         }
   
-        public static ValueTuple<SpirvCompilationResultEx, SpirvCompilationResultEx> CompileGlslToSpirv(string vertex, string fragment)
+        public static ValueTuple<SpirvCompilationResultEx, SpirvCompilationResultEx> CompileGlslToSpirv(string vertex, string fragment, NameResolver nameResolver = null)
         {
             var res = CompileGlslToSpirv(
+                nameResolver,
                 new[] {
                     new ShaderArgs {FileName = "vert.glsl", Source = vertex, Stage = ShaderStages.Vertex},
                     new ShaderArgs {FileName = "frag.glsl", Source = fragment, Stage = ShaderStages.Fragment}
@@ -71,7 +45,7 @@ namespace Veldrid.SPIRV
             return ValueTuple.Create(res[0], res[1]);
         }
 
-        public static IList<ResourceLayoutDescription> Parse(byte[] spirvBytes, ShaderStages stage)
+        public static IList<ResourceLayoutDescription> Parse(byte[] spirvBytes, ShaderStages stage, NameResolver nameResolver = null)
         {
             var sets = new List<IList<ResourceLayoutElementDescription>>();
             using (var reader = new BinaryReader(new MemoryStream(spirvBytes)))
@@ -171,6 +145,11 @@ namespace Veldrid.SPIRV
                         kind = type.EvaluateKind(types);
                         if (string.IsNullOrEmpty(uniformName))
                             uniformName = GetTypeName(type, types, names);
+                    }
+
+                    if (uniformName == null && nameResolver != null)
+                    {
+                        uniformName = nameResolver(set,binding,kind);
                     }
                     var element = new ResourceLayoutElementDescription(uniformName, kind, stage, ResourceLayoutElementOptions.None);
 

@@ -6,22 +6,18 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class PipelineKey : IEquatable<PipelineKey>
     {
-        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
-        public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
-        public ShaderKey Shader;
-
         public bool Equals(PipelineKey other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return PrimitiveTopology == other.PrimitiveTopology && Shader.Equals(other.Shader);
+            return DepthStencilState.Equals(other.DepthStencilState) && PrimitiveTopology == other.PrimitiveTopology && Equals(Shader, other.Shader) && Equals(VertexLayout, other.VertexLayout);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (obj.GetType() != this.GetType()) return false;
             return Equals((PipelineKey) obj);
         }
 
@@ -29,7 +25,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             unchecked
             {
-                return ((int) PrimitiveTopology * 397) ^ Shader.GetHashCode();
+                var hashCode = DepthStencilState.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int) PrimitiveTopology;
+                hashCode = (hashCode * 397) ^ (Shader != null ? Shader.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (VertexLayout != null ? VertexLayout.GetHashCode() : 0);
+                return hashCode;
             }
         }
 
@@ -42,5 +42,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             return !Equals(left, right);
         }
+
+        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
+        public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
+        public ShaderKey Shader;
+        public RenderVertexLayout VertexLayout;
     }
 }

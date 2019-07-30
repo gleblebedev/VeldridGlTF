@@ -82,19 +82,34 @@ namespace VeldridGlTF.Viewer.Resources
     {
         private readonly IResourceLoader<T> _loader;
         CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private Task<T> _task;
 
         public ResourceContext(ResourceId id, IResourceContainer resourceContainer, IResourceLoader<T> loader) : base(id, resourceContainer)
         {
             _loader = loader;
         }
 
-        public Task<T> Task { get; private set; }
+        public Task<T> Task
+        {
+            get
+            {
+                if (_task == null)
+                {
+                    throw new Exception("ResourceContext is not started yet.");
+                }
+                return _task;
+            }
+            private set
+            {
+                _task = value;
+            }
+        }
 
         public void Start()
         {
             try
             {
-                Task = _loader.LoadAsync(this);
+                Task = System.Threading.Tasks.Task.Run(()=>_loader.LoadAsync(this));
             }
             catch (Exception ex)
             {

@@ -21,23 +21,51 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         protected abstract Task<DrawCallCollection> CreateRenderCache(ResourceContext context);
 
-        protected DrawCallCollection CreateDrawCallCollection(Mesh mesh, MaterialResource material, RenderPass renderPass)
+        protected async Task<DrawCallCollection> CreateDrawCallCollection(Mesh mesh, MaterialResource material, RenderPass renderPass)
         {
-            return new DrawCallCollection(mesh, mesh.Primitives.Count,
-                Enumerable.Range(0, mesh.Primitives.Count).Select(_ => CreateDrawCall(mesh.Primitives[_], material, renderPass)));
+            var drawCallCollection = new DrawCallCollection(mesh, mesh.Primitives.Count, await ResolveDrawCalls(mesh, material, renderPass));
+            return drawCallCollection;
         }
 
-        protected DrawCallCollection CreateDrawCallCollection(Mesh mesh, IEnumerable<MaterialResource> materials, RenderPass renderPass)
+        private async Task<DrawCall[]> ResolveDrawCalls(Mesh mesh, MaterialResource material, RenderPass renderPass)
         {
-            return new DrawCallCollection(mesh, mesh.Primitives.Count,
-                materials.Take(mesh.Primitives.Count).Select((_, i) => CreateDrawCall(mesh.Primitives[i], _, renderPass)));
+            var callTasks = new Task<DrawCall>[mesh.Primitives.Count];
+            for (var index = 0; index < callTasks.Length; index++)
+            {
+                callTasks[index] = CreateDrawCall(mesh.Primitives[index], material, renderPass);
+            }
+
+            var calls = await Task.WhenAll(callTasks);
+            return calls;
         }
 
-        protected DrawCall CreateDrawCall(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
+        protected async Task<DrawCallCollection> CreateDrawCallCollection(Mesh mesh, IEnumerable<MaterialResource> materials, RenderPass renderPass)
+        {
+            var callTasks = new Task<DrawCall>[mesh.Primitives.Count];
+            int index = 0;
+            foreach (var material in materials)
+            {
+                if (index > callTasks.Length)
+                    break;
+                callTasks[index] = CreateDrawCall(mesh.Primitives[index], material, renderPass);
+                ++index;
+            }
+
+            while (callTasks.Length > index)
+            {
+                callTasks[index] = Task.FromResult<DrawCall>(null);
+                ++index;
+            }
+            var calls = await Task.WhenAll(callTasks);
+
+            return new DrawCallCollection(mesh, mesh.Primitives.Count, calls);
+        }
+
+        protected async Task<DrawCall> CreateDrawCall(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
         {
             if (material == null) return null;
 
-            var PipelineBinder = RenderSystem.GetPipeline(primitive, material, renderPass);
+            var PipelineBinder = await RenderSystem.GetPipeline(primitive, material, renderPass);
             var drawCall = new DrawCall
             {
                 Pipeline = PipelineBinder,

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Veldrid;
 using Veldrid.SPIRV;
+using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Shaders;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
@@ -12,7 +14,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class ShaderManager
     {
-        private readonly Dictionary<ShaderKey, ShaderAndLayout> _compiledShaders = new Dictionary<ShaderKey, ShaderAndLayout>();
+        private readonly LazyAsyncCollection<ShaderKey, ShaderAndLayout> _compiledShaders;
         private readonly ResourceFactory _factory;
         private readonly Dictionary<string, IShaderFactory> _generators = new Dictionary<string, IShaderFactory>();
         private readonly DefaultShaderFactory _defaultShaderFactory;
@@ -23,27 +25,29 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _defaultShaderFactory = new DefaultShaderFactory();
             _generators["Default"] = _defaultShaderFactory;
             _generators["Skybox"] = new SkyboxShaderFactory();
+            _compiledShaders = new LazyAsyncCollection<ShaderKey, ShaderAndLayout>(CompileShader);
         }
 
-        public ShaderAndLayout GetShaders(ShaderKey shaderKey, RenderPass pass)
+        private ShaderAndLayout CompileShader(ShaderKey shaderKey)
         {
-            ShaderAndLayout shaderAndLayout;
-            if (_compiledShaders.TryGetValue(shaderKey, out shaderAndLayout)) return shaderAndLayout;
-
             var generatorFactory = shaderKey.Factory;
 
             var generator = generatorFactory.ResolveGenerator(shaderKey);
-            (var vertexShader, var fragmentShader) = SpirvReflection.CompileGlslToSpirv(generator.GetVertexShader(), generator.GetFragmentShader());
+            (var vertexShader, var fragmentShader) = SpirvReflection.CompileGlslToSpirv(generator.GetVertexShader(), generator.GetFragmentShader(), shaderKey.RenderPass.ResolveName);
 
             var compiledShader = _factory.CreateFromSpirv(
                 new ShaderDescription(ShaderStages.Vertex, vertexShader.SpirvBytes, "main"),
                 new ShaderDescription(ShaderStages.Fragment, fragmentShader.SpirvBytes, "main"));
 
-            shaderAndLayout = new ShaderAndLayout();
+            var shaderAndLayout = new ShaderAndLayout();
             shaderAndLayout.Shaders = compiledShader;
             shaderAndLayout.Layouts = SpirvCompilationResultEx.Merge(vertexShader.Layouts, fragmentShader.Layouts);
-            _compiledShaders.Add(shaderKey, shaderAndLayout);
             return shaderAndLayout;
+        }
+
+        public Task<ShaderAndLayout> GetShaders(ShaderKey shaderKey)
+        {
+            return _compiledShaders[shaderKey];
         }
 
         public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)

@@ -74,13 +74,13 @@ namespace VeldridGlTF.Viewer.Resources
                             _context.Dispose();
                         }
 
-                        _context = value;
-
-                        if (_context != null)
+                        if (value != null)
                         {
-                            _context.ResourceInvalid += OnResourceInvalid;
-                            Start();
+                            value.ResourceInvalid += OnResourceInvalid;
+                            value.Start();
                         }
+                        // Assign _context value after context.Start() is executed.
+                        _context = value;
                     }
             }
         }
@@ -89,17 +89,19 @@ namespace VeldridGlTF.Viewer.Resources
 
         public Task<T> GetAsync()
         {
-            if (_context == null)
+            var resourceContext = _context;
+            if (resourceContext == null)
                 lock (_gate)
                 {
-                    if (_context == null)
+                    resourceContext = _context;
+                    if (resourceContext == null)
                     {
-                        Context = new ResourceContext<T>(Id, _resourceContainer, _loader);
-                        return _context.Task;
+                        Context = resourceContext = new ResourceContext<T>(Id, _resourceContainer, _loader);
+                        return resourceContext.Task;
                     }
                 }
 
-            return _context.Task;
+            return resourceContext.Task;
         }
 
         public override void Dispose()
