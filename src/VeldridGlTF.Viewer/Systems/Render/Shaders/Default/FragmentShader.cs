@@ -35,6 +35,18 @@ struct MaterialPropertiesInfo
     vec4 BaseColor;
 };
 
+struct MaterialInfo
+{
+    float perceptualRoughness;    // roughness value, as authored by the model creator (input to shader)
+    vec3 reflectance0;            // full reflectance color (normal incidence angle)
+
+    float alphaRoughness;         // roughness mapped to a more linear change in the roughness (proposed by [2])
+    vec3 diffuseColor;            // color contribution from diffuse lighting
+
+    vec3 reflectance90;           // reflectance color at grazing angle
+    vec3 specularColor;           // color contribution from specular lighting
+};
+
 layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
 layout(set = 0, binding = 2) uniform sampler BRDFSampler;
 
@@ -50,7 +62,7 @@ layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
 
 ");
             
-            #line 26 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
 	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
@@ -60,10 +72,31 @@ layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
             
             #line default
             #line hidden
-            this.Write("layout(location = 0) out vec4 fsout_color;\r\n\r\nvoid main()\r\n{\r\n    float light = 1" +
-                    ".0;\r\n\tvec3 normal = vec3(0.0,1.0,0.0);\r\n");
+            this.Write("layout(location = 0) out vec4 fsout_color;\r\n\r\nconst float GAMMA = 2.2;\r\nconst flo" +
+                    "at INV_GAMMA = 1.0 / GAMMA;\r\n\r\n// linear to sRGB approximation\r\n// see http://ch" +
+                    "illiant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html\r\nvec3 LINEARtoSRG" +
+                    "B(vec3 color)\r\n{\r\n    return pow(color, vec3(INV_GAMMA));\r\n}\r\n\r\n// sRGB to linea" +
+                    "r approximation\r\n// see http://chilliant.blogspot.com/2012/08/srgb-approximation" +
+                    "s-for-hlsl.html\r\nvec4 SRGBtoLINEAR(vec4 srgbIn)\r\n{\r\n    return vec4(pow(srgbIn.x" +
+                    "yz, vec3(GAMMA)), srgbIn.w);\r\n}\r\n\r\nvec3 getIBLContribution(MaterialInfo material" +
+                    "Info, vec3 n, vec3 v)\r\n{\r\n    float NdotV = clamp(dot(n, v), 0.0, 1.0);\r\n\tint u_" +
+                    "MipCount = 5;\r\n\r\n    float lod = clamp(materialInfo.perceptualRoughness * float(" +
+                    "u_MipCount), 0.0, float(u_MipCount));\r\n    vec3 reflection = normalize(reflect(-" +
+                    "v, n));\r\n\r\n    vec2 brdfSamplePoint = clamp(vec2(NdotV, materialInfo.perceptualR" +
+                    "oughness), vec2(0.0, 0.0), vec2(1.0, 1.0));\r\n    vec2 brdf = texture(sampler2D(B" +
+                    "RDFTexture, BRDFSampler), brdfSamplePoint).rg;\r\n\r\n    vec4 diffuseSample =  text" +
+                    "ureLod(samplerCube(ReflectionTexture, ReflectionSampler), n, 5.0f);\r\n\r\n    vec4 " +
+                    "specularSample = textureLod(samplerCube(ReflectionTexture, ReflectionSampler), r" +
+                    "eflection, lod);\r\n\r\n    vec3 diffuseLight = SRGBtoLINEAR(diffuseSample).rgb;\r\n  " +
+                    "  vec3 specularLight = SRGBtoLINEAR(specularSample).rgb;\r\n\r\n    vec3 diffuse = d" +
+                    "iffuseLight * materialInfo.diffuseColor;\r\n    vec3 specular = specularLight * (m" +
+                    "aterialInfo.specularColor * brdf.x + brdf.y);\r\n\r\n    return diffuse + specular;\r" +
+                    "\n}\r\n\r\n\r\nvoid main()\r\n{\r\n\tvec3 normal = vec3(0.0,1.0,0.0);\r\n\tfloat perceptualRoug" +
+                    "hness = 1.0;\r\n    float metallic = 0.0;\r\n    vec4 baseColor = vec4(0.0, 0.0, 0.0" +
+                    ", 1.0);\r\n    vec3 diffuseColor = vec3(0.0);\r\n    vec3 specularColor= vec3(0.3);\r" +
+                    "\n\tvec3 f0 = vec3(0.04);\r\n");
             
-            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 97 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
 	
     if (Context.Normal != null)
@@ -74,41 +107,29 @@ layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
 	{
 		WriteLine("normal = normalize({0}[2]);", Context.TBN.Name);
 	}
-	WriteLine("light = normal.y*0.5+0.5;");
+
+            
+            #line default
+            #line hidden
+            
+            #line 108 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+
     if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP) && Context.TexCoord0 != null)
 	{
 
             
             #line default
             #line hidden
-            this.Write("\tvec4 diffuse = texture(sampler2D(SurfaceTexture, SurfaceSampler), vec2(0.0, 0.0)" +
-                    ");\r\n\tvec4 brdf = texture(sampler2D(BRDFTexture, BRDFSampler), vec2(0.0, 0.0));\r\n" +
-                    "\tvec4 reflection = texture(samplerCube(ReflectionTexture, ReflectionSampler), re" +
-                    "flect(");
+            this.Write("\tbaseColor = texture(sampler2D(SurfaceTexture, SurfaceSampler),");
             
-            #line 54 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.CameraPosition));
-            
-            #line default
-            #line hidden
-            this.Write(" - ");
-            
-            #line 54 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.WorldPosition));
-            
-            #line default
-            #line hidden
-            this.Write(", normal));\r\n\tfsout_color = reflection+brdf+diffuse;\r\n    //fsout_color = texture" +
-                    "(sampler2D(SurfaceTexture, SurfaceSampler), ");
-            
-            #line 56 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 112 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Context.TexCoord0));
             
             #line default
             #line hidden
-            this.Write(") * vec4(light,light,light,light);\r\n");
+            this.Write(");\r\n");
             
-            #line 57 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 113 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
 	}
 	else
@@ -117,17 +138,55 @@ layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
             
             #line default
             #line hidden
-            this.Write("    fsout_color = _MaterialProperties.BaseColor * vec4(light,light,light,light);\r" +
-                    "\n");
+            this.Write("\tbaseColor = _MaterialProperties.BaseColor;\r\n");
             
-            #line 63 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 119 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
 
 	}
 
             
             #line default
             #line hidden
-            this.Write("\t\r\n}");
+            this.Write(@"    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
+
+    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);
+    metallic = clamp(metallic, 0.0, 1.0);
+
+    // Roughness is authored as perceptual roughness; as is convention,
+    // convert to material roughness by squaring the perceptual roughness [2].
+    float alphaRoughness = perceptualRoughness * perceptualRoughness;
+
+    // Compute reflectance.
+    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
+
+    vec3 specularEnvironmentR0 = specularColor.rgb;
+    // Anything less than 2% is physically impossible and is instead considered to be shadowing. Compare to ""Real-Time-Rendering"" 4th editon on page 325.
+    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
+
+	MaterialInfo materialInfo = MaterialInfo(
+        perceptualRoughness,
+        specularEnvironmentR0,
+        alphaRoughness,
+        diffuseColor,
+        specularEnvironmentR90,
+        specularColor
+    );
+	vec3 color = vec3(0.0, 0.0, 0.0);
+    color += getIBLContribution(materialInfo, normal, ");
+            
+            #line 147 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Context.CameraPosition));
+            
+            #line default
+            #line hidden
+            this.Write("-");
+            
+            #line 147 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Context.WorldPosition));
+            
+            #line default
+            #line hidden
+            this.Write(");\r\n\tfsout_color = vec4(color,baseColor.a);\r\n\t\r\n}");
             return this.GenerationEnvironment.ToString();
         }
     }
