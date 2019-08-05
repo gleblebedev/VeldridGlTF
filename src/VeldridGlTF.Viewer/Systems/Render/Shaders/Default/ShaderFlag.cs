@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VeldridGlTF.Viewer.Systems.Render
+namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 {
     [Flags]
     public enum ShaderFlag

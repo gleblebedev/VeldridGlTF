@@ -7,6 +7,7 @@ using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Shaders;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
+using VeldridGlTF.Viewer.Systems.Render.Shaders.PBR;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox;
 using ShaderDescription = Veldrid.ShaderDescription;
 
@@ -17,13 +18,16 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private readonly LazyAsyncCollection<ShaderKey, ShaderAndLayout> _compiledShaders;
         private readonly ResourceFactory _factory;
         private readonly Dictionary<string, IShaderFactory> _generators = new Dictionary<string, IShaderFactory>();
-        private readonly DefaultShaderFactory _defaultShaderFactory;
+        private readonly IShaderFactory _defaultShaderFactory;
+        private readonly IShaderFactory _pbrShaderFactory;
 
         public ShaderManager(ResourceFactory factory)
         {
             _factory = factory;
             _defaultShaderFactory = new DefaultShaderFactory();
-            _generators["Default"] = _defaultShaderFactory;
+            _pbrShaderFactory = new PBRShaderFactory();
+            _generators["Default"] = _pbrShaderFactory;
+            //_generators["Default"] = _defaultShaderFactory;
             _generators["Skybox"] = new SkyboxShaderFactory();
             _compiledShaders = new LazyAsyncCollection<ShaderKey, ShaderAndLayout>(CompileShader);
         }
@@ -33,7 +37,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var generatorFactory = shaderKey.Factory;
 
             var generator = generatorFactory.ResolveGenerator(shaderKey);
-            (var vertexShader, var fragmentShader) = SpirvReflection.CompileGlslToSpirv(generator.GetVertexShader(), generator.GetFragmentShader(), shaderKey.RenderPass.ResolveName);
+            (var vertexShader, var fragmentShader) = SpirvReflection.CompileGlslToSpirv(generator.GetVertexShader(), generator.GetFragmentShader(), shaderKey.LayoutNameResolver);
 
             var compiledShader = _factory.CreateFromSpirv(
                 new ShaderDescription(ShaderStages.Vertex, vertexShader.SpirvBytes, "main"),
@@ -50,7 +54,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return _compiledShaders[shaderKey];
         }
 
-        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
+        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, ILayoutNameResolver renderPass)
         {
             if (!_generators.TryGetValue(material.ShaderName, out var generatorFactory))
             {

@@ -146,5 +146,6 @@ void main()
 	vec3 color = vec3(0.0, 0.0, 0.0);
     color += getIBLContribution(materialInfo, normal, <#= Context.CameraPosition #>-<#= Context.WorldPosition #>);
 	fsout_color = vec4(color,baseColor.a);
+	//fsout_color = vec4(normal.x * 0.5 + 0.5, normal.y * 0.5 + 0.5, normal.z * 0.5 + 0.5, 1.0);
 	
 }

@@ -74,6 +74,16 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>VertexShader.tt</DependentUpon>
     </Compile>
+    <Compile Update="Systems\Render\Shaders\PBR\FragmentShader.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FragmentShader.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Systems\Render\Shaders\PBR\VertexShader.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>VertexShader.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -82,6 +92,14 @@
       <LastGenOutput>FragmentShader.cs</LastGenOutput>
     </None>
     <None Update="Systems\Render\Shaders\Default\VertexShader.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>VertexShader.cs</LastGenOutput>
+    </None>
+    <None Update="Systems\Render\Shaders\PBR\FragmentShader.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>FragmentShader.cs</LastGenOutput>
+    </None>
+    <None Update="Systems\Render\Shaders\PBR\VertexShader.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>VertexShader.cs</LastGenOutput>
     </None>

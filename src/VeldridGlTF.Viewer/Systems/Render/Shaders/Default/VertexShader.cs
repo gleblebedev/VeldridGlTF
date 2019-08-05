@@ -28,11 +28,27 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write("#version 450\r\n\r\nlayout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n  " +
-                    "  mat4 View;\r\n    mat4 Projection;\r\n\tvec3 CameraPos;\r\n};\r\n\r\nlayout(set = 2, bind" +
-                    "ing = 0) uniform WorldBuffer\r\n{\r\n    mat4 World;\r\n};\r\n\r\n");
+            this.Write("#version 450\r\n\r\nlayout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
             
-            #line 20 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 10 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+
+	Glsl.WriteMembers<EnvironmentProperties>(this);
+
+            
+            #line default
+            #line hidden
+            this.Write("};\r\nlayout(set = 2, binding = 0) uniform ObjectProperties\r\n{\r\n");
+            
+            #line 16 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+
+	Glsl.WriteMembers<ObjectProperties>(this);
+
+            
+            #line default
+            #line hidden
+            this.Write("};\r\n\r\n");
+            
+            #line 21 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	for (int location=0; location<Context.VertexElements.Count; ++location)
 	{
@@ -43,7 +59,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             #line default
             #line hidden
             
-            #line 26 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 27 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
@@ -53,36 +69,35 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             
             #line default
             #line hidden
-            this.Write("\r\nvoid main()\r\n{\r\n    vec4 worldPosition = World * vec4(POSITION, 1);\r\n\t");
+            this.Write("\r\nvoid main()\r\n{\r\n    vec4 worldPosition = u_ModelMatrix * vec4(POSITION, 1);\r\n\t");
             
-            #line 36 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 37 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Context.WorldPosition));
             
             #line default
             #line hidden
             this.Write(" = worldPosition.xyz;\r\n\t");
             
-            #line 37 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Context.CameraPosition));
             
             #line default
             #line hidden
-            this.Write(" = CameraPos;\r\n    vec4 viewPosition = View * worldPosition;\r\n\tmat3 normalMatix =" +
-                    " mat3(World);\r\n    vec4 clipPosition = Projection * viewPosition;\r\n    gl_Positi" +
-                    "on = clipPosition;\r\n");
+            this.Write(" = u_Camera;\r\n    vec4 clipPosition = u_ViewProjectionMatrix * worldPosition;\r\n  " +
+                    "  gl_Position = clipPosition;\r\n");
             
-            #line 42 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 41 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	if (Context.Normal != null)
 	{
-		WriteLine(string.Format("{0} = normalize(normalMatix * NORMAL);", Context.Normal.Name));
+		WriteLine(string.Format("{0} = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));", Context.Normal.Name));
 	}
 	if (Context.TBN != null)
 	{
-		WriteLine("vec4 tangent = TANGENT;");
-		WriteLine("vec3 normalW = normalize(normalMatix * NORMAL);");
-		WriteLine("vec3 tangentW = normalize(normalMatix * TANGENT.xyz);");
-		WriteLine("vec3 bitangentW = cross(normalW, tangentW) * TANGENT.w;");
+	    WriteLine("vec4 tangent = TANGENT;");
+		WriteLine("vec3 normalW = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));");
+		WriteLine("vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(tangent.xyz, 0.0)));");
+		WriteLine("vec3 bitangentW = cross(normalW, tangentW) * tangent.w;");
 		WriteLine(string.Format("{0} = mat3(tangentW, bitangentW, normalW);", Context.TBN.Name));
 	}
 	if (Context.TexCoord0 != null)

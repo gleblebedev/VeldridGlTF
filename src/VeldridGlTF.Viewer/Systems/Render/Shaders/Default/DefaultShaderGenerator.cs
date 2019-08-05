@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Veldrid;
 
@@ -32,7 +31,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             foreach (var varying in Varyings)
             {
                 varying.Location = location;
-                location += GetLocationSize(varying);
+                location += varying.Size;
             }
         }
 
@@ -61,16 +60,6 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             return new FragmentShader(this).TransformText();
         }
 
-        private int GetLocationSize(VaryingDescription varying)
-        {
-            switch (varying.Format)
-            {
-                case VaryingFormat.Mat3:
-                    return 3;
-                default:
-                    return 1;
-            }
-        }
 
         public bool IsFlagSet(ShaderFlag flag)
         {
@@ -78,7 +67,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         }
     }
 
-    partial class FragmentShader
+    partial class FragmentShader : IShaderTemplate
     {
         public FragmentShader(DefaultShaderGenerator key)
         {
@@ -88,7 +77,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         public DefaultShaderGenerator Context { get; set; }
     }
 
-    partial class VertexShader
+    partial class VertexShader:IShaderTemplate
     {
         public VertexShader(DefaultShaderGenerator key)
         {
@@ -96,102 +85,5 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         }
 
         public DefaultShaderGenerator Context { get; set; }
-    }
-
-    public static class Glsl
-    {
-        public static string NameOf(VaryingFormat format)
-        {
-            switch (format)
-            {
-                case VaryingFormat.Float1:
-                    return "float";
-                case VaryingFormat.Float2:
-                    return "vec2";
-                case VaryingFormat.Float3:
-                    return "vec3";
-                case VaryingFormat.Float4:
-                    return "vec4";
-                case VaryingFormat.Mat3:
-                    return "mat3";
-                case VaryingFormat.Mat4:
-                    return "mat4";
-            }
-
-            throw new NotImplementedException(format.ToString());
-        }
-
-        public static string NameOf(VertexElementFormat format)
-        {
-            switch (format)
-            {
-                case VertexElementFormat.Float1:
-                    return "float";
-                case VertexElementFormat.Float2:
-                    return "vec2";
-                case VertexElementFormat.Float3:
-                    return "vec3";
-                case VertexElementFormat.Float4:
-                    return "vec4";
-                case VertexElementFormat.Byte2_Norm:
-                    break;
-                case VertexElementFormat.Byte2:
-                    break;
-                case VertexElementFormat.Byte4_Norm:
-                    break;
-                case VertexElementFormat.Byte4:
-                    break;
-                case VertexElementFormat.SByte2_Norm:
-                    break;
-                case VertexElementFormat.SByte2:
-                    break;
-                case VertexElementFormat.SByte4_Norm:
-                    break;
-                case VertexElementFormat.SByte4:
-                    break;
-                case VertexElementFormat.UShort2_Norm:
-                    break;
-                case VertexElementFormat.UShort2:
-                    break;
-                case VertexElementFormat.UShort4_Norm:
-                    break;
-                case VertexElementFormat.UShort4:
-                    break;
-                case VertexElementFormat.Short2_Norm:
-                    break;
-                case VertexElementFormat.Short2:
-                    break;
-                case VertexElementFormat.Short4_Norm:
-                    break;
-                case VertexElementFormat.Short4:
-                    break;
-                case VertexElementFormat.UInt1:
-                    break;
-                case VertexElementFormat.UInt2:
-                    break;
-                case VertexElementFormat.UInt3:
-                    break;
-                case VertexElementFormat.UInt4:
-                    break;
-                case VertexElementFormat.Int1:
-                    break;
-                case VertexElementFormat.Int2:
-                    break;
-                case VertexElementFormat.Int3:
-                    break;
-                case VertexElementFormat.Int4:
-                    break;
-                case VertexElementFormat.Half1:
-                    break;
-                case VertexElementFormat.Half2:
-                    break;
-                case VertexElementFormat.Half4:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
-            }
-
-            throw new NotImplementedException(format.ToString());
-        }
     }
 }

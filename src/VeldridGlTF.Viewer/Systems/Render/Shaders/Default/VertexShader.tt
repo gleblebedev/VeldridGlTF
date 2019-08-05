@@ -7,14 +7,15 @@
 
 layout(set = 0, binding = 0) uniform EnvironmentProperties
 {
-    mat4 View;
-    mat4 Projection;
-	vec3 CameraPos;
+<#
+	Glsl.WriteMembers<EnvironmentProperties>(this);
+#>
 };
-
-layout(set = 2, binding = 0) uniform WorldBuffer
+layout(set = 2, binding = 0) uniform ObjectProperties
 {
-    mat4 World;
+<#
+	Glsl.WriteMembers<ObjectProperties>(this);
+#>
 };
 
 <#
@@ -32,24 +33,22 @@ layout(set = 2, binding = 0) uniform WorldBuffer
 
 void main()
 {
-    vec4 worldPosition = World * vec4(POSITION, 1);
+    vec4 worldPosition = u_ModelMatrix * vec4(POSITION, 1);
 	<#= Context.WorldPosition #> = worldPosition.xyz;
-	<#= Context.CameraPosition #> = CameraPos;
-    vec4 viewPosition = View * worldPosition;
-	mat3 normalMatix = mat3(World);
-    vec4 clipPosition = Projection * viewPosition;
+	<#= Context.CameraPosition #> = u_Camera;
+    vec4 clipPosition = u_ViewProjectionMatrix * worldPosition;
     gl_Position = clipPosition;
 <#
 	if (Context.Normal != null)
 	{
-		WriteLine(string.Format("{0} = normalize(normalMatix * NORMAL);", Context.Normal.Name));
+		WriteLine(string.Format("{0} = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));", Context.Normal.Name));
 	}
 	if (Context.TBN != null)
 	{
-		WriteLine("vec4 tangent = TANGENT;");
-		WriteLine("vec3 normalW = normalize(normalMatix * NORMAL);");
-		WriteLine("vec3 tangentW = normalize(normalMatix * TANGENT.xyz);");
-		WriteLine("vec3 bitangentW = cross(normalW, tangentW) * TANGENT.w;");
+	    WriteLine("vec4 tangent = TANGENT;");
+		WriteLine("vec3 normalW = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));");
+		WriteLine("vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(tangent.xyz, 0.0)));");
+		WriteLine("vec3 bitangentW = cross(normalW, tangentW) * tangent.w;");
 		WriteLine(string.Format("{0} = mat3(tangentW, bitangentW, normalW);", Context.TBN.Name));
 	}
 	if (Context.TexCoord0 != null)

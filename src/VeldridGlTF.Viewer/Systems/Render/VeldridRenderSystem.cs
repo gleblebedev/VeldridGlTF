@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
 using Veldrid;
@@ -54,10 +55,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private Texture _brdfLUTTexture;
         private TextureView _brdfLUTTextureView;
 
-        private DeviceBuffer _viewBuffer;
+        private DeviceBuffer _environmentProperties;
         private DeviceBuffer _emptyUniform;
 
-        private DeviceBuffer _worldBuffer;
+        private DeviceBuffer _objectProperties;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window, bool enableRenderDoc)
         {
@@ -158,27 +159,42 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 _camera.FarDistance = sceneRadius * 4.0f;
             }
 
-            //var lookAt = Matrix4x4.CreateLookAt(Vector3.UnitZ * 2.5f, Vector3.Zero, Vector3.UnitY);
-            var lookAt = _camera.ViewMatrix;
-            _cl.UpdateBuffer(_viewBuffer, 0, lookAt);
-            var perspectiveFieldOfView = _camera.ProjectionMatrix;
-            _cl.UpdateBuffer(_viewBuffer, 16*4, perspectiveFieldOfView);
-            _cl.UpdateBuffer(_viewBuffer, 16 * 4+ 16 * 4, new []{_camera.Position});
-            //_cl.UpdateBuffer(_projectionBuffer, 0, perspectiveFieldOfView);
+            UpdateEnvironment();
 
+            var objectProperties = new ObjectProperties();
             foreach (var modelIndex in _staticModels)
             {
                 var worldTransform = _staticModels.Components1[modelIndex];
                 var model = _staticModels.Components2[modelIndex];
 
+                objectProperties.u_ModelMatrix = worldTransform.WorldMatrix;
+                var n = worldTransform.WorldMatrix;// * _camera.ViewMatrix;
+                Matrix4x4 _n;
+                Matrix4x4.Invert(n, out _n);
+                n = Matrix4x4.Transpose(_n);
+                objectProperties.u_NormalMatrix = n;
+
+
                 if (model.GetDrawCalls().TryGet(out var drawCallCollection) && drawCallCollection != null)
-                    ScheduleDrawCalls(drawCallCollection, ref worldTransform.WorldMatrix);
+                    ScheduleDrawCalls(drawCallCollection, ref objectProperties);
             }
 
             _cl.End();
             _graphicsDevice.SubmitCommands(_cl);
             _graphicsDevice.WaitForIdle();
             _graphicsDevice.SwapBuffers(MainSwapchain);
+        }
+
+        private void UpdateEnvironment()
+        {
+            var lookAt = _camera.ViewMatrix;
+            var perspectiveFieldOfView = _camera.ProjectionMatrix;
+            var data = new EnvironmentProperties();
+            data.u_ViewProjectionMatrix = lookAt * perspectiveFieldOfView;
+            data.u_Camera = _camera.Position;
+            data.u_Exposure = 1.0f;
+            data.u_MipCount = 6;
+            _cl.UpdateBuffer(_environmentProperties, 0, data);
         }
 
         public IStaticModel AddStaticModel(EcsEntity entity)
@@ -204,7 +220,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         private void RenderSkybox()
         {
-            var identity = Matrix4x4.Identity;
+            var identity = new ObjectProperties();
+            identity.u_ModelMatrix = Matrix4x4.Identity;
+            identity.u_NormalMatrix = Matrix4x4.Identity;
+
             DrawCallCollection drawCallCollection;
 
             foreach (var index in _skyboxes)
@@ -226,10 +245,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
         }
 
-        private void ScheduleDrawCalls(DrawCallCollection renderCache, ref Matrix4x4 worldMatrix)
+        private void ScheduleDrawCalls(DrawCallCollection renderCache, ref ObjectProperties worldMatrix)
         {
             _cl.SetIndexBuffer(renderCache.IndexBuffer, IndexFormat.UInt16);
-            _cl.UpdateBuffer(_worldBuffer, 0, ref worldMatrix);
+            _cl.UpdateBuffer(_objectProperties, 0, ref worldMatrix);
             for (var index = 0; index < renderCache.DrawCalls.Count; index++)
             {
                 var drawCall = renderCache.DrawCalls[index];
@@ -368,10 +387,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _emptyUniform = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
             //_projectionBuffer =
             //    factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
-            _viewBuffer =
-                factory.CreateBuffer(new BufferDescription(64+64+16, BufferUsage.UniformBuffer));
-            _worldBuffer =
-                factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _environmentProperties =
+                factory.CreateBuffer(new BufferDescription(GetBufferSize<EnvironmentProperties>(), BufferUsage.UniformBuffer));
+            _objectProperties =
+                factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             MaterialBuffer = CreateMaterialBuffer();
 
             _brdfLUTTexture = _brdfLUTImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
@@ -389,11 +408,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             _resourceSetBuilder = new ResourceSetBuilder(
                 _resourceFactory,
-                new ResourceSetSlot("EnvironmentProperties", ResourceKind.UniformBuffer,  _viewBuffer),
+                new ResourceSetSlot("EnvironmentProperties", ResourceKind.UniformBuffer,  _environmentProperties),
                 new ResourceSetSlot("BRDFTexture", ResourceKind.TextureReadOnly,  _brdfLUTTextureView), 
                 new ResourceSetSlot("BRDFSampler", ResourceKind.Sampler,  _graphicsDevice.LinearSampler),
-                new ResourceSetSlot("WorldBuffer", ResourceKind.UniformBuffer, _worldBuffer),
-                new ResourceSetSlot(null, ResourceKind.UniformBuffer, _worldBuffer),
+                new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer, _objectProperties),
+                new ResourceSetSlot(null, ResourceKind.UniformBuffer, _objectProperties),
                 new ResourceSetSlot("ReflectionTexture", ResourceKind.TextureReadOnly, _skyTextureView),
                 new ResourceSetSlot("ReflectionSampler", ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler)
                 );
@@ -413,6 +432,16 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var materialHandler = new ResourceHandler<IMaterial>(ResourceId.Null,
                 _ => MaterialLoader.CreateMaterial(this, _, skyboxMaterial), null);
             _skybox.Material = materialHandler;
+        }
+
+        private static uint GetBufferSize<T>() where T: struct
+        {
+            var sizeOf = Marshal.SizeOf<T>();
+            if (0 != (sizeOf & 15))
+            {
+                sizeOf = (sizeOf & ~15) + 16;
+            }
+            return (uint)sizeOf;
         }
 
         protected virtual void OnDeviceDestroyed()

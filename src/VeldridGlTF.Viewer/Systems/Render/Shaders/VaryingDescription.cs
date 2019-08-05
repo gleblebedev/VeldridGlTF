@@ -24,6 +24,18 @@
         {
             return Name;
         }
+
+        public int Size
+        {
+            get
+            {
+                if (Format == VaryingFormat.Mat3)
+                    return 3;
+                if (Format == VaryingFormat.Mat4)
+                    return 4;
+                return 1;
+            }
+        }
     }
 
     /// <summary>
@@ -54,5 +66,9 @@
         Mat3,
 
         Mat4
+    }
+    public interface IShaderTemplate
+    {
+        void WriteLine(string textToAppend);
     }
 }

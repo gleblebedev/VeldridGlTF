@@ -6,18 +6,16 @@ using Veldrid.SPIRV.Instructions;
 
 namespace Veldrid.SPIRV
 {
-    public delegate string NameResolver(uint set, uint binding, ResourceKind kind);
-
     public static class SpirvReflection
     {
         public const uint MagicNumber = 0x07230203;
 
         public static SpirvCompilationResultEx[] CompileGlslToSpirv(params ShaderArgs[] shaders)
         {
-            return CompileGlslToSpirv((NameResolver)null, shaders);
+            return CompileGlslToSpirv((ILayoutNameResolver)null, shaders);
         }
 
-        public static SpirvCompilationResultEx[] CompileGlslToSpirv(NameResolver nameResolver, params ShaderArgs[] shaders)
+        public static SpirvCompilationResultEx[] CompileGlslToSpirv(ILayoutNameResolver nameNameResolver, params ShaderArgs[] shaders)
         {
             var res = new SpirvCompilationResultEx[shaders.Length];
 
@@ -27,17 +25,17 @@ namespace Veldrid.SPIRV
                 var compilationResult = SpirvCompilation.CompileGlslToSpirv(shader.Source, shader.FileName,
                     shader.Stage,
                     new GlslCompileOptions(true));
-                var layout = Parse(compilationResult.SpirvBytes, shader.Stage, nameResolver);
+                var layout = Parse(compilationResult.SpirvBytes, shader.Stage, nameNameResolver);
                 res[index] = new SpirvCompilationResultEx(compilationResult.SpirvBytes, layout.ToArray());
             }
 
             return res;
         }
   
-        public static ValueTuple<SpirvCompilationResultEx, SpirvCompilationResultEx> CompileGlslToSpirv(string vertex, string fragment, NameResolver nameResolver = null)
+        public static ValueTuple<SpirvCompilationResultEx, SpirvCompilationResultEx> CompileGlslToSpirv(string vertex, string fragment, ILayoutNameResolver nameNameResolver = null)
         {
             var res = CompileGlslToSpirv(
-                nameResolver,
+                nameNameResolver,
                 new[] {
                     new ShaderArgs {FileName = "vert.glsl", Source = vertex, Stage = ShaderStages.Vertex},
                     new ShaderArgs {FileName = "frag.glsl", Source = fragment, Stage = ShaderStages.Fragment}
@@ -45,7 +43,7 @@ namespace Veldrid.SPIRV
             return ValueTuple.Create(res[0], res[1]);
         }
 
-        public static IList<ResourceLayoutDescription> Parse(byte[] spirvBytes, ShaderStages stage, NameResolver nameResolver = null)
+        public static IList<ResourceLayoutDescription> Parse(byte[] spirvBytes, ShaderStages stage, ILayoutNameResolver nameNameResolver = null)
         {
             var sets = new List<IList<ResourceLayoutElementDescription>>();
             using (var reader = new BinaryReader(new MemoryStream(spirvBytes)))
@@ -147,9 +145,9 @@ namespace Veldrid.SPIRV
                             uniformName = GetTypeName(type, types, names);
                     }
 
-                    if (uniformName == null && nameResolver != null)
+                    if (uniformName == null && nameNameResolver != null)
                     {
-                        uniformName = nameResolver(set,binding,kind);
+                        uniformName = nameNameResolver.Resolve(set,binding,kind);
                     }
                     var element = new ResourceLayoutElementDescription(uniformName, kind, stage, ResourceLayoutElementOptions.None);
 

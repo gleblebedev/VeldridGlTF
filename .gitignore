@@ -14,3 +14,4 @@ bld/
 src/.vs/
 src/packages/
 *.swp
+*.user

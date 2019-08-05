@@ -1,10 +1,11 @@
 ﻿using System;
+using Veldrid.SPIRV;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 {
     public class DefaultShaderKey : ShaderKey, IEquatable<DefaultShaderKey>
     {
-        public DefaultShaderKey(IShaderFactory factory, RenderPass renderPass, RenderVertexLayout layout) : base(factory, renderPass)
+        public DefaultShaderKey(IShaderFactory factory, ILayoutNameResolver renderPass, RenderVertexLayout layout) : base(factory, renderPass)
         {
             VertexLayout = layout;
             foreach (var element in VertexLayout.VertexLayoutDescription.Elements)

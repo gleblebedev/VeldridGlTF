@@ -1,9 +1,10 @@
 ﻿using System;
 using Veldrid;
+using Veldrid.SPIRV;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
-    public class RenderPass
+    public class RenderPass: ILayoutNameResolver
     {
         private PassResourceLayout[] _resourceLayouts;
 
@@ -13,7 +14,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         }
         public string Name { get; private set; }
 
-        public string ResolveName(uint set, uint binding, ResourceKind kind)
+        public string Resolve(uint set, uint binding, ResourceKind kind)
         {
             if (_resourceLayouts == null || _resourceLayouts.Length <= set)
                 return null;

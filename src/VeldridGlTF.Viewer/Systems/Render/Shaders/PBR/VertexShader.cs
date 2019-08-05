@@ -7,7 +7,7 @@
 //     the code is regenerated.
 // </auto-generated>
 // ------------------------------------------------------------------------------
-namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
+namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
 {
     using System.Linq;
     using System.Text;
@@ -18,9 +18,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+    #line 1 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
-    public partial class FragmentShader : FragmentShaderBase
+    public partial class VertexShader : VertexShaderBase
     {
 #line hidden
         /// <summary>
@@ -28,166 +28,121 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write(@"#version 450
-
-struct MaterialPropertiesInfo
-{
-    vec4 BaseColor;
-};
-
-struct MaterialInfo
-{
-    float perceptualRoughness;    // roughness value, as authored by the model creator (input to shader)
-    vec3 reflectance0;            // full reflectance color (normal incidence angle)
-
-    float alphaRoughness;         // roughness mapped to a more linear change in the roughness (proposed by [2])
-    vec3 diffuseColor;            // color contribution from diffuse lighting
-
-    vec3 reflectance90;           // reflectance color at grazing angle
-    vec3 specularColor;           // color contribution from specular lighting
-};
-
-layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
-layout(set = 0, binding = 2) uniform sampler BRDFSampler;
-
-layout(set = 1, binding = 0) uniform textureCube ReflectionTexture;
-layout(set = 1, binding = 1) uniform sampler ReflectionSampler;
-
-layout(set = 3, binding = 0) uniform MaterialProperties
-{
-    MaterialPropertiesInfo _MaterialProperties;
-};
-layout(set = 3, binding = 1) uniform texture2D SurfaceTexture;
-layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
-
-");
+            this.Write("#version 450\r\n\r\n");
             
-            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 8 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
+
+	WriteDefines();
+
+            
+            #line default
+            #line hidden
+            this.Write("\r\n");
+            
+            #line 12 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
+
+	for (int location=0; location<Context.VertexElements.Count; ++location)
+	{
+		WriteLine(string.Format("layout(location = {0}) in {1} {2};", location, Glsl.NameOf(Context.VertexElements[location].Format), Context.VertexElements[location].Name));
+	}
+
+            
+            #line default
+            #line hidden
+            
+            #line 18 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
 	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
-		WriteLine(string.Format("layout(location = {0}) in {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
+		WriteLine(string.Format("layout(location = {0}) out {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
 	}
 
             
             #line default
             #line hidden
-            this.Write("layout(location = 0) out vec4 fsout_color;\r\n\r\nconst float GAMMA = 2.2;\r\nconst flo" +
-                    "at INV_GAMMA = 1.0 / GAMMA;\r\n\r\n// linear to sRGB approximation\r\n// see http://ch" +
-                    "illiant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html\r\nvec3 LINEARtoSRG" +
-                    "B(vec3 color)\r\n{\r\n    return pow(color, vec3(INV_GAMMA));\r\n}\r\n\r\n// sRGB to linea" +
-                    "r approximation\r\n// see http://chilliant.blogspot.com/2012/08/srgb-approximation" +
-                    "s-for-hlsl.html\r\nvec4 SRGBtoLINEAR(vec4 srgbIn)\r\n{\r\n    return vec4(pow(srgbIn.x" +
-                    "yz, vec3(GAMMA)), srgbIn.w);\r\n}\r\n\r\nvec3 getIBLContribution(MaterialInfo material" +
-                    "Info, vec3 n, vec3 v)\r\n{\r\n    float NdotV = clamp(dot(n, v), 0.0, 1.0);\r\n\tint u_" +
-                    "MipCount = 5;\r\n\r\n    float lod = clamp(materialInfo.perceptualRoughness * float(" +
-                    "u_MipCount), 0.0, float(u_MipCount));\r\n    vec3 reflection = normalize(reflect(-" +
-                    "v, n));\r\n\r\n    vec2 brdfSamplePoint = clamp(vec2(NdotV, materialInfo.perceptualR" +
-                    "oughness), vec2(0.0, 0.0), vec2(1.0, 1.0));\r\n    vec2 brdf = texture(sampler2D(B" +
-                    "RDFTexture, BRDFSampler), brdfSamplePoint).rg;\r\n\r\n    vec4 diffuseSample =  text" +
-                    "ureLod(samplerCube(ReflectionTexture, ReflectionSampler), n, 5.0f);\r\n\r\n    vec4 " +
-                    "specularSample = textureLod(samplerCube(ReflectionTexture, ReflectionSampler), r" +
-                    "eflection, lod);\r\n\r\n    vec3 diffuseLight = SRGBtoLINEAR(diffuseSample).rgb;\r\n  " +
-                    "  vec3 specularLight = SRGBtoLINEAR(specularSample).rgb;\r\n\r\n    vec3 diffuse = d" +
-                    "iffuseLight * materialInfo.diffuseColor;\r\n    vec3 specular = specularLight * (m" +
-                    "aterialInfo.specularColor * brdf.x + brdf.y);\r\n\r\n    return diffuse + specular;\r" +
-                    "\n}\r\n\r\n\r\nvoid main()\r\n{\r\n\tvec3 normal = vec3(0.0,1.0,0.0);\r\n\tfloat perceptualRoug" +
-                    "hness = 1.0;\r\n    float metallic = 0.0;\r\n    vec4 baseColor = vec4(0.0, 0.0, 0.0" +
-                    ", 1.0);\r\n    vec3 diffuseColor = vec3(0.0);\r\n    vec3 specularColor= vec3(0.3);\r" +
-                    "\n\tvec3 f0 = vec3(0.04);\r\n");
+            this.Write("\r\nlayout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
             
-            #line 97 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 27 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
-	
-    if (Context.Normal != null)
-	{
-		WriteLine("normal = normalize({0});", Context.Normal.Name);
-	}
-    else if (Context.TBN != null)
-	{
-		WriteLine("normal = normalize({0}[2]);", Context.TBN.Name);
-	}
+	WriteMembers<EnvironmentProperties>();
 
             
             #line default
             #line hidden
+            this.Write("};\r\nlayout(set = 2, binding = 0) uniform ObjectProperties\r\n{\r\n");
             
-            #line 108 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
+            #line 33 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
-    if (Context.IsFlagSet(ShaderFlag.HAS_DIFFUSE_MAP) && Context.TexCoord0 != null)
-	{
-
-            
-            #line default
-            #line hidden
-            this.Write("\tbaseColor = texture(sampler2D(SurfaceTexture, SurfaceSampler),");
-            
-            #line 112 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.TexCoord0));
-            
-            #line default
-            #line hidden
-            this.Write(");\r\n");
-            
-            #line 113 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-
-	}
-	else
-	{
+	WriteMembers<ObjectProperties>();
 
             
             #line default
             #line hidden
-            this.Write("\tbaseColor = _MaterialProperties.BaseColor;\r\n");
-            
-            #line 119 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-
-	}
-
-            
-            #line default
-            #line hidden
-            this.Write(@"    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
-
-    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);
-    metallic = clamp(metallic, 0.0, 1.0);
-
-    // Roughness is authored as perceptual roughness; as is convention,
-    // convert to material roughness by squaring the perceptual roughness [2].
-    float alphaRoughness = perceptualRoughness * perceptualRoughness;
-
-    // Compute reflectance.
-    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
-
-    vec3 specularEnvironmentR0 = specularColor.rgb;
-    // Anything less than 2% is physically impossible and is instead considered to be shadowing. Compare to ""Real-Time-Rendering"" 4th editon on page 325.
-    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
-
-	MaterialInfo materialInfo = MaterialInfo(
-        perceptualRoughness,
-        specularEnvironmentR0,
-        alphaRoughness,
-        diffuseColor,
-        specularEnvironmentR90,
-        specularColor
-    );
-	vec3 color = vec3(0.0, 0.0, 0.0);
-    color += getIBLContribution(materialInfo, normal, ");
-            
-            #line 147 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.CameraPosition));
-            
-            #line default
-            #line hidden
-            this.Write("-");
-            
-            #line 147 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\FragmentShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.WorldPosition));
-            
-            #line default
-            #line hidden
-            this.Write(");\r\n\tfsout_color = vec4(color,baseColor.a);\r\n\t//fsout_color = vec4(normal.x * 0.5" +
-                    " + 0.5, normal.y * 0.5 + 0.5, normal.z * 0.5 + 0.5, 1.0);\r\n\t\r\n}");
+            this.Write("};\r\n\r\n#ifdef USE_MORPHING\r\nuniform float u_morphWeights[WEIGHT_COUNT];\r\n#endif\r\n\r" +
+                    "\n#ifdef USE_SKINNING\r\nuniform mat4 u_jointMatrix[JOINT_COUNT];\r\nuniform mat4 u_j" +
+                    "ointNormalMatrix[JOINT_COUNT];\r\n#endif\r\n\r\n#ifdef USE_SKINNING\r\nmat4 getSkinningM" +
+                    "atrix()\r\n{\r\n    mat4 skin = mat4(0);\r\n\r\n    #if defined(HAS_WEIGHT_SET1) && defi" +
+                    "ned(HAS_JOINT_SET1)\r\n    skin +=\r\n        a_Weight1.x * u_jointMatrix[int(a_Join" +
+                    "t1.x)] +\r\n        a_Weight1.y * u_jointMatrix[int(a_Joint1.y)] +\r\n        a_Weig" +
+                    "ht1.z * u_jointMatrix[int(a_Joint1.z)] +\r\n        a_Weight1.w * u_jointMatrix[in" +
+                    "t(a_Joint1.w)];\r\n    #endif\r\n\r\n    #if defined(HAS_WEIGHT_SET2) && defined(HAS_J" +
+                    "OINT_SET2)\r\n    skin +=\r\n        a_Weight2.x * u_jointMatrix[int(a_Joint2.x)] +\r" +
+                    "\n        a_Weight2.y * u_jointMatrix[int(a_Joint2.y)] +\r\n        a_Weight2.z * u" +
+                    "_jointMatrix[int(a_Joint2.z)] +\r\n        a_Weight2.w * u_jointMatrix[int(a_Joint" +
+                    "2.w)];\r\n    #endif\r\n\r\n    return skin;\r\n}\r\n\r\nmat4 getSkinningNormalMatrix()\r\n{\r\n" +
+                    "    mat4 skin = mat4(0);\r\n\r\n    #if defined(HAS_WEIGHT_SET1) && defined(HAS_JOIN" +
+                    "T_SET1)\r\n    skin +=\r\n        a_Weight1.x * u_jointNormalMatrix[int(a_Joint1.x)]" +
+                    " +\r\n        a_Weight1.y * u_jointNormalMatrix[int(a_Joint1.y)] +\r\n        a_Weig" +
+                    "ht1.z * u_jointNormalMatrix[int(a_Joint1.z)] +\r\n        a_Weight1.w * u_jointNor" +
+                    "malMatrix[int(a_Joint1.w)];\r\n    #endif\r\n\r\n    #if defined(HAS_WEIGHT_SET2) && d" +
+                    "efined(HAS_JOINT_SET2)\r\n    skin +=\r\n        a_Weight2.x * u_jointNormalMatrix[i" +
+                    "nt(a_Joint2.x)] +\r\n        a_Weight2.y * u_jointNormalMatrix[int(a_Joint2.y)] +\r" +
+                    "\n        a_Weight2.z * u_jointNormalMatrix[int(a_Joint2.z)] +\r\n        a_Weight2" +
+                    ".w * u_jointNormalMatrix[int(a_Joint2.w)];\r\n    #endif\r\n\r\n    return skin;\r\n}\r\n#" +
+                    "endif // !USE_SKINNING\r\n\r\n#ifdef USE_MORPHING\r\nvec4 getTargetPosition()\r\n{\r\n    " +
+                    "vec4 pos = vec4(0);\r\n\r\n#ifdef HAS_TARGET_POSITION0\r\n    pos.xyz += u_morphWeight" +
+                    "s[0] * TARGET_POSITION0;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_POSITION1\r\n    pos.xyz += " +
+                    "u_morphWeights[1] * TARGET_POSITION1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_POSITION2\r\n  " +
+                    "  pos.xyz += u_morphWeights[2] * TARGET_POSITION2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_" +
+                    "POSITION3\r\n    pos.xyz += u_morphWeights[3] * TARGET_POSITION3;\r\n#endif\r\n\r\n#ifde" +
+                    "f HAS_TARGET_POSITION4\r\n    pos.xyz += u_morphWeights[4] * TARGET_POSITION4;\r\n#e" +
+                    "ndif\r\n\r\n    return pos;\r\n}\r\n\r\nvec4 getTargetNormal()\r\n{\r\n    vec4 normal = vec4(" +
+                    "0);\r\n\r\n#ifdef HAS_TARGET_NORMAL0\r\n    normal.xyz += u_morphWeights[0] * TARGET_N" +
+                    "ORMAL0;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL1\r\n    normal.xyz += u_morphWeights[1" +
+                    "] * TARGET_NORMAL1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL2\r\n    normal.xyz += u_mo" +
+                    "rphWeights[2] * TARGET_NORMAL2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL3\r\n    normal" +
+                    ".xyz += u_morphWeights[3] * TARGET_NORMAL3;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL4" +
+                    "\r\n    normal.xyz += u_morphWeights[4] * TARGET_NORMAL4;\r\n#endif\r\n\r\n    return no" +
+                    "rmal;\r\n}\r\n\r\nvec4 getTargetTangent()\r\n{\r\n    vec4 tangent = vec4(0);\r\n\r\n#ifdef HA" +
+                    "S_TARGET_TANGENT0\r\n    tangent.xyz += u_morphWeights[0] * TARGET_TANGENT0;\r\n#end" +
+                    "if\r\n\r\n#ifdef HAS_TARGET_TANGENT1\r\n    tangent.xyz += u_morphWeights[1] * TARGET_" +
+                    "TANGENT1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT2\r\n    tangent.xyz += u_morphWeigh" +
+                    "ts[2] * TARGET_TANGENT2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT3\r\n    tangent.xyz " +
+                    "+= u_morphWeights[3] * TARGET_TANGENT3;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT4\r\n " +
+                    "   tangent.xyz += u_morphWeights[4] * TARGET_TANGENT4;\r\n#endif\r\n\r\n    return tan" +
+                    "gent;\r\n}\r\n\r\n#endif // !USE_MORPHING\r\n\r\n\r\nvec4 getPosition()\r\n{\r\n    vec4 pos = v" +
+                    "ec4(POSITION, 1.0);\r\n\r\n#ifdef USE_MORPHING\r\n    pos += getTargetPosition();\r\n#en" +
+                    "dif\r\n\r\n#ifdef USE_SKINNING\r\n    pos = getSkinningMatrix() * pos;\r\n#endif\r\n\r\n    " +
+                    "return pos;\r\n}\r\n\r\n#ifdef HAS_NORMALS\r\nvec4 getNormal()\r\n{\r\n    vec4 normal = vec" +
+                    "4(NORMAL.xyz,0);\r\n\r\n#ifdef USE_MORPHING\r\n    normal += getTargetNormal();\r\n#endi" +
+                    "f\r\n\r\n#ifdef USE_SKINNING\r\n    normal = getSkinningNormalMatrix() * normal;\r\n#end" +
+                    "if\r\n\r\n    return normalize(normal);\r\n}\r\n#endif\r\n\r\n#ifdef HAS_TANGENTS\r\nvec4 getT" +
+                    "angent()\r\n{\r\n    vec4 tangent = TANGENT;\r\n\r\n#ifdef USE_MORPHING\r\n    tangent += " +
+                    "getTargetTangent();\r\n#endif\r\n\r\n#ifdef USE_SKINNING\r\n    tangent = getSkinningMat" +
+                    "rix() * tangent;\r\n#endif\r\n\r\n    return normalize(tangent);\r\n}\r\n#endif\r\n\r\nvoid ma" +
+                    "in()\r\n{\r\n    vec4 pos = u_ModelMatrix * getPosition();\r\n    v_Position = vec3(po" +
+                    "s.xyz) / pos.w;\r\n\r\n    #ifdef HAS_NORMALS\r\n    #ifdef HAS_TANGENTS\r\n    vec4 tan" +
+                    "gent = getTangent();\r\n    vec3 normalW = normalize(vec3(u_NormalMatrix * vec4(ge" +
+                    "tNormal().xyz, 0.0)));\r\n    vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(" +
+                    "tangent.xyz, 0.0)));\r\n    vec3 bitangentW = cross(normalW, tangentW) * tangent.w" +
+                    ";\r\n    v_TBN = mat3(tangentW, bitangentW, normalW);\r\n    #else // !HAS_TANGENTS\r" +
+                    "\n    v_Normal = normalize(vec3(u_NormalMatrix * vec4(getNormal().xyz, 0.0)));\r\n " +
+                    "   #endif\r\n    #endif // !HAS_NORMALS\r\n\r\n    v_UVCoord1 = vec2(0.0, 0.0);\r\n    v" +
+                    "_UVCoord2 = vec2(0.0, 0.0);\r\n\r\n    #ifdef HAS_UV_SET1\r\n    v_UVCoord1 = TEXCOORD" +
+                    "_0;\r\n    #endif\r\n\r\n    #ifdef HAS_UV_SET2\r\n    v_UVCoord2 = TEXCOORD_1;\r\n    #en" +
+                    "dif\r\n\r\n    #if defined(HAS_VERTEX_COLOR_VEC3) || defined(HAS_VERTEX_COLOR_VEC4)\r" +
+                    "\n    v_Color = COLOR;\r\n    #endif\r\n\r\n    gl_Position = u_ViewProjectionMatrix * " +
+                    "pos;\r\n}\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }
@@ -199,7 +154,7 @@ layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
     /// Base class for this transformation
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
-    public class FragmentShaderBase
+    public class VertexShaderBase
     {
         #region Fields
         private global::System.Text.StringBuilder generationEnvironmentField;

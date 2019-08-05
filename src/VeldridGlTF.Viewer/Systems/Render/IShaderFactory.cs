@@ -1,4 +1,5 @@
-﻿using VeldridGlTF.Viewer.Systems.Render.Resources;
+﻿using Veldrid.SPIRV;
+using VeldridGlTF.Viewer.Systems.Render.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Shaders;
 
 namespace VeldridGlTF.Viewer.Systems.Render
@@ -6,6 +7,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
     public interface IShaderFactory
     {
         IShaderGenerator ResolveGenerator(ShaderKey key);
-        ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, RenderPass pass);
+        ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, ILayoutNameResolver pass);
     }
 }
