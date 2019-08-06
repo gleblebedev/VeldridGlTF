@@ -18,12 +18,16 @@ namespace VeldridGlTF.Viewer.Systems.Render
         }
 
         public ResourceSetBuilder(ResourceFactory factory, IResourceSetBuilder fallback, params ResourceSetSlot[] slots)
+            :this(factory,fallback,(IEnumerable<ResourceSetSlot>)slots)
         {
-            _factory = factory;
-            _slots = slots.ToDictionary(_=>_.Name??"");
-            _fallback = fallback;
         }
 
+        public ResourceSetBuilder(ResourceFactory factory, IResourceSetBuilder fallback, IEnumerable<ResourceSetSlot> slots)
+        {
+            _factory = factory;
+            _slots = slots.ToDictionary(_ => _.Name ?? "");
+            _fallback = fallback;
+        }
         public bool TryResolve(string name, out ResourceSetSlot slot)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -72,7 +76,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             {
                 if (!TryResolve(resources[index].Name, out var slot))
                 {
-                    throw new KeyNotFoundException("Unknown bindable resource " + resources[index]);
+                    throw new KeyNotFoundException("Unknown bindable resource " + resources[index].Name);
                 }
 
                 res[index] = slot.GetResource() ?? emptyBindableResource;

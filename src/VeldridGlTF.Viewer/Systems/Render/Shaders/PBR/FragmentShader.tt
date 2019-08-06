@@ -137,10 +137,15 @@ uniform mat3 u_NormalUVTransform;
 #endif
 
 #ifdef HAS_EMISSIVE_MAP
-uniform sampler2D u_EmissiveSampler;
-uniform int u_EmissiveUVSet;
-uniform vec3 u_EmissiveFactor;
-uniform mat3 u_EmissiveUVTransform;
+layout(set = 5, binding = 0) uniform texture2D EmissiveTexture;
+layout(set = 5, binding = 1) uniform sampler EmissiveSampler;
+layout(set = 5, binding = 2) uniform EmissiveMapProperties
+{
+<#
+	WriteMembers<EmissiveMapProperties>();
+#>
+};
+
 #endif
 
 #ifdef HAS_OCCLUSION_MAP
@@ -747,14 +752,14 @@ void main()
 
     vec3 emissive = vec3(0);
 #ifdef HAS_EMISSIVE_MAP
-    emissive = SRGBtoLINEAR(texture2D(u_EmissiveSampler, getEmissiveUV())).rgb * u_EmissiveFactor;
+    emissive = SRGBtoLINEAR(texture(sampler2D(EmissiveTexture, EmissiveSampler), getEmissiveUV())).rgb * u_EmissiveFactor;
     color += emissive;
 #endif
 
 #ifndef DEBUG_OUTPUT // no debug
 
    // regular shading
-    outFragColor = vec4(toneMap(color), baseColor.a);
+   outFragColor = vec4(toneMap(color), baseColor.a);
 
 #else // debug output
 

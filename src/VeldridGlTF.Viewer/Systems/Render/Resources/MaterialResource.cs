@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Numerics;
+using System.Collections.Generic;
 using Veldrid;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
@@ -8,11 +8,31 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
     public class MaterialResource : AbstractResource, IMaterial, IDisposable
     {
+        public static class Slots
+        {
+            public const string DiffuseTexture = "DiffuseTexture";
+            public const string DiffuseSampler = "DiffuseSampler";
+            public const string MetallicRoughness = "MetallicRoughness";
+            public const string BaseColorTexture = "BaseColorTexture";
+            public const string BaseColorSampler = "BaseColorSampler";
+            public const string SpecularGlossiness = "SpecularGlossiness";
+            public const string NormalTexture = "NormalTexture";
+            public const string NormalSampler = "NormalSampler";
+
+            public const string EmissiveTexture = "EmissiveTexture";
+            public const string EmissiveSampler = "EmissiveSampler";
+            public const string EmissiveMapProperties = "EmissiveMapProperties";
+            
+            public const string OcclusionTexture = "OcclusionTexture";
+            public const string OcclusionSampler = "OcclusionSampler";
+        }
+
         private readonly VeldridRenderSystem _renderSystem;
-        public Vector4 _baseColor;
         private ResourceSetBuilder _resourceSet;
 
         public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
+        private List<IDisposable> _disposables;
+        private bool _unlit;
 
 
         public MaterialResource(ResourceId id, VeldridRenderSystem renderSystem) : base(id)
@@ -33,16 +53,39 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         public override void Dispose()
         {
             ResourceSetBuilder?.Dispose();
+            foreach (var disposable in Disposables)
+            {
+                disposable?.Dispose();
+            }
             base.Dispose();
         }
 
-        public IResourceHandler<ITexture> DiffuseTexture { get; set; }
-
         public string ShaderName { get; set; } = "Default";
+
+        public List<IDisposable> Disposables
+        {
+            get { return _disposables; }
+            set { _disposables = value; }
+        }
+
+        public bool Unlit
+        {
+            get { return _unlit; }
+            set { _unlit = value; }
+        }
 
         public void UpdateBuffer(CommandList _cl, DeviceBuffer materialBuffer)
         {
-            _cl.UpdateBuffer(materialBuffer, 0, ref _baseColor);
+            //_cl.UpdateBuffer(materialBuffer, 0, ref _baseColor);
         }
+    }
+
+    public class MetalicRoughnessResource
+    {
+        public MetalicRoughnessStruct Buffer;
+    }
+    public struct MetalicRoughnessStruct
+    {
+
     }
 }

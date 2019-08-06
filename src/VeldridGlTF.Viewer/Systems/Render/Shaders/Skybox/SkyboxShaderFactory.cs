@@ -34,17 +34,15 @@ void main()
         {
             return @"#version 450
 
-layout(set = 3, binding = 1) uniform textureCube SurfaceTexture;
-layout(set = 3, binding = 2) uniform sampler SurfaceSampler;
+layout(set = 3, binding = 1) uniform textureCube DiffuseTexture;
+layout(set = 3, binding = 2) uniform sampler DiffuseSampler;
 
 layout(location = 0) in vec3 fsin_0;
 layout(location = 0) out vec4 OutputColor;
 
 void main()
 {
-	//vec4 reflection = texture(samplerCube(ReflectionTexture, ReflectionSampler), vec3(0,0,0));
-	//vec4 brdf = texture(sampler2D(BRDFTexture, BRDFSampler), vec2(0.0, 0.0));
-    vec4 skybox = texture(samplerCube(SurfaceTexture, SurfaceSampler), fsin_0);
+    vec4 skybox = texture(samplerCube(DiffuseTexture, DiffuseSampler), fsin_0);
     OutputColor = skybox;
 }";
         }

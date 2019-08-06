@@ -425,8 +425,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var skyboxMaterial = new MaterialDescription(ResourceId.Null)
             {
                 ShaderName = "Skybox",
-                DiffuseTexture = new ManualResourceHandler<ITexture>(ResourceId.Null,
-                    new TextureResource(ResourceId.Null, _skyTexture, _skyTextureView)),
+                SpecularGlossiness = new SpecularGlossiness()
+                {
+                    Diffuse = new MapParameters()
+                    {
+                        Map = new ManualResourceHandler<ITexture>(ResourceId.Null,
+                            new TextureResource(ResourceId.Null, _skyTexture, _skyTextureView))
+                    }
+                },
                 DepthWriteEnabled = false
             };
             var materialHandler = new ResourceHandler<IMaterial>(ResourceId.Null,
@@ -434,7 +440,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _skybox.Material = materialHandler;
         }
 
-        private static uint GetBufferSize<T>() where T: struct
+        public static uint GetBufferSize<T>() where T: struct
         {
             var sizeOf = Marshal.SizeOf<T>();
             if (0 != (sizeOf & 15))

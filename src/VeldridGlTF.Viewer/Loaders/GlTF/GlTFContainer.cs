@@ -9,6 +9,7 @@ using SharpGLTF.Materials;
 using SharpGLTF.Schema2;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
+using AlphaMode = VeldridGlTF.Viewer.Data.AlphaMode;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
@@ -143,14 +144,89 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var id = string.IsNullOrWhiteSpace(material.Name) ? "@" + index : material.Name;
                 while (Materials.ContainsId(id)) id += "_";
                 var resourceId = new ResourceId(container, id);
-                var result = new MaterialDescription(resourceId);
-                result.BaseColor = material.GetDiffuseColor(Vector4.One);
-                var resourceHandler = Textures[material.GetDiffuseTexture()];
-                if (resourceHandler != null) result.DiffuseTexture = context.Resolve<ITexture>(resourceHandler.Id);
 
-                Materials.Add(material, id, new ManualResourceHandler<IMaterialDescription>(resourceId, result));
+                //result.BaseColor = material.GetDiffuseColor(Vector4.One);
+                //var resourceHandler = Textures[material.GetDiffuseTexture()];
+                //if (resourceHandler != null) result.DiffuseTexture = context.Resolve<ITexture>(resourceHandler.Id);
+
+                Materials.Add(material, id, new ManualResourceHandler<IMaterialDescription>(resourceId, MakeMaterialDescription(resourceId, material, context)));
                 ++index;
             }
+        }
+
+        private MaterialDescription MakeMaterialDescription(ResourceId resourceId, Material material,
+            ResourceContext context)
+        {
+            var result = new MaterialDescription(resourceId);
+            {
+                switch (material.Alpha)
+                {
+                    case SharpGLTF.Schema2.AlphaMode.OPAQUE:
+                        result.AlphaMode = AlphaMode.Opaque;
+                        break;
+                    case SharpGLTF.Schema2.AlphaMode.MASK:
+                        result.AlphaMode = AlphaMode.Mask;
+                        break;
+                    case SharpGLTF.Schema2.AlphaMode.BLEND:
+                        result.AlphaMode = AlphaMode.Blend;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                result.AlphaCutoff = material.AlphaCutoff;
+            }
+
+            {
+                result.Unlit = material.Unlit;
+            }
+
+            {
+                var materialMap = ResolveTexture(material, context, "BaseColor");
+                if (materialMap != null)
+                {
+                    var specularGlossiness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
+                    specularGlossiness.BaseColor = materialMap;
+                }
+            }
+            {
+                var materialMap = ResolveTexture(material, context, "MetallicRoughness");
+                if (materialMap != null)
+                {
+                    var specularGlossiness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
+                    specularGlossiness.MetallicRoughnessMap = materialMap;
+                }
+            }
+            {
+                result.Normal = ResolveTexture(material, context, "Normal");
+            }
+            {
+                result.Occlusion = ResolveTexture(material, context, "Occlusion");
+            }
+            {
+                result.Emissive = ResolveTexture(material, context, "Emissive");
+            }
+            return result;
+        }
+
+        private MapParameters ResolveTexture(Material material, ResourceContext context, string channelKey)
+        {
+            var baseColor = material.FindChannel(channelKey);
+            if (baseColor != null)
+            {
+                if (baseColor.Value.Texture != null)
+                {
+                    var resourceHandler = Textures[baseColor.Value.Texture];
+                    if (resourceHandler != null)
+                    {
+                        return new MapParameters()
+                        {
+                            Map = context.Resolve<ITexture>(resourceHandler.Id)
+                        };
+                    }
+                }
+            }
+
+            return null;
         }
 
         private void RegisterTextures(ModelRoot modelRoot, string container)

@@ -1,23 +1,28 @@
-﻿using System.Numerics;
-using VeldridGlTF.Viewer.Data;
+﻿using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
+
     public class MaterialDescription : AbstractResource, IMaterialDescription
     {
         private bool _depthTestEnabled = true;
         private bool _depthWriteEnabled = true;
+        private AlphaMode _alphaMode;
+        private bool _unlit;
 
         public MaterialDescription(ResourceId id) : base(id)
         {
         }
 
-        public IResourceHandler<ITexture> DiffuseTexture { get; set; }
-
-        public Vector4 BaseColor { get; set; }
-
         public string ShaderName { get; set; } = "Default";
+        public MapParameters Normal { get; set; }
+        public MapParameters Emissive { get; set; }
+        public MapParameters Occlusion { get; set; }
+        public SpecularGlossiness SpecularGlossiness { get; set; }
+        public MetallicRoughness MetallicRoughness { get; set; }
+
+        public float AlphaCutoff { get; set; } = 1.0f;
 
         public bool DepthTestEnabled
         {
@@ -30,5 +35,18 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             get { return _depthWriteEnabled; }
             set { _depthWriteEnabled = value; }
         }
+
+        public AlphaMode AlphaMode
+        {
+            get { return _alphaMode; }
+            set { _alphaMode = value; }
+        }
+
+        public bool Unlit
+        {
+            get { return _unlit; }
+            set { _unlit = value; }
+        }
     }
+
 }

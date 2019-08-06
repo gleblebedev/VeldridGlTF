@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Veldrid;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.PBR;
@@ -107,6 +108,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
         {
             foreach (var fieldInfo in typeof(T).GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
             {
+                var fixedBuffer = (FixedBufferAttribute)fieldInfo.GetCustomAttribute(typeof(FixedBufferAttribute), false);
+                if (fixedBuffer != null)
+                {
+                    template.WriteLine("    " + NameOf(fixedBuffer.ElementType) + " " + fieldInfo.Name + " ["+fixedBuffer.Length+"];");
+                }
+
                 template.WriteLine("    " + NameOf(fieldInfo.FieldType)+ " " + fieldInfo.Name + ";");
             }
         }
@@ -125,6 +132,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
                 return "vec4";
             if (type == typeof(Matrix4x4))
                 return "mat4";
+            if (type == typeof(Matrix3x3))
+                return "mat3";
             throw new NotImplementedException(type.FullName);
         }
     }

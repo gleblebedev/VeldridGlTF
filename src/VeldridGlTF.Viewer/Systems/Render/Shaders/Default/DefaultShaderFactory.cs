@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Veldrid.SPIRV;
+﻿using Veldrid.SPIRV;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
@@ -14,12 +13,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material, ILayoutNameResolver renderPass)
         {
             var shaderKey = new DefaultShaderKey(this, renderPass, primitive.Elements);
-            if (shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "NORMAL"))
-                shaderKey.Flags |= ShaderFlag.HAS_DIFFUSE_MAP;
+            //if (shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "NORMAL"))
+            //    shaderKey.Flags |= ShaderFlag.HAS_DIFFUSE_MAP;
 
-            if (material.DiffuseTexture != null &&
-                shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "TEXCOORD_0"))
-                shaderKey.Flags |= ShaderFlag.HAS_DIFFUSE_MAP;
+            //if (material.DiffuseTexture != null &&
+            //    shaderKey.VertexLayout.VertexLayoutDescription.Elements.Any(_ => _.Name == "TEXCOORD_0"))
+            //    shaderKey.Flags |= ShaderFlag.HAS_DIFFUSE_MAP;
 
             return shaderKey;
         }
