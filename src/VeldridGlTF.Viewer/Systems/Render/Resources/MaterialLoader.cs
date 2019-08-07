@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp.Processing.Dithering;
 using Veldrid;
@@ -103,6 +104,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.SpecularGlossinessSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
+                        specularGlossinessParameters.SpecularFactor = new Vector3(diffuseMapParameters.Color.X, diffuseMapParameters.Color.Y, diffuseMapParameters.Color.Z);
                     }
                     slots.Add(AddUniformBuffer(renderContext, disposables, ref specularGlossinessParameters, MaterialResource.Slots.SpecularGlossiness));
                 }

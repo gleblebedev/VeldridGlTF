@@ -352,76 +352,76 @@ layout(set = 6, binding = 0) uniform MetallicRoughness
                     "GBtoLINEAR(texture(sampler2D(SpecularGlossinessTexture, SpecularGlossinessSample" +
                     "r), getSpecularGlossinessUV()));\r\n    perceptualRoughness = (1.0 - sgSample.a * " +
                     "GlossinessFactor); // glossiness to roughness\r\n    f0 = sgSample.rgb * SpecularF" +
-                    "actor; // specular\r\n#else\r\n    f0 = u_SpecularFactor;\r\n    perceptualRoughness =" +
-                    " 1.0 - GlossinessFactor;\r\n#endif // ! HAS_SPECULAR_GLOSSINESS_MAP\r\n\r\n#ifdef HAS_" +
-                    "DIFFUSE_MAP\r\n    baseColor = SRGBtoLINEAR(texture(sampler2D(DiffuseTexture, Diff" +
-                    "useSampler), getDiffuseUV())) * u_DiffuseFactor;\r\n#else\r\n    baseColor = Diffuse" +
-                    "Factor;\r\n#endif // !HAS_DIFFUSE_MAP\r\n\r\n    baseColor *= getVertexColor();\r\n\r\n   " +
-                    " // f0 = specular\r\n    specularColor = f0;\r\n    float oneMinusSpecularStrength =" +
-                    " 1.0 - max(max(f0.r, f0.g), f0.b);\r\n    diffuseColor = baseColor.rgb * oneMinusS" +
-                    "pecularStrength;\r\n\r\n#ifdef DEBUG_METALLIC\r\n    // do conversion between metallic" +
-                    " M-R and S-G metallic\r\n    metallic = solveMetallic(baseColor.rgb, specularColor" +
-                    ", oneMinusSpecularStrength);\r\n#endif // ! DEBUG_METALLIC\r\n\r\n#endif // ! MATERIAL" +
-                    "_SPECULARGLOSSINESS\r\n\r\n#ifdef MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef HAS_METALLIC_" +
-                    "ROUGHNESS_MAP\r\n    // Roughness is stored in the \'g\' channel, metallic is stored" +
-                    " in the \'b\' channel.\r\n    // This layout intentionally reserves the \'r\' channel " +
-                    "for (optional) occlusion map data\r\n    vec4 mrSample = texture(sampler2D(Metalli" +
-                    "cRoughnessTexture, MetallicRoughnessSampler), getMetallicRoughnessUV());\r\n    pe" +
-                    "rceptualRoughness = mrSample.g * RoughnessFactor;\r\n    metallic = mrSample.b * M" +
-                    "etallicFactor;\r\n#else\r\n    metallic = MetallicFactor;\r\n    perceptualRoughness =" +
-                    " RoughnessFactor;\r\n#endif\r\n\r\n    // The albedo may be defined from a base textur" +
-                    "e or a flat color\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    baseColor = SRGBtoLINEAR(textu" +
-                    "re(sampler2D(BaseColorTexture, BaseColorSampler), getBaseColorUV())) * BaseColor" +
-                    "Factor;\r\n#else\r\n    baseColor = BaseColorFactor;\r\n#endif\r\n\r\n    baseColor *= get" +
-                    "VertexColor();\r\n\r\n    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - m" +
-                    "etallic);\r\n\r\n    specularColor = mix(f0, baseColor.rgb, metallic);\r\n\r\n#endif // " +
-                    "! MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef ALPHAMODE_MASK\r\n    if(baseColor.a < u_Al" +
-                    "phaCutoff)\r\n    {\r\n        discard;\r\n    }\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#i" +
-                    "fdef ALPHAMODE_OPAQUE\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef MATERIAL_UNLIT\r\n" +
-                    "    outFragColor = vec4(LINEARtoSRGB(baseColor.rgb), baseColor.a);\r\n    return;\r" +
-                    "\n#endif\r\n\r\n    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);\r\n    " +
-                    "metallic = clamp(metallic, 0.0, 1.0);\r\n\r\n    // Roughness is authored as percept" +
-                    "ual roughness; as is convention,\r\n    // convert to material roughness by squari" +
-                    "ng the perceptual roughness [2].\r\n    float alphaRoughness = perceptualRoughness" +
-                    " * perceptualRoughness;\r\n\r\n    // Compute reflectance.\r\n    float reflectance = " +
-                    "max(max(specularColor.r, specularColor.g), specularColor.b);\r\n\r\n    vec3 specula" +
-                    "rEnvironmentR0 = specularColor.rgb;\r\n    // Anything less than 2% is physically " +
-                    "impossible and is instead considered to be shadowing. Compare to \"Real-Time-Rend" +
-                    "ering\" 4th editon on page 325.\r\n    vec3 specularEnvironmentR90 = vec3(clamp(ref" +
-                    "lectance * 50.0, 0.0, 1.0));\r\n\r\n    MaterialInfo materialInfo = MaterialInfo(\r\n " +
-                    "       perceptualRoughness,\r\n        specularEnvironmentR0,\r\n        alphaRoughn" +
-                    "ess,\r\n        diffuseColor,\r\n        specularEnvironmentR90,\r\n        specularCo" +
-                    "lor\r\n    );\r\n\r\n    // LIGHTING\r\n\r\n    vec3 color = vec3(0.0, 0.0, 0.0);\r\n    vec" +
-                    "3 normal = getNormal();\r\n    vec3 view = normalize(u_Camera - v_Position);\r\n\r\n#i" +
-                    "fdef USE_PUNCTUAL\r\n    for (int i = 0; i < LIGHT_COUNT; ++i)\r\n    {\r\n        Lig" +
-                    "ht light = u_Lights[i];\r\n        if (light.type == LightType_Directional)\r\n     " +
-                    "   {\r\n            color += applyDirectionalLight(light, materialInfo, normal, vi" +
-                    "ew);\r\n        }\r\n        else if (light.type == LightType_Point)\r\n        {\r\n   " +
-                    "         color += applyPointLight(light, materialInfo, normal, view);\r\n        }" +
-                    "\r\n        else if (light.type == LightType_Spot)\r\n        {\r\n            color +" +
-                    "= applySpotLight(light, materialInfo, normal, view);\r\n        }\r\n    }\r\n#endif\r\n" +
-                    "\r\n    // Calculate lighting contribution from image based lighting source (IBL)\r" +
-                    "\n#ifdef USE_IBL\r\n    color += getIBLContribution(materialInfo, normal, view);\r\n#" +
-                    "endif\r\n\r\n    float ao = 1.0;\r\n    // Apply optional PBR terms for additional (op" +
-                    "tional) shading\r\n#ifdef HAS_OCCLUSION_MAP\r\n    ao = texture(sampler2D(OcclusionT" +
-                    "exture, OcclusionSampler), getOcclusionUV()).r;\r\n    color = mix(color, color * " +
-                    "ao, u_OcclusionStrength);\r\n#endif\r\n\r\n    vec3 emissive = vec3(0);\r\n#ifdef HAS_EM" +
-                    "ISSIVE_MAP\r\n    emissive = SRGBtoLINEAR(texture(sampler2D(EmissiveTexture, Emiss" +
-                    "iveSampler), getEmissiveUV())).rgb * EmissiveFactor;\r\n    color += emissive;\r\n#e" +
-                    "ndif\r\n\r\n#ifndef DEBUG_OUTPUT // no debug\r\n\r\n   // regular shading\r\n   outFragCol" +
-                    "or = vec4(toneMap(color), baseColor.a);\r\n\r\n#else // debug output\r\n\r\n    #ifdef D" +
-                    "EBUG_METALLIC\r\n        outFragColor.rgb = vec3(metallic);\r\n    #endif\r\n\r\n    #if" +
-                    "def DEBUG_ROUGHNESS\r\n        outFragColor.rgb = vec3(perceptualRoughness);\r\n    " +
-                    "#endif\r\n\r\n    #ifdef DEBUG_NORMAL\r\n        #ifdef HAS_NORMAL_MAP\r\n            ou" +
-                    "tFragColor.rgb = texture2D(NormalSampler, getNormalUV()).rgb;\r\n        #else\r\n  " +
-                    "          outFragColor.rgb = vec3(0.5, 0.5, 1.0);\r\n        #endif\r\n    #endif\r\n\r" +
-                    "\n    #ifdef DEBUG_BASECOLOR\r\n        outFragColor.rgb = LINEARtoSRGB(baseColor.r" +
-                    "gb);\r\n    #endif\r\n\r\n    #ifdef DEBUG_OCCLUSION\r\n        outFragColor.rgb = vec3(" +
-                    "ao);\r\n    #endif\r\n\r\n    #ifdef DEBUG_EMISSIVE\r\n        outFragColor.rgb = LINEAR" +
-                    "toSRGB(emissive);\r\n    #endif\r\n\r\n    #ifdef DEBUG_F0\r\n        outFragColor.rgb =" +
-                    " vec3(f0);\r\n    #endif\r\n\r\n    #ifdef DEBUG_ALPHA\r\n        outFragColor.rgb = vec" +
-                    "3(baseColor.a);\r\n    #endif\r\n\r\n    outFragColor.a = 1.0;\r\n\r\n#endif // !DEBUG_OUT" +
-                    "PUT\r\n}");
+                    "actor; // specular\r\n#else\r\n    f0 = SpecularFactor;\r\n    perceptualRoughness = 1" +
+                    ".0 - GlossinessFactor;\r\n#endif // ! HAS_SPECULAR_GLOSSINESS_MAP\r\n\r\n#ifdef HAS_DI" +
+                    "FFUSE_MAP\r\n    baseColor = SRGBtoLINEAR(texture(sampler2D(DiffuseTexture, Diffus" +
+                    "eSampler), getDiffuseUV())) * DiffuseFactor;\r\n#else\r\n    baseColor = DiffuseFact" +
+                    "or;\r\n#endif // !HAS_DIFFUSE_MAP\r\n\r\n    baseColor *= getVertexColor();\r\n\r\n    // " +
+                    "f0 = specular\r\n    specularColor = f0;\r\n    float oneMinusSpecularStrength = 1.0" +
+                    " - max(max(f0.r, f0.g), f0.b);\r\n    diffuseColor = baseColor.rgb * oneMinusSpecu" +
+                    "larStrength;\r\n\r\n#ifdef DEBUG_METALLIC\r\n    // do conversion between metallic M-R" +
+                    " and S-G metallic\r\n    metallic = solveMetallic(baseColor.rgb, specularColor, on" +
+                    "eMinusSpecularStrength);\r\n#endif // ! DEBUG_METALLIC\r\n\r\n#endif // ! MATERIAL_SPE" +
+                    "CULARGLOSSINESS\r\n\r\n#ifdef MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef HAS_METALLIC_ROUG" +
+                    "HNESS_MAP\r\n    // Roughness is stored in the \'g\' channel, metallic is stored in " +
+                    "the \'b\' channel.\r\n    // This layout intentionally reserves the \'r\' channel for " +
+                    "(optional) occlusion map data\r\n    vec4 mrSample = texture(sampler2D(MetallicRou" +
+                    "ghnessTexture, MetallicRoughnessSampler), getMetallicRoughnessUV());\r\n    percep" +
+                    "tualRoughness = mrSample.g * RoughnessFactor;\r\n    metallic = mrSample.b * Metal" +
+                    "licFactor;\r\n#else\r\n    metallic = MetallicFactor;\r\n    perceptualRoughness = Rou" +
+                    "ghnessFactor;\r\n#endif\r\n\r\n    // The albedo may be defined from a base texture or" +
+                    " a flat color\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    baseColor = SRGBtoLINEAR(texture(s" +
+                    "ampler2D(BaseColorTexture, BaseColorSampler), getBaseColorUV())) * BaseColorFact" +
+                    "or;\r\n#else\r\n    baseColor = BaseColorFactor;\r\n#endif\r\n\r\n    baseColor *= getVert" +
+                    "exColor();\r\n\r\n    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metal" +
+                    "lic);\r\n\r\n    specularColor = mix(f0, baseColor.rgb, metallic);\r\n\r\n#endif // ! MA" +
+                    "TERIAL_METALLICROUGHNESS\r\n\r\n#ifdef ALPHAMODE_MASK\r\n    if(baseColor.a < u_AlphaC" +
+                    "utoff)\r\n    {\r\n        discard;\r\n    }\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef" +
+                    " ALPHAMODE_OPAQUE\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef MATERIAL_UNLIT\r\n    " +
+                    "outFragColor = vec4(LINEARtoSRGB(baseColor.rgb), baseColor.a);\r\n    return;\r\n#en" +
+                    "dif\r\n\r\n    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);\r\n    meta" +
+                    "llic = clamp(metallic, 0.0, 1.0);\r\n\r\n    // Roughness is authored as perceptual " +
+                    "roughness; as is convention,\r\n    // convert to material roughness by squaring t" +
+                    "he perceptual roughness [2].\r\n    float alphaRoughness = perceptualRoughness * p" +
+                    "erceptualRoughness;\r\n\r\n    // Compute reflectance.\r\n    float reflectance = max(" +
+                    "max(specularColor.r, specularColor.g), specularColor.b);\r\n\r\n    vec3 specularEnv" +
+                    "ironmentR0 = specularColor.rgb;\r\n    // Anything less than 2% is physically impo" +
+                    "ssible and is instead considered to be shadowing. Compare to \"Real-Time-Renderin" +
+                    "g\" 4th editon on page 325.\r\n    vec3 specularEnvironmentR90 = vec3(clamp(reflect" +
+                    "ance * 50.0, 0.0, 1.0));\r\n\r\n    MaterialInfo materialInfo = MaterialInfo(\r\n     " +
+                    "   perceptualRoughness,\r\n        specularEnvironmentR0,\r\n        alphaRoughness," +
+                    "\r\n        diffuseColor,\r\n        specularEnvironmentR90,\r\n        specularColor\r" +
+                    "\n    );\r\n\r\n    // LIGHTING\r\n\r\n    vec3 color = vec3(0.0, 0.0, 0.0);\r\n    vec3 no" +
+                    "rmal = getNormal();\r\n    vec3 view = normalize(u_Camera - v_Position);\r\n\r\n#ifdef" +
+                    " USE_PUNCTUAL\r\n    for (int i = 0; i < LIGHT_COUNT; ++i)\r\n    {\r\n        Light l" +
+                    "ight = u_Lights[i];\r\n        if (light.type == LightType_Directional)\r\n        {" +
+                    "\r\n            color += applyDirectionalLight(light, materialInfo, normal, view);" +
+                    "\r\n        }\r\n        else if (light.type == LightType_Point)\r\n        {\r\n       " +
+                    "     color += applyPointLight(light, materialInfo, normal, view);\r\n        }\r\n  " +
+                    "      else if (light.type == LightType_Spot)\r\n        {\r\n            color += ap" +
+                    "plySpotLight(light, materialInfo, normal, view);\r\n        }\r\n    }\r\n#endif\r\n\r\n  " +
+                    "  // Calculate lighting contribution from image based lighting source (IBL)\r\n#if" +
+                    "def USE_IBL\r\n    color += getIBLContribution(materialInfo, normal, view);\r\n#endi" +
+                    "f\r\n\r\n    float ao = 1.0;\r\n    // Apply optional PBR terms for additional (option" +
+                    "al) shading\r\n#ifdef HAS_OCCLUSION_MAP\r\n    ao = texture(sampler2D(OcclusionTextu" +
+                    "re, OcclusionSampler), getOcclusionUV()).r;\r\n    color = mix(color, color * ao, " +
+                    "u_OcclusionStrength);\r\n#endif\r\n\r\n    vec3 emissive = vec3(0);\r\n#ifdef HAS_EMISSI" +
+                    "VE_MAP\r\n    emissive = SRGBtoLINEAR(texture(sampler2D(EmissiveTexture, EmissiveS" +
+                    "ampler), getEmissiveUV())).rgb * EmissiveFactor;\r\n    color += emissive;\r\n#endif" +
+                    "\r\n\r\n#ifndef DEBUG_OUTPUT // no debug\r\n\r\n   // regular shading\r\n   outFragColor =" +
+                    " vec4(toneMap(color), baseColor.a);\r\n\r\n#else // debug output\r\n\r\n    #ifdef DEBUG" +
+                    "_METALLIC\r\n        outFragColor.rgb = vec3(metallic);\r\n    #endif\r\n\r\n    #ifdef " +
+                    "DEBUG_ROUGHNESS\r\n        outFragColor.rgb = vec3(perceptualRoughness);\r\n    #end" +
+                    "if\r\n\r\n    #ifdef DEBUG_NORMAL\r\n        #ifdef HAS_NORMAL_MAP\r\n            outFra" +
+                    "gColor.rgb = texture2D(NormalSampler, getNormalUV()).rgb;\r\n        #else\r\n      " +
+                    "      outFragColor.rgb = vec3(0.5, 0.5, 1.0);\r\n        #endif\r\n    #endif\r\n\r\n   " +
+                    " #ifdef DEBUG_BASECOLOR\r\n        outFragColor.rgb = LINEARtoSRGB(baseColor.rgb);" +
+                    "\r\n    #endif\r\n\r\n    #ifdef DEBUG_OCCLUSION\r\n        outFragColor.rgb = vec3(ao);" +
+                    "\r\n    #endif\r\n\r\n    #ifdef DEBUG_EMISSIVE\r\n        outFragColor.rgb = LINEARtoSR" +
+                    "GB(emissive);\r\n    #endif\r\n\r\n    #ifdef DEBUG_F0\r\n        outFragColor.rgb = vec" +
+                    "3(f0);\r\n    #endif\r\n\r\n    #ifdef DEBUG_ALPHA\r\n        outFragColor.rgb = vec3(ba" +
+                    "seColor.a);\r\n    #endif\r\n\r\n    outFragColor.a = 1.0;\r\n\r\n#endif // !DEBUG_OUTPUT\r" +
+                    "\n}");
             return this.GenerationEnvironment.ToString();
         }
     }

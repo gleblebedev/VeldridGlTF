@@ -628,12 +628,12 @@ void main()
     perceptualRoughness = (1.0 - sgSample.a * GlossinessFactor); // glossiness to roughness
     f0 = sgSample.rgb * SpecularFactor; // specular
 #else
-    f0 = u_SpecularFactor;
+    f0 = SpecularFactor;
     perceptualRoughness = 1.0 - GlossinessFactor;
 #endif // ! HAS_SPECULAR_GLOSSINESS_MAP
 
 #ifdef HAS_DIFFUSE_MAP
-    baseColor = SRGBtoLINEAR(texture(sampler2D(DiffuseTexture, DiffuseSampler), getDiffuseUV())) * u_DiffuseFactor;
+    baseColor = SRGBtoLINEAR(texture(sampler2D(DiffuseTexture, DiffuseSampler), getDiffuseUV())) * DiffuseFactor;
 #else
     baseColor = DiffuseFactor;
 #endif // !HAS_DIFFUSE_MAP

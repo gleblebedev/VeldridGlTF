@@ -55,6 +55,9 @@
     <None Include="..\modules\glTF-Sample-Models\2.0\Box\glTF-Binary\Box.glb" Link="Assets\Box.glb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\SpecGlossVsMetalRough\glTF-Binary\SpecGlossVsMetalRough.glb" Link="Assets\SpecGlossVsMetalRough.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
