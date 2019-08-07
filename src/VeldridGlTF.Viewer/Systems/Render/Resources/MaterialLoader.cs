@@ -38,11 +38,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
 
                 material.Unlit = description.Unlit;
 
-                var metalicRoughness = description.MetallicRoughness;
-                if (metalicRoughness != null)
+                var metallicRoughness = description.MetallicRoughness;
+                if (metallicRoughness != null)
                 {
-                    var baseColorMapParameters = metalicRoughness.BaseColor;
+                    var metallicRoughnessParameters = MetallicRoughness.Identity;
 
+                    var baseColorMapParameters = metallicRoughness.BaseColor;
                     if (baseColorMapParameters != null)
                     {
                         var baseColor = await context.ResolveDependencyAsync(baseColorMapParameters.Map) as TextureResource;
@@ -54,13 +55,27 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                                 renderContext.Device.Aniso4xSampler));
                         }
                     }
+                    var metallicRoughnessMapParameters = metallicRoughness.MetallicRoughnessMap;
+                    if (metallicRoughnessMapParameters != null)
+                    {
+                        var metallicRoughnessMap = await context.ResolveDependencyAsync(metallicRoughnessMapParameters.Map) as TextureResource;
+                        if (metallicRoughnessMap != null)
+                        {
+                            slots.Add(new ResourceSetSlot(MaterialResource.Slots.MetallicRoughnessTexture, ResourceKind.TextureReadOnly,
+                                metallicRoughnessMap.View));
+                            slots.Add(new ResourceSetSlot(MaterialResource.Slots.MetallicRoughnessSampler, ResourceKind.Sampler,
+                                renderContext.Device.Aniso4xSampler));
+                        }
+                    }
+                    slots.Add(AddUniformBuffer(renderContext, disposables, ref metallicRoughnessParameters, MaterialResource.Slots.MetallicRoughness));
                 }
 
                 var specularGlossiness = description.SpecularGlossiness;
                 if (specularGlossiness != null)
                 {
-                    var diffuseMapParameters = specularGlossiness.Diffuse;
+                    var specularGlossinessParameters = SpecularGlossiness.Identity;
 
+                    var diffuseMapParameters = specularGlossiness.Diffuse;
                     if (diffuseMapParameters != null)
                     {
                         var diffuse = await context.ResolveDependencyAsync(diffuseMapParameters.Map) as TextureResource;
@@ -72,6 +87,19 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                                 renderContext.Device.Aniso4xSampler));
                         }
                     }
+                    var specularGlossinessMapParameters = specularGlossiness.SpecularGlossinessMap;
+                    if (specularGlossinessMapParameters != null)
+                    {
+                        var specularGlossinessMap = await context.ResolveDependencyAsync(specularGlossinessMapParameters.Map) as TextureResource;
+                        if (specularGlossinessMap != null)
+                        {
+                            slots.Add(new ResourceSetSlot(MaterialResource.Slots.SpecularGlossinessTexture, ResourceKind.TextureReadOnly,
+                                specularGlossinessMap.View));
+                            slots.Add(new ResourceSetSlot(MaterialResource.Slots.SpecularGlossinessSampler, ResourceKind.Sampler,
+                                renderContext.Device.Aniso4xSampler));
+                        }
+                    }
+                    slots.Add(AddUniformBuffer(renderContext, disposables, ref specularGlossinessParameters, MaterialResource.Slots.SpecularGlossiness));
                 }
 
                 if (description.Emissive != null)
@@ -97,6 +125,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             map.View));
                         slots.Add(new ResourceSetSlot(MaterialResource.Slots.NormalSampler, ResourceKind.Sampler,
                             renderContext.Device.Aniso4xSampler));
+                        var normalMapProperties = NormalMapProperties.Identity;
+                        slots.Add(AddUniformBuffer(renderContext, disposables, ref normalMapProperties, MaterialResource.Slots.NormalMapProperties));
                     }
                 }
 

@@ -10,14 +10,21 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
     {
         public static class Slots
         {
+            public const string SpecularGlossiness = "SpecularGlossiness";
             public const string DiffuseTexture = "DiffuseTexture";
             public const string DiffuseSampler = "DiffuseSampler";
+            public const string SpecularGlossinessTexture = "SpecularGlossinessTexture";
+            public const string SpecularGlossinessSampler = "SpecularGlossinessSampler";
+
             public const string MetallicRoughness = "MetallicRoughness";
+            public const string MetallicRoughnessTexture = "MetallicRoughnessTexture";
+            public const string MetallicRoughnessSampler = "MetallicRoughnessSampler";
             public const string BaseColorTexture = "BaseColorTexture";
             public const string BaseColorSampler = "BaseColorSampler";
-            public const string SpecularGlossiness = "SpecularGlossiness";
+
             public const string NormalTexture = "NormalTexture";
             public const string NormalSampler = "NormalSampler";
+            public const string NormalMapProperties = "NormalMapProperties";
 
             public const string EmissiveTexture = "EmissiveTexture";
             public const string EmissiveSampler = "EmissiveSampler";
@@ -25,6 +32,15 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             
             public const string OcclusionTexture = "OcclusionTexture";
             public const string OcclusionSampler = "OcclusionSampler";
+
+            public const string brdfLUTTexture = "brdfLUTTexture";
+            public const string brdfLUTSampler = "brdfLUTSampler";
+
+            public const string DiffuseEnvTexture = "DiffuseEnvTexture";
+            public const string DiffuseEnvSampler = "DiffuseEnvSampler";
+
+            public const string SpecularEnvTexture = "SpecularEnvTexture";
+            public const string SpecularEnvSampler = "SpecularEnvSampler";
         }
 
         private readonly VeldridRenderSystem _renderSystem;

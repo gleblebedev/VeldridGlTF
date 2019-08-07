@@ -22,8 +22,8 @@ struct MaterialInfo
     vec3 specularColor;           // color contribution from specular lighting
 };
 
-layout(set = 0, binding = 1) uniform texture2D BRDFTexture;
-layout(set = 0, binding = 2) uniform sampler BRDFSampler;
+layout(set = 0, binding = 1) uniform texture2D brdfLUTTexture;
+layout(set = 0, binding = 2) uniform sampler brdfLUTSampler;
 
 layout(set = 1, binding = 0) uniform textureCube ReflectionTexture;
 layout(set = 1, binding = 1) uniform sampler ReflectionSampler;

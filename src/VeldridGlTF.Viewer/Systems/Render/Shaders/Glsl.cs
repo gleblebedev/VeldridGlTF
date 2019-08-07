@@ -113,8 +113,10 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
                 {
                     template.WriteLine("    " + NameOf(fixedBuffer.ElementType) + " " + fieldInfo.Name + " ["+fixedBuffer.Length+"];");
                 }
-
-                template.WriteLine("    " + NameOf(fieldInfo.FieldType)+ " " + fieldInfo.Name + ";");
+                else
+                {
+                    template.WriteLine("    " + NameOf(fieldInfo.FieldType) + " " + fieldInfo.Name + ";");
+                }
             }
         }
 

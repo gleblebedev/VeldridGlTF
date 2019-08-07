@@ -409,12 +409,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _resourceSetBuilder = new ResourceSetBuilder(
                 _resourceFactory,
                 new ResourceSetSlot("EnvironmentProperties", ResourceKind.UniformBuffer,  _environmentProperties),
-                new ResourceSetSlot("BRDFTexture", ResourceKind.TextureReadOnly,  _brdfLUTTextureView), 
-                new ResourceSetSlot("BRDFSampler", ResourceKind.Sampler,  _graphicsDevice.LinearSampler),
+                new ResourceSetSlot(MaterialResource.Slots.brdfLUTTexture, ResourceKind.TextureReadOnly,  _brdfLUTTextureView), 
+                new ResourceSetSlot(MaterialResource.Slots.brdfLUTSampler, ResourceKind.Sampler,  _graphicsDevice.LinearSampler),
                 new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer, _objectProperties),
                 new ResourceSetSlot(null, ResourceKind.UniformBuffer, _objectProperties),
-                new ResourceSetSlot("ReflectionTexture", ResourceKind.TextureReadOnly, _skyTextureView),
-                new ResourceSetSlot("ReflectionSampler", ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler)
+                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly, _skyTextureView),
+                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvSampler, ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler),
+                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvTexture, ResourceKind.TextureReadOnly, _skyTextureView),
+                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvSampler, ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler)
                 );
 
             _cl = factory.CreateCommandList();
@@ -425,7 +427,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var skyboxMaterial = new MaterialDescription(ResourceId.Null)
             {
                 ShaderName = "Skybox",
-                SpecularGlossiness = new SpecularGlossiness()
+                SpecularGlossiness = new Data.SpecularGlossiness()
                 {
                     Diffuse = new MapParameters()
                     {

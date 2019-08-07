@@ -42,7 +42,7 @@ layout(location = 0) out vec4 OutputColor;
 
 void main()
 {
-    vec4 skybox = texture(samplerCube(DiffuseTexture, DiffuseSampler), fsin_0);
+    vec4 skybox = textureLod(samplerCube(DiffuseTexture, DiffuseSampler), fsin_0, 3);
     OutputColor = skybox;
 }";
         }
