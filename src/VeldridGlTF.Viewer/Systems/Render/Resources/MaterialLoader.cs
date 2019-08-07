@@ -104,7 +104,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.SpecularGlossinessSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
-                        specularGlossinessParameters.SpecularFactor = new Vector3(diffuseMapParameters.Color.X, diffuseMapParameters.Color.Y, diffuseMapParameters.Color.Z);
+                        specularGlossinessParameters.SpecularFactor = new Vector3(specularGlossinessMapParameters.Color.X, specularGlossinessMapParameters.Color.Y, specularGlossinessMapParameters.Color.Z);
+                        specularGlossinessParameters.GlossinessFactor = specularGlossinessMapParameters.Color.W;
                     }
                     slots.Add(AddUniformBuffer(renderContext, disposables, ref specularGlossinessParameters, MaterialResource.Slots.SpecularGlossiness));
                 }
