@@ -8,6 +8,7 @@ namespace VeldridGlTF.Viewer.Data
         public IResourceHandler<ITexture> Map;
         public float Scale;
         public int UVSet = 0;
-        public Matrix4x4 UVTransform = Matrix4x4.Identity;
+        public Matrix3x3 UVTransform = Matrix3x3.Identity;
+        public Vector4 Color;
     }
 }

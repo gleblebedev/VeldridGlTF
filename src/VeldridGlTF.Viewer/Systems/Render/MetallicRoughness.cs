@@ -33,8 +33,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             BaseColorUVSet = 0,
             MetallicRoughnessUVTransform = Matrix3x3.Identity,
             MetallicRoughnessUVSet = 0,
-            MetallicFactor = 0.01f,
-            RoughnessFactor = 0.99f,
+            MetallicFactor = 1.0f,
+            RoughnessFactor = 1.0f,
             BaseColorFactor = Vector4.One
         };
     }

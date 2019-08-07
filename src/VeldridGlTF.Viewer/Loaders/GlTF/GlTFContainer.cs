@@ -184,16 +184,32 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var materialMap = ResolveTexture(material, context, "BaseColor");
                 if (materialMap != null)
                 {
-                    var specularGlossiness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
-                    specularGlossiness.BaseColor = materialMap;
+                    var metallicRoughness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
+                    metallicRoughness.BaseColor = materialMap;
                 }
             }
             {
                 var materialMap = ResolveTexture(material, context, "MetallicRoughness");
                 if (materialMap != null)
                 {
-                    var specularGlossiness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
-                    specularGlossiness.MetallicRoughnessMap = materialMap;
+                    var metallicRoughness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
+                    metallicRoughness.MetallicRoughnessMap = materialMap;
+                }
+            }
+            {
+                var materialMap = ResolveTexture(material, context, "Diffuse");
+                if (materialMap != null)
+                {
+                    var specularGlossiness = result.SpecularGlossiness ?? (result.SpecularGlossiness = new SpecularGlossiness());
+                    specularGlossiness.Diffuse = materialMap;
+                }
+            }
+            {
+                var materialMap = ResolveTexture(material, context, "SpecularGlossiness");
+                if (materialMap != null)
+                {
+                    var specularGlossiness = result.SpecularGlossiness ?? (result.SpecularGlossiness = new SpecularGlossiness());
+                    specularGlossiness.SpecularGlossinessMap = materialMap;
                 }
             }
             {
@@ -213,17 +229,20 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             var baseColor = material.FindChannel(channelKey);
             if (baseColor != null)
             {
+                var map = new MapParameters();
                 if (baseColor.Value.Texture != null)
                 {
                     var resourceHandler = Textures[baseColor.Value.Texture];
                     if (resourceHandler != null)
                     {
-                        return new MapParameters()
-                        {
-                            Map = context.Resolve<ITexture>(resourceHandler.Id)
-                        };
+                        map.Map = context.Resolve<ITexture>(resourceHandler.Id);
                     }
                 }
+
+                map.Color = baseColor.Value.Parameter;
+                map.UVSet = baseColor.Value.TextureCoordinate;
+                //map.UVTransform = baseColor.Value.TextureTransform;
+                return map;
             }
 
             return null;

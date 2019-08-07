@@ -54,6 +54,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.BaseColorSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
+
+                        metallicRoughnessParameters.BaseColorFactor = baseColorMapParameters.Color;
                     }
                     var metallicRoughnessMapParameters = metallicRoughness.MetallicRoughnessMap;
                     if (metallicRoughnessMapParameters != null)
@@ -66,6 +68,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.MetallicRoughnessSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
+                        metallicRoughnessParameters.MetallicFactor = metallicRoughnessMapParameters.Color.X;
+                        metallicRoughnessParameters.RoughnessFactor = metallicRoughnessMapParameters.Color.Y;
                     }
                     slots.Add(AddUniformBuffer(renderContext, disposables, ref metallicRoughnessParameters, MaterialResource.Slots.MetallicRoughness));
                 }
@@ -86,6 +90,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.DiffuseSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
+                        specularGlossinessParameters.DiffuseFactor = diffuseMapParameters.Color;
                     }
                     var specularGlossinessMapParameters = specularGlossiness.SpecularGlossinessMap;
                     if (specularGlossinessMapParameters != null)

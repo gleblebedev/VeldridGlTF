@@ -2,7 +2,7 @@
   "profiles": {
     "VeldridGlTF.Viewer.Desktop": {
       "commandName": "Project",
-      "commandLineArgs": "-g Direct3D11 -i Boombox.glb --renderdoc"
+      "commandLineArgs": "-g Direct3D11 -i Buggy.glb --renderdoc"
     }
   }
 }
