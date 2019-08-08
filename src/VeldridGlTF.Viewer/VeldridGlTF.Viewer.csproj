@@ -16,28 +16,31 @@
     <None Remove="Assets\brdfLUT.png" />
     <None Remove="Assets\Diffuse.png" />
     <None Remove="Assets\Sky\NegX.dds" />
-    <None Remove="Assets\Sky\NegX.png" />
     <None Remove="Assets\Sky\NegY.dds" />
-    <None Remove="Assets\Sky\NegY.png" />
     <None Remove="Assets\Sky\NegZ.dds" />
-    <None Remove="Assets\Sky\NegZ.png" />
     <None Remove="Assets\Sky\PosX.dds" />
-    <None Remove="Assets\Sky\PosX.png" />
     <None Remove="Assets\Sky\PosY.dds" />
-    <None Remove="Assets\Sky\PosY.png" />
     <None Remove="Assets\Sky\PosZ.dds" />
-    <None Remove="Assets\Sky\PosZ.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\diffuse\diffuse_back_0.jpg" Link="Assets\Sky\papermill\diffuse\diffuse_back_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\diffuse\diffuse_bottom_0.jpg" Link="Assets\Sky\papermill\diffuse\diffuse_bottom_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\diffuse\diffuse_front_0.jpg" Link="Assets\Sky\papermill\diffuse\diffuse_front_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\diffuse\diffuse_left_0.jpg" Link="Assets\Sky\papermill\diffuse\diffuse_left_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\diffuse\diffuse_right_0.jpg" Link="Assets\Sky\papermill\diffuse\diffuse_right_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\diffuse\diffuse_top_0.jpg" Link="Assets\Sky\papermill\diffuse\diffuse_top_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\specular\specular_back_0.jpg" Link="Assets\Sky\papermill\specular\specular_back_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\specular\specular_bottom_0.jpg" Link="Assets\Sky\papermill\specular\specular_bottom_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\specular\specular_front_0.jpg" Link="Assets\Sky\papermill\specular\specular_front_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\specular\specular_left_0.jpg" Link="Assets\Sky\papermill\specular\specular_left_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\specular\specular_right_0.jpg" Link="Assets\Sky\papermill\specular\specular_right_0.jpg" />
+    <EmbeddedResource Include="..\modules\glTF-Sample-Environments\papermill\specular\specular_top_0.jpg" Link="Assets\Sky\papermill\specular\specular_top_0.jpg" />
     <EmbeddedResource Include="Assets\brdfLUT.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Assets\Diffuse.png" />
-    <EmbeddedResource Include="Assets\Sky\NegX.png" />
-    <EmbeddedResource Include="Assets\Sky\NegY.png" />
-    <EmbeddedResource Include="Assets\Sky\NegZ.png" />
-    <EmbeddedResource Include="Assets\Sky\PosX.png" />
-    <EmbeddedResource Include="Assets\Sky\PosY.png" />
-    <EmbeddedResource Include="Assets\Sky\PosZ.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,13 +51,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.5.0" />
+    <PackageReference Include="CommandLineParser" Version="2.6.0" />
     <PackageReference Include="System.CodeDom" Version="4.5.0" />
     <PackageReference Include="Veldrid" Version="4.6.1" />
     <PackageReference Include="Veldrid.ImageSharp" Version="4.6.1" />
     <PackageReference Include="Veldrid.RenderDoc" Version="1.0.0" />
     <PackageReference Include="Veldrid.SDL2" Version="4.6.1" />
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.11" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.12" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.6.1" />
     <PackageReference Include="Veldrid.Utilities" Version="4.6.1" />
   </ItemGroup>
@@ -103,6 +106,11 @@
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>VertexShader.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\Sky\papermill\diffuse\" />
+    <Folder Include="Assets\Sky\papermill\specular\" />
   </ItemGroup>
 
 </Project>

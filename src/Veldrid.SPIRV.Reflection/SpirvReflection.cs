@@ -6,7 +6,7 @@ using Veldrid.SPIRV.Instructions;
 
 namespace Veldrid.SPIRV
 {
-    public static class SpirvReflection
+    public static class SpirvReflection2
     {
         public const uint MagicNumber = 0x07230203;
 
@@ -18,7 +18,7 @@ namespace Veldrid.SPIRV
         public static SpirvCompilationResultEx[] CompileGlslToSpirv(ILayoutNameResolver nameNameResolver, params ShaderArgs[] shaders)
         {
             var res = new SpirvCompilationResultEx[shaders.Length];
-
+            
             for (var index = 0; index < shaders.Length; index++)
             {
                 var shader = shaders[index];

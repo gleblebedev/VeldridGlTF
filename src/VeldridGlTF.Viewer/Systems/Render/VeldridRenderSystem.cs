@@ -45,9 +45,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
         #region SKY
 
         private Skybox _skybox;
-        private ImageSharpCubemapTexture _skyImage;
-        private Texture _skyTexture;
-        private TextureView _skyTextureView;
+
+        private ImageSharpCubemapTexture _specularEnvImage;
+        private Texture _specularEnvTexture;
+        private TextureView _specularEnvTextureView;
+
+
+        private ImageSharpCubemapTexture _diffuseEnvImage;
+        private Texture _diffuseEnvTexture;
+        private TextureView _diffuseEnvTextureView;
 
         #endregion
 
@@ -89,13 +95,29 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             _camera = new Camera(Window.Width, Window.Height);
             _albedoImage = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.Diffuse.png");
-            _skyImage = LoadCubemapTexture(GetType().Assembly
-                , "VeldridGlTF.Viewer.Assets.Sky.PosX.png"
-                , "VeldridGlTF.Viewer.Assets.Sky.NegX.png"
-                , "VeldridGlTF.Viewer.Assets.Sky.PosY.png"
-                , "VeldridGlTF.Viewer.Assets.Sky.NegY.png"
-                , "VeldridGlTF.Viewer.Assets.Sky.PosZ.png"
-                , "VeldridGlTF.Viewer.Assets.Sky.NegZ.png"
+            //_specularEnvImage = LoadCubemapTexture(GetType().Assembly
+            //    , "VeldridGlTF.Viewer.Assets.Sky.PosX.png"
+            //    , "VeldridGlTF.Viewer.Assets.Sky.NegX.png"
+            //    , "VeldridGlTF.Viewer.Assets.Sky.PosY.png"
+            //    , "VeldridGlTF.Viewer.Assets.Sky.NegY.png"
+            //    , "VeldridGlTF.Viewer.Assets.Sky.PosZ.png"
+            //    , "VeldridGlTF.Viewer.Assets.Sky.NegZ.png"
+            //);
+            _specularEnvImage = LoadCubemapTexture(GetType().Assembly
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_right_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_left_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_top_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_bottom_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_front_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_back_0.jpg"
+            );
+            _diffuseEnvImage = LoadCubemapTexture(GetType().Assembly
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.diffuse.diffuse_right_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.diffuse.diffuse_left_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.diffuse.diffuse_top_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.diffuse.diffuse_bottom_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.diffuse.diffuse_front_0.jpg"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.diffuse.diffuse_back_0.jpg"
             );
             _brdfLUTImage = LoadTexture(GetType().Assembly, "VeldridGlTF.Viewer.Assets.brdfLUT.png");
         }
@@ -146,7 +168,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             }
 
             _camera.Pitch = -0.5f;
-            _camera.Yaw += deltaSeconds;
+            // Full turn = 7s, to match Gyazo GIF capture time.
+            _camera.Yaw += 2.0f*(float)Math.PI*0.98f/7.0f*deltaSeconds;
             _camera.Position = _camera.Forward * -200;
             if (sceneBbox.Max.X > sceneBbox.Min.X)
             {
@@ -192,8 +215,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var data = new EnvironmentProperties();
             data.u_ViewProjectionMatrix = lookAt * perspectiveFieldOfView;
             data.u_Camera = _camera.Position;
-            data.u_Exposure = 1.0f;
-            data.u_MipCount = 6;
+            data.u_Exposure = 2.0f;
+            data.u_MipCount = 10;
             _cl.UpdateBuffer(_environmentProperties, 0, data);
         }
 
@@ -401,9 +424,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _defaultDiffuseTextureView = factory.CreateTextureView(_surfaceTexture);
             //_defaultDiffuseTextureView.Name = _surfaceTexture.Name;
 
-            _skyTexture = _skyImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
+            _specularEnvTexture = _specularEnvImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
             //_skyTexture.Name = "DefaultSkyboxTexture";
-            _skyTextureView = factory.CreateTextureView(_skyTexture);
+            _specularEnvTextureView = factory.CreateTextureView(_specularEnvTexture);
+            //_skyTextureView.Name = _surfaceTexture.Name;
+
+            _diffuseEnvTexture = _diffuseEnvImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
+            //_skyTexture.Name = "DefaultSkyboxTexture";
+            _diffuseEnvTextureView = factory.CreateTextureView(_diffuseEnvTexture);
             //_skyTextureView.Name = _surfaceTexture.Name;
 
             _resourceSetBuilder = new ResourceSetBuilder(
@@ -413,9 +441,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 new ResourceSetSlot(MaterialResource.Slots.brdfLUTSampler, ResourceKind.Sampler,  _graphicsDevice.LinearSampler),
                 new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer, _objectProperties),
                 new ResourceSetSlot(null, ResourceKind.UniformBuffer, _objectProperties),
-                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly, _skyTextureView),
+                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly, _diffuseEnvTextureView),
                 new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvSampler, ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler),
-                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvTexture, ResourceKind.TextureReadOnly, _skyTextureView),
+                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvTexture, ResourceKind.TextureReadOnly, _specularEnvTextureView),
                 new ResourceSetSlot(MaterialResource.Slots.SpecularEnvSampler, ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler)
                 );
 
@@ -432,7 +460,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     Diffuse = new MapParameters()
                     {
                         Map = new ManualResourceHandler<ITexture>(ResourceId.Null,
-                            new TextureResource(ResourceId.Null, _skyTexture, _skyTextureView))
+                            new TextureResource(ResourceId.Null, _specularEnvTexture, _specularEnvTextureView))
                     }
                 },
                 DepthWriteEnabled = false

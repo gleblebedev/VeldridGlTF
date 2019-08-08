@@ -37,7 +37,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var generatorFactory = shaderKey.Factory;
 
             var generator = generatorFactory.ResolveGenerator(shaderKey);
-            (var vertexShader, var fragmentShader) = SpirvReflection.CompileGlslToSpirv(generator.GetVertexShader(), generator.GetFragmentShader(), shaderKey.LayoutNameResolver);
+            (var vertexShader, var fragmentShader) = SpirvReflection2.CompileGlslToSpirv(generator.GetVertexShader(), generator.GetFragmentShader(), shaderKey.LayoutNameResolver);
 
             var compiledShader = _factory.CreateFromSpirv(
                 new ShaderDescription(ShaderStages.Vertex, vertexShader.SpirvBytes, "main"),
