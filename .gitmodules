@@ -7,3 +7,6 @@
 [submodule "src/modules/ecs"]
 	path = src/modules/ecs
 	url = https://github.com/Leopotam/ecs.git
+[submodule "src/modules/glTF-Sample-Environments"]
+	path = src/modules/glTF-Sample-Environments
+	url = https://github.com/ux3d/glTF-Sample-Environments.git
