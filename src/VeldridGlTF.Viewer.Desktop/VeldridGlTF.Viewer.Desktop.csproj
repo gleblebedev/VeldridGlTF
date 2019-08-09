@@ -52,9 +52,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\modules\glTF-Sample-Models\2.0\Box\glTF-Binary\Box.glb" Link="Assets\Box.glb">
+    <Content Include="..\modules\glTF-Sample-Models\2.0\BoxVertexColors\glTF-Binary\BoxVertexColors.glb" Link="Assets\BoxVertexColors.glb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\Box\glTF-Binary\Box.glb" Link="Assets\Box.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\DamagedHelmet\glTF-Binary\DamagedHelmet.glb" Link="Assets\DamagedHelmet.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\MorphPrimitivesTest\glTF-Binary\MorphPrimitivesTest.glb" Link="Assets\MorphPrimitivesTest.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\modules\glTF-Sample-Models\2.0\SpecGlossVsMetalRough\glTF-Binary\SpecGlossVsMetalRough.glb" Link="Assets\SpecGlossVsMetalRough.glb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

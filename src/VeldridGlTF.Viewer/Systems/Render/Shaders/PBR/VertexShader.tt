@@ -254,8 +254,11 @@ void main()
     v_UVCoord2 = TEXCOORD_1;
     #endif
 
-    #if defined(HAS_VERTEX_COLOR_VEC3) || defined(HAS_VERTEX_COLOR_VEC4)
-    v_Color = COLOR;
+    #if defined(HAS_VERTEX_COLOR_VEC3)
+    v_Color = vec4(COLOR_0, 1.0f);
+    #endif
+    #if defined(HAS_VERTEX_COLOR_VEC4)
+    v_Color = COLOR_0;
     #endif
 
     gl_Position = u_ViewProjectionMatrix * pos;

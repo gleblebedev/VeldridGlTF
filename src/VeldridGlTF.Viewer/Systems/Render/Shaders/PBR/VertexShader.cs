@@ -140,9 +140,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
                     "   #endif\r\n    #endif // !HAS_NORMALS\r\n\r\n    v_UVCoord1 = vec2(0.0, 0.0);\r\n    v" +
                     "_UVCoord2 = vec2(0.0, 0.0);\r\n\r\n    #ifdef HAS_UV_SET1\r\n    v_UVCoord1 = TEXCOORD" +
                     "_0;\r\n    #endif\r\n\r\n    #ifdef HAS_UV_SET2\r\n    v_UVCoord2 = TEXCOORD_1;\r\n    #en" +
-                    "dif\r\n\r\n    #if defined(HAS_VERTEX_COLOR_VEC3) || defined(HAS_VERTEX_COLOR_VEC4)\r" +
-                    "\n    v_Color = COLOR;\r\n    #endif\r\n\r\n    gl_Position = u_ViewProjectionMatrix * " +
-                    "pos;\r\n}\r\n");
+                    "dif\r\n\r\n    #if defined(HAS_VERTEX_COLOR_VEC3)\r\n    v_Color = vec4(COLOR_0, 1.0f)" +
+                    ";\r\n    #endif\r\n    #if defined(HAS_VERTEX_COLOR_VEC4)\r\n    v_Color = COLOR_0;\r\n " +
+                    "   #endif\r\n\r\n    gl_Position = u_ViewProjectionMatrix * pos;\r\n}\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }
