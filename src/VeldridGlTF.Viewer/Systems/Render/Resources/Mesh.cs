@@ -17,6 +17,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         public readonly List<RenderPrimitive> _primitives;
         public DeviceBuffer IndexBuffer;
         public DeviceBuffer VertexBuffer;
+        private IReadOnlyList<float> _defaultMorphWeights;
 
         private Mesh(ResourceId id, DeviceBuffer vertexBuffer, DeviceBuffer indexBuffer, BoundingBox boundingBox,
             List<RenderPrimitive> primitives) : base(id)
@@ -46,6 +47,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             var primitives = new List<RenderPrimitive>(geometry.Primitives.Count);
 
             var boundingBox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
+            
 
             foreach (var meshPrimitive in geometry.Primitives)
             {
@@ -100,7 +102,15 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                     BufferUsage.IndexBuffer));
             renderContext.Device.UpdateBuffer(indexBuffer, 0, indices.ToArray());
 
-            return new Mesh(context.Id, vertexBuffer, indexBuffer, boundingBox, primitives);
+            var mesh = new Mesh(context.Id, vertexBuffer, indexBuffer, boundingBox, primitives);
+            mesh.DefaultMorphWeights = geometry.MorphWeights;
+            return mesh;
+        }
+
+        public IReadOnlyList<float> DefaultMorphWeights
+        {
+            get { return _defaultMorphWeights; }
+            set { _defaultMorphWeights = value; }
         }
 
         public static async Task<IMesh> Create(VeldridRenderSystem renderSystem, ResourceContext context,

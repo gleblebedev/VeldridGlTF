@@ -187,19 +187,27 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var objectProperties = new ObjectProperties();
             foreach (var modelIndex in _staticModels)
             {
-                var worldTransform = _staticModels.Components1[modelIndex];
                 var model = _staticModels.Components2[modelIndex];
 
-                objectProperties.u_ModelMatrix = worldTransform.WorldMatrix;
-                var n = worldTransform.WorldMatrix;// * _camera.ViewMatrix;
-                Matrix4x4 _n;
-                Matrix4x4.Invert(n, out _n);
-                n = Matrix4x4.Transpose(_n);
-                objectProperties.u_NormalMatrix = n;
-
-
                 if (model.GetDrawCalls().TryGet(out var drawCallCollection) && drawCallCollection != null)
+                {
+                    var worldTransform = _staticModels.Components1[modelIndex];
+                    objectProperties.ModelMatrix = worldTransform.WorldMatrix;
+                    var n = worldTransform.WorldMatrix;
+                    Matrix4x4 _n;
+                    Matrix4x4.Invert(n, out _n);
+                    n = Matrix4x4.Transpose(_n);
+                    objectProperties.NormalMatrix = n;
+                    unsafe
+                    {
+                        for (var index = 0; index < drawCallCollection.MorphWeights.Count; index++)
+                        {
+                            objectProperties.MorphWeights[index] = drawCallCollection.MorphWeights[index];
+                        }
+                    }
+
                     ScheduleDrawCalls(drawCallCollection, ref objectProperties);
+                }
             }
 
             _cl.End();
@@ -244,8 +252,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private void RenderSkybox()
         {
             var identity = new ObjectProperties();
-            identity.u_ModelMatrix = Matrix4x4.Identity;
-            identity.u_NormalMatrix = Matrix4x4.Identity;
+            identity.ModelMatrix = Matrix4x4.Identity;
+            identity.NormalMatrix = Matrix4x4.Identity;
 
             DrawCallCollection drawCallCollection;
 
@@ -268,10 +276,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
         }
 
-        private void ScheduleDrawCalls(DrawCallCollection renderCache, ref ObjectProperties worldMatrix)
+        private void ScheduleDrawCalls(DrawCallCollection renderCache, ref ObjectProperties objectProperties)
         {
             _cl.SetIndexBuffer(renderCache.IndexBuffer, IndexFormat.UInt16);
-            _cl.UpdateBuffer(_objectProperties, 0, ref worldMatrix);
+            _cl.UpdateBuffer(_objectProperties, 0, ref objectProperties);
             for (var index = 0; index < renderCache.DrawCalls.Count; index++)
             {
                 var drawCall = renderCache.DrawCalls[index];

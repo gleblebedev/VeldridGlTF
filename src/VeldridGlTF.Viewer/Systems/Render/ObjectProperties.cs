@@ -3,10 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ObjectProperties
+    [StructLayout(LayoutKind.Explicit)]
+    public unsafe struct ObjectProperties
     {
-        public Matrix4x4 u_ModelMatrix;
-        public Matrix4x4 u_NormalMatrix;
+        [FieldOffset(0)]
+        public Matrix4x4 ModelMatrix;
+        [FieldOffset(64)]
+        public Matrix4x4 NormalMatrix;
+        [FieldOffset(128)]
+        public fixed float MorphWeights[5];
     }
 }

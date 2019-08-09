@@ -29,8 +29,24 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             }
 
             _streams = new List<IGeometryStream>(meshPrimitive.VertexAccessors.Count);
-            foreach (var accessor in meshPrimitive.VertexAccessors)
-                _streams.Add(GeometryStream.Create(accessor.Key, accessor.Value));
+
+            foreach (var accessorKeyValuePair in meshPrimitive.VertexAccessors)
+            {
+                var key = accessorKeyValuePair.Key;
+                var accessor = accessorKeyValuePair.Value;
+                _streams.Add(GeometryStream.Create(key, accessor));
+            }
+
+
+            for (var targetIndex=0; targetIndex<meshPrimitive.MorphTargetsCount;++targetIndex)
+            {
+                foreach (var accessorKeyValuePair in meshPrimitive.GetMorphTargetAccessors(targetIndex))
+                {
+                    var key = accessorKeyValuePair.Key;
+                    var accessor = accessorKeyValuePair.Value;
+                    _streams.Add(GeometryStream.Create("TARGET_"+key+targetIndex, accessor));
+                }
+            }
 
             Indices = meshPrimitive.GetTriangleIndices().SelectMany(_ => new[] {_.Item1, _.Item2, _.Item3}).ToList();
         }

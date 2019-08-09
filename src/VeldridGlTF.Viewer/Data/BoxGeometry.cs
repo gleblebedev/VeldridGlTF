@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using VeldridGlTF.Viewer.Data.Geometry;
 
@@ -35,7 +36,10 @@ namespace VeldridGlTF.Viewer.Data
         }
 
         private IReadOnlyList<IGeometryPrimitive> _primitives = new []{ new BoxGeometryPrimitive() };
+        private static IReadOnlyList<float> _morphWeights = new float[0];
 
         public IReadOnlyList<IGeometryPrimitive> Primitives => _primitives;
+
+        public IReadOnlyList<float> MorphWeights => _morphWeights;
     }
 }

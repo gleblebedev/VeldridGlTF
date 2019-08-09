@@ -78,71 +78,70 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             
             #line default
             #line hidden
-            this.Write("};\r\n\r\n#ifdef USE_MORPHING\r\nuniform float u_morphWeights[WEIGHT_COUNT];\r\n#endif\r\n\r" +
-                    "\n#ifdef USE_SKINNING\r\nuniform mat4 u_jointMatrix[JOINT_COUNT];\r\nuniform mat4 u_j" +
-                    "ointNormalMatrix[JOINT_COUNT];\r\n#endif\r\n\r\n#ifdef USE_SKINNING\r\nmat4 getSkinningM" +
-                    "atrix()\r\n{\r\n    mat4 skin = mat4(0);\r\n\r\n    #if defined(HAS_WEIGHT_SET1) && defi" +
-                    "ned(HAS_JOINT_SET1)\r\n    skin +=\r\n        a_Weight1.x * u_jointMatrix[int(a_Join" +
-                    "t1.x)] +\r\n        a_Weight1.y * u_jointMatrix[int(a_Joint1.y)] +\r\n        a_Weig" +
-                    "ht1.z * u_jointMatrix[int(a_Joint1.z)] +\r\n        a_Weight1.w * u_jointMatrix[in" +
-                    "t(a_Joint1.w)];\r\n    #endif\r\n\r\n    #if defined(HAS_WEIGHT_SET2) && defined(HAS_J" +
-                    "OINT_SET2)\r\n    skin +=\r\n        a_Weight2.x * u_jointMatrix[int(a_Joint2.x)] +\r" +
-                    "\n        a_Weight2.y * u_jointMatrix[int(a_Joint2.y)] +\r\n        a_Weight2.z * u" +
-                    "_jointMatrix[int(a_Joint2.z)] +\r\n        a_Weight2.w * u_jointMatrix[int(a_Joint" +
-                    "2.w)];\r\n    #endif\r\n\r\n    return skin;\r\n}\r\n\r\nmat4 getSkinningNormalMatrix()\r\n{\r\n" +
-                    "    mat4 skin = mat4(0);\r\n\r\n    #if defined(HAS_WEIGHT_SET1) && defined(HAS_JOIN" +
-                    "T_SET1)\r\n    skin +=\r\n        a_Weight1.x * u_jointNormalMatrix[int(a_Joint1.x)]" +
-                    " +\r\n        a_Weight1.y * u_jointNormalMatrix[int(a_Joint1.y)] +\r\n        a_Weig" +
-                    "ht1.z * u_jointNormalMatrix[int(a_Joint1.z)] +\r\n        a_Weight1.w * u_jointNor" +
-                    "malMatrix[int(a_Joint1.w)];\r\n    #endif\r\n\r\n    #if defined(HAS_WEIGHT_SET2) && d" +
-                    "efined(HAS_JOINT_SET2)\r\n    skin +=\r\n        a_Weight2.x * u_jointNormalMatrix[i" +
-                    "nt(a_Joint2.x)] +\r\n        a_Weight2.y * u_jointNormalMatrix[int(a_Joint2.y)] +\r" +
-                    "\n        a_Weight2.z * u_jointNormalMatrix[int(a_Joint2.z)] +\r\n        a_Weight2" +
-                    ".w * u_jointNormalMatrix[int(a_Joint2.w)];\r\n    #endif\r\n\r\n    return skin;\r\n}\r\n#" +
-                    "endif // !USE_SKINNING\r\n\r\n#ifdef USE_MORPHING\r\nvec4 getTargetPosition()\r\n{\r\n    " +
-                    "vec4 pos = vec4(0);\r\n\r\n#ifdef HAS_TARGET_POSITION0\r\n    pos.xyz += u_morphWeight" +
-                    "s[0] * TARGET_POSITION0;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_POSITION1\r\n    pos.xyz += " +
-                    "u_morphWeights[1] * TARGET_POSITION1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_POSITION2\r\n  " +
-                    "  pos.xyz += u_morphWeights[2] * TARGET_POSITION2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_" +
-                    "POSITION3\r\n    pos.xyz += u_morphWeights[3] * TARGET_POSITION3;\r\n#endif\r\n\r\n#ifde" +
-                    "f HAS_TARGET_POSITION4\r\n    pos.xyz += u_morphWeights[4] * TARGET_POSITION4;\r\n#e" +
-                    "ndif\r\n\r\n    return pos;\r\n}\r\n\r\nvec4 getTargetNormal()\r\n{\r\n    vec4 normal = vec4(" +
-                    "0);\r\n\r\n#ifdef HAS_TARGET_NORMAL0\r\n    normal.xyz += u_morphWeights[0] * TARGET_N" +
-                    "ORMAL0;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL1\r\n    normal.xyz += u_morphWeights[1" +
-                    "] * TARGET_NORMAL1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL2\r\n    normal.xyz += u_mo" +
-                    "rphWeights[2] * TARGET_NORMAL2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL3\r\n    normal" +
-                    ".xyz += u_morphWeights[3] * TARGET_NORMAL3;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL4" +
-                    "\r\n    normal.xyz += u_morphWeights[4] * TARGET_NORMAL4;\r\n#endif\r\n\r\n    return no" +
-                    "rmal;\r\n}\r\n\r\nvec4 getTargetTangent()\r\n{\r\n    vec4 tangent = vec4(0);\r\n\r\n#ifdef HA" +
-                    "S_TARGET_TANGENT0\r\n    tangent.xyz += u_morphWeights[0] * TARGET_TANGENT0;\r\n#end" +
-                    "if\r\n\r\n#ifdef HAS_TARGET_TANGENT1\r\n    tangent.xyz += u_morphWeights[1] * TARGET_" +
-                    "TANGENT1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT2\r\n    tangent.xyz += u_morphWeigh" +
-                    "ts[2] * TARGET_TANGENT2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT3\r\n    tangent.xyz " +
-                    "+= u_morphWeights[3] * TARGET_TANGENT3;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT4\r\n " +
-                    "   tangent.xyz += u_morphWeights[4] * TARGET_TANGENT4;\r\n#endif\r\n\r\n    return tan" +
-                    "gent;\r\n}\r\n\r\n#endif // !USE_MORPHING\r\n\r\n\r\nvec4 getPosition()\r\n{\r\n    vec4 pos = v" +
-                    "ec4(POSITION, 1.0);\r\n\r\n#ifdef USE_MORPHING\r\n    pos += getTargetPosition();\r\n#en" +
-                    "dif\r\n\r\n#ifdef USE_SKINNING\r\n    pos = getSkinningMatrix() * pos;\r\n#endif\r\n\r\n    " +
-                    "return pos;\r\n}\r\n\r\n#ifdef HAS_NORMALS\r\nvec4 getNormal()\r\n{\r\n    vec4 normal = vec" +
-                    "4(NORMAL.xyz,0);\r\n\r\n#ifdef USE_MORPHING\r\n    normal += getTargetNormal();\r\n#endi" +
-                    "f\r\n\r\n#ifdef USE_SKINNING\r\n    normal = getSkinningNormalMatrix() * normal;\r\n#end" +
-                    "if\r\n\r\n    return normalize(normal);\r\n}\r\n#endif\r\n\r\n#ifdef HAS_TANGENTS\r\nvec4 getT" +
-                    "angent()\r\n{\r\n    vec4 tangent = TANGENT;\r\n\r\n#ifdef USE_MORPHING\r\n    tangent += " +
-                    "getTargetTangent();\r\n#endif\r\n\r\n#ifdef USE_SKINNING\r\n    tangent = getSkinningMat" +
-                    "rix() * tangent;\r\n#endif\r\n\r\n    return normalize(tangent);\r\n}\r\n#endif\r\n\r\nvoid ma" +
-                    "in()\r\n{\r\n    vec4 pos = u_ModelMatrix * getPosition();\r\n    v_Position = vec3(po" +
-                    "s.xyz) / pos.w;\r\n\r\n    #ifdef HAS_NORMALS\r\n    #ifdef HAS_TANGENTS\r\n    vec4 tan" +
-                    "gent = getTangent();\r\n    vec3 normalW = normalize(vec3(u_NormalMatrix * vec4(ge" +
-                    "tNormal().xyz, 0.0)));\r\n    vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(" +
-                    "tangent.xyz, 0.0)));\r\n    vec3 bitangentW = cross(normalW, tangentW) * tangent.w" +
-                    ";\r\n    v_TBN = mat3(tangentW, bitangentW, normalW);\r\n    #else // !HAS_TANGENTS\r" +
-                    "\n    v_Normal = normalize(vec3(u_NormalMatrix * vec4(getNormal().xyz, 0.0)));\r\n " +
-                    "   #endif\r\n    #endif // !HAS_NORMALS\r\n\r\n    v_UVCoord1 = vec2(0.0, 0.0);\r\n    v" +
-                    "_UVCoord2 = vec2(0.0, 0.0);\r\n\r\n    #ifdef HAS_UV_SET1\r\n    v_UVCoord1 = TEXCOORD" +
-                    "_0;\r\n    #endif\r\n\r\n    #ifdef HAS_UV_SET2\r\n    v_UVCoord2 = TEXCOORD_1;\r\n    #en" +
-                    "dif\r\n\r\n    #if defined(HAS_VERTEX_COLOR_VEC3)\r\n    v_Color = vec4(COLOR_0, 1.0f)" +
-                    ";\r\n    #endif\r\n    #if defined(HAS_VERTEX_COLOR_VEC4)\r\n    v_Color = COLOR_0;\r\n " +
-                    "   #endif\r\n\r\n    gl_Position = u_ViewProjectionMatrix * pos;\r\n}\r\n");
+            this.Write("};\r\n\r\n#ifdef USE_SKINNING\r\nuniform mat4 u_jointMatrix[JOINT_COUNT];\r\nuniform mat4" +
+                    " u_jointNormalMatrix[JOINT_COUNT];\r\n#endif\r\n\r\n#ifdef USE_SKINNING\r\nmat4 getSkinn" +
+                    "ingMatrix()\r\n{\r\n    mat4 skin = mat4(0);\r\n\r\n    #if defined(HAS_WEIGHT_SET1) && " +
+                    "defined(HAS_JOINT_SET1)\r\n    skin +=\r\n        a_Weight1.x * u_jointMatrix[int(a_" +
+                    "Joint1.x)] +\r\n        a_Weight1.y * u_jointMatrix[int(a_Joint1.y)] +\r\n        a_" +
+                    "Weight1.z * u_jointMatrix[int(a_Joint1.z)] +\r\n        a_Weight1.w * u_jointMatri" +
+                    "x[int(a_Joint1.w)];\r\n    #endif\r\n\r\n    #if defined(HAS_WEIGHT_SET2) && defined(H" +
+                    "AS_JOINT_SET2)\r\n    skin +=\r\n        a_Weight2.x * u_jointMatrix[int(a_Joint2.x)" +
+                    "] +\r\n        a_Weight2.y * u_jointMatrix[int(a_Joint2.y)] +\r\n        a_Weight2.z" +
+                    " * u_jointMatrix[int(a_Joint2.z)] +\r\n        a_Weight2.w * u_jointMatrix[int(a_J" +
+                    "oint2.w)];\r\n    #endif\r\n\r\n    return skin;\r\n}\r\n\r\nmat4 getSkinningNormalMatrix()\r" +
+                    "\n{\r\n    mat4 skin = mat4(0);\r\n\r\n    #if defined(HAS_WEIGHT_SET1) && defined(HAS_" +
+                    "JOINT_SET1)\r\n    skin +=\r\n        a_Weight1.x * u_jointNormalMatrix[int(a_Joint1" +
+                    ".x)] +\r\n        a_Weight1.y * u_jointNormalMatrix[int(a_Joint1.y)] +\r\n        a_" +
+                    "Weight1.z * u_jointNormalMatrix[int(a_Joint1.z)] +\r\n        a_Weight1.w * u_join" +
+                    "tNormalMatrix[int(a_Joint1.w)];\r\n    #endif\r\n\r\n    #if defined(HAS_WEIGHT_SET2) " +
+                    "&& defined(HAS_JOINT_SET2)\r\n    skin +=\r\n        a_Weight2.x * u_jointNormalMatr" +
+                    "ix[int(a_Joint2.x)] +\r\n        a_Weight2.y * u_jointNormalMatrix[int(a_Joint2.y)" +
+                    "] +\r\n        a_Weight2.z * u_jointNormalMatrix[int(a_Joint2.z)] +\r\n        a_Wei" +
+                    "ght2.w * u_jointNormalMatrix[int(a_Joint2.w)];\r\n    #endif\r\n\r\n    return skin;\r\n" +
+                    "}\r\n#endif // !USE_SKINNING\r\n\r\n#ifdef USE_MORPHING\r\nvec4 getTargetPosition()\r\n{\r\n" +
+                    "    vec4 pos = vec4(0);\r\n\r\n#ifdef HAS_TARGET_POSITION0\r\n    pos.xyz += MorphWeig" +
+                    "hts[0] * TARGET_POSITION0;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_POSITION1\r\n    pos.xyz +" +
+                    "= MorphWeights[1] * TARGET_POSITION1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_POSITION2\r\n  " +
+                    "  pos.xyz += MorphWeights[2] * TARGET_POSITION2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_PO" +
+                    "SITION3\r\n    pos.xyz += MorphWeights[3] * TARGET_POSITION3;\r\n#endif\r\n\r\n#ifdef HA" +
+                    "S_TARGET_POSITION4\r\n    pos.xyz += MorphWeights[4] * TARGET_POSITION4;\r\n#endif\r\n" +
+                    "\r\n    return pos;\r\n}\r\n\r\nvec4 getTargetNormal()\r\n{\r\n    vec4 normal = vec4(0);\r\n\r" +
+                    "\n#ifdef HAS_TARGET_NORMAL0\r\n    normal.xyz += MorphWeights[0] * TARGET_NORMAL0;\r" +
+                    "\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL1\r\n    normal.xyz += MorphWeights[1] * TARGET" +
+                    "_NORMAL1;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL2\r\n    normal.xyz += MorphWeights[2" +
+                    "] * TARGET_NORMAL2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL3\r\n    normal.xyz += Morp" +
+                    "hWeights[3] * TARGET_NORMAL3;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_NORMAL4\r\n    normal.x" +
+                    "yz += MorphWeights[4] * TARGET_NORMAL4;\r\n#endif\r\n\r\n    return normal;\r\n}\r\n\r\nvec4" +
+                    " getTargetTangent()\r\n{\r\n    vec4 tangent = vec4(0);\r\n\r\n#ifdef HAS_TARGET_TANGENT" +
+                    "0\r\n    tangent.xyz += MorphWeights[0] * TARGET_TANGENT0;\r\n#endif\r\n\r\n#ifdef HAS_T" +
+                    "ARGET_TANGENT1\r\n    tangent.xyz += MorphWeights[1] * TARGET_TANGENT1;\r\n#endif\r\n\r" +
+                    "\n#ifdef HAS_TARGET_TANGENT2\r\n    tangent.xyz += MorphWeights[2] * TARGET_TANGENT" +
+                    "2;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT3\r\n    tangent.xyz += MorphWeights[3] * T" +
+                    "ARGET_TANGENT3;\r\n#endif\r\n\r\n#ifdef HAS_TARGET_TANGENT4\r\n    tangent.xyz += MorphW" +
+                    "eights[4] * TARGET_TANGENT4;\r\n#endif\r\n\r\n    return tangent;\r\n}\r\n\r\n#endif // !USE" +
+                    "_MORPHING\r\n\r\n\r\nvec4 getPosition()\r\n{\r\n    vec4 pos = vec4(POSITION, 1.0);\r\n\r\n#if" +
+                    "def USE_MORPHING\r\n    pos += getTargetPosition();\r\n#endif\r\n\r\n#ifdef USE_SKINNING" +
+                    "\r\n    pos = getSkinningMatrix() * pos;\r\n#endif\r\n\r\n    return pos;\r\n}\r\n\r\n#ifdef H" +
+                    "AS_NORMALS\r\nvec4 getNormal()\r\n{\r\n    vec4 normal = vec4(NORMAL.xyz,0);\r\n\r\n#ifdef" +
+                    " USE_MORPHING\r\n    normal += getTargetNormal();\r\n#endif\r\n\r\n#ifdef USE_SKINNING\r\n" +
+                    "    normal = getSkinningNormalMatrix() * normal;\r\n#endif\r\n\r\n    return normalize" +
+                    "(normal);\r\n}\r\n#endif\r\n\r\n#ifdef HAS_TANGENTS\r\nvec4 getTangent()\r\n{\r\n    vec4 tang" +
+                    "ent = TANGENT;\r\n\r\n#ifdef USE_MORPHING\r\n    tangent += getTargetTangent();\r\n#endi" +
+                    "f\r\n\r\n#ifdef USE_SKINNING\r\n    tangent = getSkinningMatrix() * tangent;\r\n#endif\r\n" +
+                    "\r\n    return normalize(tangent);\r\n}\r\n#endif\r\n\r\nvoid main()\r\n{\r\n    vec4 pos = Mo" +
+                    "delMatrix * getPosition();\r\n    v_Position = vec3(pos.xyz) / pos.w;\r\n\r\n    #ifde" +
+                    "f HAS_NORMALS\r\n    #ifdef HAS_TANGENTS\r\n    vec4 tangent = getTangent();\r\n    ve" +
+                    "c3 normalW = normalize(vec3(NormalMatrix * vec4(getNormal().xyz, 0.0)));\r\n    ve" +
+                    "c3 tangentW = normalize(vec3(ModelMatrix * vec4(tangent.xyz, 0.0)));\r\n    vec3 b" +
+                    "itangentW = cross(normalW, tangentW) * tangent.w;\r\n    v_TBN = mat3(tangentW, bi" +
+                    "tangentW, normalW);\r\n    #else // !HAS_TANGENTS\r\n    v_Normal = normalize(vec3(N" +
+                    "ormalMatrix * vec4(getNormal().xyz, 0.0)));\r\n    #endif\r\n    #endif // !HAS_NORM" +
+                    "ALS\r\n\r\n    v_UVCoord1 = vec2(0.0, 0.0);\r\n    v_UVCoord2 = vec2(0.0, 0.0);\r\n\r\n   " +
+                    " #ifdef HAS_UV_SET1\r\n    v_UVCoord1 = TEXCOORD_0;\r\n    #endif\r\n\r\n    #ifdef HAS_" +
+                    "UV_SET2\r\n    v_UVCoord2 = TEXCOORD_1;\r\n    #endif\r\n\r\n    #if defined(HAS_VERTEX_" +
+                    "COLOR_VEC3)\r\n    v_Color = vec4(COLOR_0, 1.0f);\r\n    #endif\r\n    #if defined(HAS" +
+                    "_VERTEX_COLOR_VEC4)\r\n    v_Color = COLOR_0;\r\n    #endif\r\n\r\n    gl_Position = u_V" +
+                    "iewProjectionMatrix * pos;\r\n}\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }

@@ -33,11 +33,20 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.NormalSampler, ShaderFlag.HAS_NORMAL_MAP);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.EmissiveSampler, ShaderFlag.HAS_EMISSIVE_MAP);
-            //SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.OcclusionSampler, ShaderFlag.HAS_OCCLUSION_MAP);
+            SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.OcclusionSampler, ShaderFlag.HAS_OCCLUSION_MAP);
+
             if (material.Unlit)
                 shaderKey.SetFlag(ShaderFlag.MATERIAL_UNLIT);
             shaderKey.SetFlag(ShaderFlag.USE_IBL);
             shaderKey.SetFlag(ShaderFlag.USE_TEX_LOD);
+
+            if (shaderKey.HasFlag(ShaderFlag.HAS_TARGET_POSITION0) ||
+                shaderKey.HasFlag(ShaderFlag.HAS_TARGET_NORMAL0) ||
+                shaderKey.HasFlag(ShaderFlag.HAS_TARGET_TANGENT0))
+            {
+                shaderKey.SetFlag(ShaderFlag.USE_MORPHING);
+            }
+
             return shaderKey;
         }
 

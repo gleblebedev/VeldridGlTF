@@ -31,8 +31,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
         };
 
         private static readonly IReadOnlyList<IGeometryPrimitive> _primitives = new[] {new SkyboxPrimitive()};
+        private static IReadOnlyList<float>  _morphWeights = new float[0];
 
         public IReadOnlyList<IGeometryPrimitive> Primitives => _primitives;
+
+        public IReadOnlyList<float> MorphWeights => _morphWeights;
 
         internal class SkyboxPrimitive : IGeometryPrimitive
         {

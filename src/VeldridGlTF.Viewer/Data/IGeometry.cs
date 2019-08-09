@@ -6,5 +6,7 @@ namespace VeldridGlTF.Viewer.Data
     public interface IGeometry
     {
         IReadOnlyList<IGeometryPrimitive> Primitives { get; }
+
+        IReadOnlyList<float> MorphWeights { get; }
     }
 }

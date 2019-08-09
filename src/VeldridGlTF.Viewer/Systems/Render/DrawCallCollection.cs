@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SharpGLTF.Geometry;
 using Veldrid;
 using Veldrid.Utilities;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
@@ -13,10 +14,13 @@ namespace VeldridGlTF.Viewer.Systems.Render
             IndexBuffer = mesh.IndexBuffer;
             VertexBuffer = mesh.VertexBuffer;
             BoundingBox = mesh.BoundingBox;
+            MorphWeights = mesh.DefaultMorphWeights;
             foreach (var drawCall in drawCalls)
                 if (drawCall != null)
                     DrawCalls.Add(drawCall);
         }
+
+        public IReadOnlyList<float> MorphWeights { get; set; }
 
         public List<DrawCall> DrawCalls { get; set; }
 
