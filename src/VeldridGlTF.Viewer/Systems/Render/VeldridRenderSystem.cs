@@ -200,9 +200,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     objectProperties.NormalMatrix = n;
                     unsafe
                     {
-                        for (var index = 0; index < drawCallCollection.MorphWeights.Count; index++)
+                        if (drawCallCollection.MorphWeights != null)
                         {
-                            objectProperties.MorphWeights[index] = drawCallCollection.MorphWeights[index];
+                            for (var index = 0; index < drawCallCollection.MorphWeights.Count; index++)
+                            {
+                                objectProperties.MorphWeights[index] = drawCallCollection.MorphWeights[index];
+                            }
                         }
                     }
 
