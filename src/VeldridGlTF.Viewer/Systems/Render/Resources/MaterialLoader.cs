@@ -147,10 +147,13 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             map.View));
                         slots.Add(new ResourceSetSlot(MaterialResource.Slots.OcclusionSampler, ResourceKind.Sampler,
                             renderContext.Device.Aniso4xSampler));
+                        var occlustionMapProperties = OcclusionMapProperties.Identity;
+                        slots.Add(AddUniformBuffer(renderContext, disposables, ref occlustionMapProperties, MaterialResource.Slots.OcclusionMapProperties));
                     }
                 }
                 material.DepthStencilState.DepthTestEnabled = description.DepthTestEnabled;
                 material.DepthStencilState.DepthWriteEnabled = description.DepthWriteEnabled;
+                material.AlphaMode = description.AlphaMode;
 
                 material.ResourceSetBuilder = new ResourceSetBuilder(renderContext.Factory,
                     renderContext.RenderSystem.ResourceSetBuilder,

@@ -1,5 +1,6 @@
 ﻿using System;
 using Veldrid;
+using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Systems.Render.Shaders;
 
 namespace VeldridGlTF.Viewer.Systems.Render
@@ -26,6 +27,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             unchecked
             {
                 var hashCode = DepthStencilState.GetHashCode();
+                hashCode = (hashCode * 397) ^ AlphaMode.GetHashCode();
                 hashCode = (hashCode * 397) ^ (int) PrimitiveTopology;
                 hashCode = (hashCode * 397) ^ (Shader != null ? Shader.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (VertexLayout != null ? VertexLayout.GetHashCode() : 0);
@@ -43,6 +45,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return !Equals(left, right);
         }
 
+        public AlphaMode AlphaMode = AlphaMode.Opaque;
         public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
         public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
         public ShaderKey Shader;

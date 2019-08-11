@@ -140,6 +140,18 @@ layout(set = 7, binding = 2) uniform NormalMapProperties
 };
 #endif
 
+#ifdef HAS_OCCLUSION_MAP
+layout(set = 8, binding = 0) uniform texture2D OcclusionTexture;
+layout(set = 8, binding = 1) uniform sampler OcclusionSampler;
+layout(set = 8, binding = 2) uniform OcclusionMapProperties
+{
+<#
+	WriteMembers<OcclusionMapProperties>();
+#>
+};
+#endif
+
+
 #ifdef HAS_EMISSIVE_MAP
 layout(set = 5, binding = 0) uniform texture2D EmissiveTexture;
 layout(set = 5, binding = 1) uniform sampler EmissiveSampler;
@@ -188,13 +200,6 @@ layout(set = 6, binding = 3) uniform texture2D MetallicRoughnessTexture;
 layout(set = 6, binding = 4) uniform sampler MetallicRoughnessSampler;
 #endif
 
-#ifdef HAS_OCCLUSION_MAP
-uniform sampler2D u_OcclusionSampler;
-uniform int u_OcclusionUVSet;
-uniform float u_OcclusionStrength;
-uniform mat3 u_OcclusionUVTransform;
-#endif
-
 // IBL
 #ifdef USE_IBL
 layout(set = 0, binding = 1) uniform texture2D brdfLUTTexture;
@@ -235,9 +240,9 @@ vec2 getOcclusionUV()
 {
     vec3 uv = vec3(v_UVCoord1, 1.0);
 #ifdef HAS_OCCLUSION_MAP
-    uv.xy = u_OcclusionUVSet < 1 ? v_UVCoord1 : v_UVCoord2;
+    uv.xy = OcclusionUVSet < 1 ? v_UVCoord1 : v_UVCoord2;
     #ifdef HAS_OCCLSION_UV_TRANSFORM
-    uv *= u_OcclusionUVTransform;
+    uv *= OcclusionUVTransform;
     #endif
 #endif
     return uv.xy;
@@ -754,7 +759,7 @@ void main()
     // Apply optional PBR terms for additional (optional) shading
 #ifdef HAS_OCCLUSION_MAP
     ao = texture(sampler2D(OcclusionTexture, OcclusionSampler), getOcclusionUV()).r;
-    color = mix(color, color * ao, u_OcclusionStrength);
+    color = mix(color, color * ao, OcclusionStrength);
 #endif
 
     vec3 emissive = vec3(0);

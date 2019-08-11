@@ -44,7 +44,7 @@ void main()
                 .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, glslCompileOptions)
                 .SpirvBytes;
 
-            var reflection = SpirvReflection.Parse(bytecode, ShaderStages.Vertex);
+            var reflection = SpirvReflection2.Parse(bytecode, ShaderStages.Vertex);
 #if DEBUG
             foreach (var uniform in reflection.SelectMany(_=>_.Elements))
             {
@@ -78,7 +78,7 @@ void main()
                 .CompileGlslToSpirv(sourceCode, "shader.glsl", ShaderStages.Vertex, glslCompileOptions)
                 .SpirvBytes;
 
-            var reflection = SpirvReflection.Parse(bytecode, ShaderStages.Vertex);
+            var reflection = SpirvReflection2.Parse(bytecode, ShaderStages.Vertex);
 #if DEBUG
             foreach (var uniform in reflection.SelectMany(_ => _.Elements))
             {

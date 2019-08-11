@@ -8,6 +8,41 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
 {
     public class MaterialResource : AbstractResource, IMaterial, IDisposable
     {
+        private readonly VeldridRenderSystem _renderSystem;
+        private ResourceSetBuilder _resourceSet;
+        public AlphaMode AlphaMode = AlphaMode.Opaque;
+
+        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
+
+
+        public MaterialResource(ResourceId id, VeldridRenderSystem renderSystem) : base(id)
+        {
+            _renderSystem = renderSystem;
+        }
+
+        public ResourceSetBuilder ResourceSetBuilder
+        {
+            get => _resourceSet;
+            internal set
+            {
+                if (_resourceSet != null) _resourceSet.Dispose();
+                _resourceSet = value;
+            }
+        }
+
+        public string ShaderName { get; set; } = "Default";
+
+        public List<IDisposable> Disposables { get; set; }
+
+        public bool Unlit { get; set; }
+
+        public override void Dispose()
+        {
+            ResourceSetBuilder?.Dispose();
+            foreach (var disposable in Disposables) disposable?.Dispose();
+            base.Dispose();
+        }
+
         public static class Slots
         {
             public const string SpecularGlossiness = "SpecularGlossiness";
@@ -29,9 +64,10 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             public const string EmissiveTexture = "EmissiveTexture";
             public const string EmissiveSampler = "EmissiveSampler";
             public const string EmissiveMapProperties = "EmissiveMapProperties";
-            
+
             public const string OcclusionTexture = "OcclusionTexture";
             public const string OcclusionSampler = "OcclusionSampler";
+            public const string OcclusionMapProperties = "OcclusionMapProperties";
 
             public const string brdfLUTTexture = "brdfLUTTexture";
             public const string brdfLUTSampler = "brdfLUTSampler";
@@ -42,66 +78,5 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             public const string SpecularEnvTexture = "SpecularEnvTexture";
             public const string SpecularEnvSampler = "SpecularEnvSampler";
         }
-
-        private readonly VeldridRenderSystem _renderSystem;
-        private ResourceSetBuilder _resourceSet;
-
-        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
-        private List<IDisposable> _disposables;
-        private bool _unlit;
-
-
-        public MaterialResource(ResourceId id, VeldridRenderSystem renderSystem) : base(id)
-        {
-            _renderSystem = renderSystem;
-        }
-
-        public ResourceSetBuilder ResourceSetBuilder
-        {
-            get => _resourceSet;
-            internal set
-            {
-                if (_resourceSet != null) _resourceSet.Dispose();
-                _resourceSet = value;
-            }
-        }
-
-        public override void Dispose()
-        {
-            ResourceSetBuilder?.Dispose();
-            foreach (var disposable in Disposables)
-            {
-                disposable?.Dispose();
-            }
-            base.Dispose();
-        }
-
-        public string ShaderName { get; set; } = "Default";
-
-        public List<IDisposable> Disposables
-        {
-            get { return _disposables; }
-            set { _disposables = value; }
-        }
-
-        public bool Unlit
-        {
-            get { return _unlit; }
-            set { _unlit = value; }
-        }
-
-        public void UpdateBuffer(CommandList _cl, DeviceBuffer materialBuffer)
-        {
-            //_cl.UpdateBuffer(materialBuffer, 0, ref _baseColor);
-        }
-    }
-
-    public class MetalicRoughnessResource
-    {
-        public MetalicRoughnessStruct Buffer;
-    }
-    public struct MetalicRoughnessStruct
-    {
-
     }
 }

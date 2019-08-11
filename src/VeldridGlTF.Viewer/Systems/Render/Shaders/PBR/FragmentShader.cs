@@ -114,11 +114,22 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             
             #line default
             #line hidden
-            this.Write("};\r\n#endif\r\n\r\n#ifdef HAS_EMISSIVE_MAP\r\nlayout(set = 5, binding = 0) uniform textu" +
-                    "re2D EmissiveTexture;\r\nlayout(set = 5, binding = 1) uniform sampler EmissiveSamp" +
-                    "ler;\r\nlayout(set = 5, binding = 2) uniform EmissiveMapProperties\r\n{\r\n");
+            this.Write("};\r\n#endif\r\n\r\n#ifdef HAS_OCCLUSION_MAP\r\nlayout(set = 8, binding = 0) uniform text" +
+                    "ure2D OcclusionTexture;\r\nlayout(set = 8, binding = 1) uniform sampler OcclusionS" +
+                    "ampler;\r\nlayout(set = 8, binding = 2) uniform OcclusionMapProperties\r\n{\r\n");
             
             #line 148 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+
+	WriteMembers<OcclusionMapProperties>();
+
+            
+            #line default
+            #line hidden
+            this.Write("};\r\n#endif\r\n\r\n\r\n#ifdef HAS_EMISSIVE_MAP\r\nlayout(set = 5, binding = 0) uniform tex" +
+                    "ture2D EmissiveTexture;\r\nlayout(set = 5, binding = 1) uniform sampler EmissiveSa" +
+                    "mpler;\r\nlayout(set = 5, binding = 2) uniform EmissiveMapProperties\r\n{\r\n");
+            
+            #line 160 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
 	WriteMembers<EmissiveMapProperties>();
 
@@ -128,7 +139,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             this.Write("};\r\n\r\n#endif\r\n\r\n#ifdef MATERIAL_SPECULARGLOSSINESS\r\nlayout(set = 6, binding = 0) " +
                     "uniform SpecularGlossiness\r\n{\r\n");
             
-            #line 158 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+            #line 170 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
 	WriteMembers<SpecularGlossiness>();
 
@@ -152,7 +163,7 @@ layout(set = 6, binding = 0) uniform MetallicRoughness
 {
 ");
             
-            #line 176 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+            #line 188 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
 	WriteMembers<MetallicRoughness>();
 
@@ -163,265 +174,262 @@ layout(set = 6, binding = 0) uniform MetallicRoughness
                     "ture2D BaseColorTexture;\r\nlayout(set = 6, binding = 2) uniform sampler BaseColor" +
                     "Sampler;\r\n#endif\r\n#ifdef HAS_METALLIC_ROUGHNESS_MAP\r\nlayout(set = 6, binding = 3" +
                     ") uniform texture2D MetallicRoughnessTexture;\r\nlayout(set = 6, binding = 4) unif" +
-                    "orm sampler MetallicRoughnessSampler;\r\n#endif\r\n\r\n#ifdef HAS_OCCLUSION_MAP\r\nunifo" +
-                    "rm sampler2D u_OcclusionSampler;\r\nuniform int u_OcclusionUVSet;\r\nuniform float u" +
-                    "_OcclusionStrength;\r\nuniform mat3 u_OcclusionUVTransform;\r\n#endif\r\n\r\n// IBL\r\n#if" +
-                    "def USE_IBL\r\nlayout(set = 0, binding = 1) uniform texture2D brdfLUTTexture;\r\nlay" +
-                    "out(set = 0, binding = 2) uniform sampler brdfLUTSampler;\r\n\r\nlayout(set = 1, bin" +
-                    "ding = 0) uniform textureCube DiffuseEnvTexture;\r\nlayout(set = 1, binding = 1) u" +
-                    "niform sampler DiffuseEnvSampler;\r\nlayout(set = 1, binding = 2) uniform textureC" +
-                    "ube SpecularEnvTexture;\r\nlayout(set = 1, binding = 3) uniform sampler SpecularEn" +
-                    "vSampler;\r\n#endif\r\n\r\nvec2 getNormalUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);" +
-                    "\r\n#ifdef HAS_NORMAL_MAP\r\n    uv.xy = NormalUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r" +
-                    "\n    #ifdef HAS_NORMAL_UV_TRANSFORM\r\n    uv *= NormalUVTransform;\r\n    #endif\r\n#" +
-                    "endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getEmissiveUV()\r\n{\r\n    vec3 uv = vec3(v_UVC" +
-                    "oord1, 1.0);\r\n#ifdef HAS_EMISSIVE_MAP\r\n    uv.xy = EmissiveUVSet < 1 ? v_UVCoord" +
-                    "1 : v_UVCoord2;\r\n    #ifdef HAS_EMISSIVE_UV_TRANSFORM\r\n    uv *= EmissiveUVTrans" +
-                    "form;\r\n    #endif\r\n#endif\r\n\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getOcclusionUV()\r\n{\r\n " +
-                    "   vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_OCCLUSION_MAP\r\n    uv.xy = u_Occ" +
-                    "lusionUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_OCCLSION_UV_TRANSFORM" +
-                    "\r\n    uv *= u_OcclusionUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r" +
-                    "\nvec2 getBaseColorUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_BASE" +
-                    "_COLOR_MAP\r\n    uv.xy = BaseColorUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifde" +
-                    "f HAS_BASECOLOR_UV_TRANSFORM\r\n    uv *= BaseColorUVTransform;\r\n    #endif\r\n#endi" +
-                    "f\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getMetallicRoughnessUV()\r\n{\r\n    vec3 uv = vec3(" +
-                    "v_UVCoord1, 1.0);\r\n#ifdef HAS_METALLIC_ROUGHNESS_MAP\r\n    uv.xy = MetallicRoughn" +
-                    "essUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_METALLICROUGHNESS_UV_TRA" +
-                    "NSFORM\r\n    uv *= MetallicRoughnessUVTransform;\r\n    #endif\r\n#endif\r\n    return " +
-                    "uv.xy;\r\n}\r\n\r\nvec2 getSpecularGlossinessUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1" +
-                    ".0);\r\n#ifdef HAS_SPECULAR_GLOSSINESS_MAP\r\n    uv.xy = SpecularGlossinessUVSet < " +
-                    "1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_SPECULARGLOSSINESS_UV_TRANSFORM\r\n  " +
-                    "  uv *= SpecularGlossinessUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}" +
-                    "\r\n\r\nvec2 getDiffuseUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_DIF" +
-                    "FUSE_MAP\r\n    uv.xy = DiffuseUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HA" +
-                    "S_DIFFUSE_UV_TRANSFORM\r\n    uv *= DiffuseUVTransform;\r\n    #endif\r\n#endif\r\n    r" +
-                    "eturn uv.xy;\r\n}\r\n\r\nconst float M_PI = 3.141592653589793;\r\nconst float c_MinRefle" +
-                    "ctance = 0.04;\r\n\r\nstruct AngularInfo\r\n{\r\n    float NdotL;                  // co" +
-                    "s angle between normal and light direction\r\n    float NdotV;                  //" +
-                    " cos angle between normal and view direction\r\n    float NdotH;                  " +
-                    "// cos angle between normal and half vector\r\n    float LdotH;                  /" +
-                    "/ cos angle between light direction and half vector\r\n\r\n    float VdotH;         " +
-                    "         // cos angle between view direction and half vector\r\n\r\n    vec3 padding" +
-                    ";\r\n};\r\n\r\nvec4 getVertexColor()\r\n{\r\n   vec4 color = vec4(1.0, 1.0, 1.0, 1.0);\r\n\r\n" +
-                    "#ifdef HAS_VERTEX_COLOR_VEC3\r\n    color.rgb = v_Color;\r\n#endif\r\n#ifdef HAS_VERTE" +
-                    "X_COLOR_VEC4\r\n    color = v_Color;\r\n#endif\r\n\r\n   return color;\r\n}\r\n\r\n// Find the" +
-                    " normal for this fragment, pulling either from a predefined normal map\r\n// or fr" +
-                    "om the interpolated mesh normal and tangent attributes.\r\nvec3 getNormal()\r\n{\r\n  " +
-                    "  vec2 UV = getNormalUV();\r\n\r\n    // Retrieve the tangent space matrix\r\n#ifndef " +
-                    "HAS_TANGENTS\r\n    vec3 pos_dx = dFdx(v_Position);\r\n    vec3 pos_dy = dFdy(v_Posi" +
-                    "tion);\r\n    vec3 tex_dx = dFdx(vec3(UV, 0.0));\r\n    vec3 tex_dy = dFdy(vec3(UV, " +
-                    "0.0));\r\n    vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_d" +
-                    "y.t - tex_dy.s * tex_dx.t);\r\n\r\n#ifdef HAS_NORMALS\r\n    vec3 ng = normalize(v_Nor" +
-                    "mal);\r\n#else\r\n    vec3 ng = cross(pos_dx, pos_dy);\r\n#endif\r\n\r\n    t = normalize(" +
-                    "t - ng * dot(ng, t));\r\n    vec3 b = normalize(cross(ng, t));\r\n    mat3 tbn = mat" +
-                    "3(t, b, ng);\r\n#else // HAS_TANGENTS\r\n    mat3 tbn = v_TBN;\r\n#endif\r\n\r\n#ifdef HAS" +
-                    "_NORMAL_MAP\r\n    vec3 n = texture(sampler2D(NormalTexture, NormalSampler), UV).r" +
-                    "gb;\r\n    n = normalize(tbn * ((2.0 * n - 1.0) * vec3(NormalScale, NormalScale, 1" +
-                    ".0)));\r\n#else\r\n    // The tbn matrix is linearly interpolated, so we need to re-" +
-                    "normalize\r\n    vec3 n = normalize(tbn[2].xyz);\r\n#endif\r\n\r\n    return n;\r\n}\r\n\r\nfl" +
-                    "oat getPerceivedBrightness(vec3 vector)\r\n{\r\n    return sqrt(0.299 * vector.r * v" +
-                    "ector.r + 0.587 * vector.g * vector.g + 0.114 * vector.b * vector.b);\r\n}\r\n\r\n// h" +
-                    "ttps://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_mater" +
-                    "ials_pbrSpecularGlossiness/examples/convert-between-workflows/js/three.pbrUtilit" +
-                    "ies.js#L34\r\nfloat solveMetallic(vec3 diffuse, vec3 specular, float oneMinusSpecu" +
-                    "larStrength) {\r\n    float specularBrightness = getPerceivedBrightness(specular);" +
-                    "\r\n\r\n    if (specularBrightness < c_MinReflectance) {\r\n        return 0.0;\r\n    }" +
-                    "\r\n\r\n    float diffuseBrightness = getPerceivedBrightness(diffuse);\r\n\r\n    float " +
-                    "a = c_MinReflectance;\r\n    float b = diffuseBrightness * oneMinusSpecularStrengt" +
-                    "h / (1.0 - c_MinReflectance) + specularBrightness - 2.0 * c_MinReflectance;\r\n   " +
-                    " float c = c_MinReflectance - specularBrightness;\r\n    float D = b * b - 4.0 * a" +
-                    " * c;\r\n\r\n    return clamp((-b + sqrt(D)) / (2.0 * a), 0.0, 1.0);\r\n}\r\n\r\nAngularIn" +
-                    "fo getAngularInfo(vec3 pointToLight, vec3 normal, vec3 view)\r\n{\r\n    // Standard" +
-                    " one-letter names\r\n    vec3 n = normalize(normal);           // Outward directio" +
-                    "n of surface point\r\n    vec3 v = normalize(view);             // Direction from " +
-                    "surface point to view\r\n    vec3 l = normalize(pointToLight);     // Direction fr" +
-                    "om surface point to light\r\n    vec3 h = normalize(l + v);            // Directio" +
-                    "n of the vector between l and v\r\n\r\n    float NdotL = clamp(dot(n, l), 0.0, 1.0);" +
-                    "\r\n    float NdotV = clamp(dot(n, v), 0.0, 1.0);\r\n    float NdotH = clamp(dot(n, " +
-                    "h), 0.0, 1.0);\r\n    float LdotH = clamp(dot(l, h), 0.0, 1.0);\r\n    float VdotH =" +
-                    " clamp(dot(v, h), 0.0, 1.0);\r\n\r\n    return AngularInfo(\r\n        NdotL,\r\n       " +
-                    " NdotV,\r\n        NdotH,\r\n        LdotH,\r\n        VdotH,\r\n        vec3(0, 0, 0)\r\n" +
-                    "    );\r\n}\r\n\r\n// KHR_lights_punctual extension.\r\n// see https://github.com/Khrono" +
-                    "sGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_lights_punctual\r\n\r\nstruct Lig" +
-                    "ht\r\n{\r\n    vec3 direction;\r\n    float range;\r\n\r\n    vec3 color;\r\n    float inten" +
-                    "sity;\r\n\r\n    vec3 position;\r\n    float innerConeCos;\r\n\r\n    float outerConeCos;\r" +
-                    "\n    int type;\r\n\r\n    vec2 padding;\r\n};\r\n\r\nconst int LightType_Directional = 0;\r" +
-                    "\nconst int LightType_Point = 1;\r\nconst int LightType_Spot = 2;\r\n\r\n#ifdef USE_PUN" +
-                    "CTUAL\r\nuniform Light u_Lights[LIGHT_COUNT];\r\n#endif\r\n\r\n#ifdef ALPHAMODE_MASK\r\nun" +
-                    "iform float u_AlphaCutoff;\r\n#endif\r\n\r\nstruct MaterialInfo\r\n{\r\n    float perceptu" +
-                    "alRoughness;    // roughness value, as authored by the model creator (input to s" +
-                    "hader)\r\n    vec3 reflectance0;            // full reflectance color (normal inci" +
-                    "dence angle)\r\n\r\n    float alphaRoughness;         // roughness mapped to a more " +
-                    "linear change in the roughness (proposed by [2])\r\n    vec3 diffuseColor;        " +
-                    "    // color contribution from diffuse lighting\r\n\r\n    vec3 reflectance90;      " +
-                    "     // reflectance color at grazing angle\r\n    vec3 specularColor;           //" +
-                    " color contribution from specular lighting\r\n};\r\n\r\n// Calculation of the lighting" +
-                    " contribution from an optional Image Based Light source.\r\n// Precomputed Environ" +
-                    "ment Maps are required uniform inputs and are computed as outlined in [1].\r\n// S" +
-                    "ee our README.md on Environment Maps [3] for additional discussion.\r\n#ifdef USE_" +
-                    "IBL\r\nvec3 getIBLContribution(MaterialInfo materialInfo, vec3 n, vec3 v)\r\n{\r\n    " +
-                    "float NdotV = clamp(dot(n, v), 0.0, 1.0);\r\n\r\n    float lod = clamp(materialInfo." +
-                    "perceptualRoughness * float(u_MipCount), 0.0, float(u_MipCount));\r\n    vec3 refl" +
-                    "ection = normalize(reflect(-v, n));\r\n\r\n    vec2 brdfSamplePoint = clamp(vec2(Ndo" +
-                    "tV, materialInfo.perceptualRoughness), vec2(0.0, 0.0), vec2(1.0, 1.0));\r\n    // " +
-                    "retrieve a scale and bias to F0. See [1], Figure 3\r\n    vec2 brdf = texture(samp" +
-                    "ler2D(brdfLUTTexture, brdfLUTSampler), brdfSamplePoint).rg;\r\n\r\n    //vec4 diffus" +
-                    "eSample = texture(samplerCube(DiffuseEnvTexture, DiffuseEnvSampler), n);\r\n\tvec4 " +
-                    "diffuseSample = textureLod(samplerCube(SpecularEnvTexture, SpecularEnvSampler), " +
-                    "n, 6);\r\n\r\n#ifdef USE_TEX_LOD\r\n    vec4 specularSample = textureLod(samplerCube(S" +
-                    "pecularEnvTexture, SpecularEnvSampler), reflection, lod);\r\n#else\r\n    vec4 specu" +
-                    "larSample = texture(samplerCube(SpecularEnvTexture, SpecularEnvSampler), reflect" +
-                    "ion);\r\n#endif\r\n\r\n#ifdef USE_HDR\r\n    // Already linear.\r\n    vec3 diffuseLight =" +
-                    " diffuseSample.rgb;\r\n    vec3 specularLight = specularSample.rgb;\r\n#else\r\n    ve" +
-                    "c3 diffuseLight = SRGBtoLINEAR(diffuseSample).rgb;\r\n    vec3 specularLight = SRG" +
-                    "BtoLINEAR(specularSample).rgb;\r\n#endif\r\n\r\n    vec3 diffuse = diffuseLight * mate" +
-                    "rialInfo.diffuseColor;\r\n    vec3 specular = specularLight * (materialInfo.specul" +
-                    "arColor * brdf.x + brdf.y);\r\n\r\n    return diffuse + specular;\r\n}\r\n#endif\r\n\r\n// L" +
-                    "ambert lighting\r\n// see https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to" +
-                    "-pi-in-game-lighting-equation/\r\nvec3 diffuse(MaterialInfo materialInfo)\r\n{\r\n    " +
-                    "return materialInfo.diffuseColor / M_PI;\r\n}\r\n\r\n// The following equation models " +
-                    "the Fresnel reflectance term of the spec equation (aka F())\r\n// Implementation o" +
-                    "f fresnel from [4], Equation 15\r\nvec3 specularReflection(MaterialInfo materialIn" +
-                    "fo, AngularInfo angularInfo)\r\n{\r\n    return materialInfo.reflectance0 + (materia" +
-                    "lInfo.reflectance90 - materialInfo.reflectance0) * pow(clamp(1.0 - angularInfo.V" +
-                    "dotH, 0.0, 1.0), 5.0);\r\n}\r\n\r\n// Smith Joint GGX\r\n// Note: Vis = G / (4 * NdotL *" +
-                    " NdotV)\r\n// see Eric Heitz. 2014. Understanding the Masking-Shadowing Function i" +
-                    "n Microfacet-Based BRDFs. Journal of Computer Graphics Techniques, 3\r\n// see Rea" +
-                    "l-Time Rendering. Page 331 to 336.\r\n// see https://google.github.io/filament/Fil" +
-                    "ament.md.html#materialsystem/specularbrdf/geometricshadowing(specularg)\r\nfloat v" +
-                    "isibilityOcclusion(MaterialInfo materialInfo, AngularInfo angularInfo)\r\n{\r\n    f" +
-                    "loat NdotL = angularInfo.NdotL;\r\n    float NdotV = angularInfo.NdotV;\r\n    float" +
-                    " alphaRoughnessSq = materialInfo.alphaRoughness * materialInfo.alphaRoughness;\r\n" +
-                    "\r\n    float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughnessSq) + alpha" +
-                    "RoughnessSq);\r\n    float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaRoughne" +
-                    "ssSq) + alphaRoughnessSq);\r\n\r\n    float GGX = GGXV + GGXL;\r\n    if (GGX > 0.0)\r\n" +
-                    "    {\r\n        return 0.5 / GGX;\r\n    }\r\n    return 0.0;\r\n}\r\n\r\n// The following " +
-                    "equation(s) model the distribution of microfacet normals across the area being d" +
-                    "rawn (aka D())\r\n// Implementation from \"Average Irregularity Representation of a" +
-                    " Roughened Surface for Ray Reflection\" by T. S. Trowbridge, and K. P. Reitz\r\n// " +
-                    "Follows the distribution function recommended in the SIGGRAPH 2013 course notes " +
-                    "from EPIC Games [1], Equation 3.\r\nfloat microfacetDistribution(MaterialInfo mate" +
-                    "rialInfo, AngularInfo angularInfo)\r\n{\r\n    float alphaRoughnessSq = materialInfo" +
-                    ".alphaRoughness * materialInfo.alphaRoughness;\r\n    float f = (angularInfo.NdotH" +
-                    " * alphaRoughnessSq - angularInfo.NdotH) * angularInfo.NdotH + 1.0;\r\n    return " +
-                    "alphaRoughnessSq / (M_PI * f * f);\r\n}\r\n\r\nvec3 getPointShade(vec3 pointToLight, M" +
-                    "aterialInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    AngularInfo angularInf" +
-                    "o = getAngularInfo(pointToLight, normal, view);\r\n\r\n    if (angularInfo.NdotL > 0" +
-                    ".0 || angularInfo.NdotV > 0.0)\r\n    {\r\n        // Calculate the shading terms fo" +
-                    "r the microfacet specular shading model\r\n        vec3 F = specularReflection(mat" +
-                    "erialInfo, angularInfo);\r\n        float Vis = visibilityOcclusion(materialInfo, " +
-                    "angularInfo);\r\n        float D = microfacetDistribution(materialInfo, angularInf" +
-                    "o);\r\n\r\n        // Calculation of analytical lighting contribution\r\n        vec3 " +
-                    "diffuseContrib = (1.0 - F) * diffuse(materialInfo);\r\n        vec3 specContrib = " +
-                    "F * Vis * D;\r\n\r\n        // Obtain final intensity as reflectance (BRDF) scaled b" +
-                    "y the energy of the light (cosine law)\r\n        return angularInfo.NdotL * (diff" +
-                    "useContrib + specContrib);\r\n    }\r\n\r\n    return vec3(0.0, 0.0, 0.0);\r\n}\r\n\r\n// ht" +
-                    "tps://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights" +
-                    "_punctual/README.md#range-property\r\nfloat getRangeAttenuation(float range, float" +
-                    " distance)\r\n{\r\n    if (range < 0.0)\r\n    {\r\n        // negative range means unli" +
-                    "mited\r\n        return 1.0;\r\n    }\r\n    return max(min(1.0 - pow(distance / range" +
-                    ", 4.0), 1.0), 0.0) / pow(distance, 2.0);\r\n}\r\n\r\n// https://github.com/KhronosGrou" +
-                    "p/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#inner-an" +
-                    "d-outer-cone-angles\r\nfloat getSpotAttenuation(vec3 pointToLight, vec3 spotDirect" +
-                    "ion, float outerConeCos, float innerConeCos)\r\n{\r\n    float actualCos = dot(norma" +
-                    "lize(spotDirection), normalize(-pointToLight));\r\n    if (actualCos > outerConeCo" +
-                    "s)\r\n    {\r\n        if (actualCos < innerConeCos)\r\n        {\r\n            return " +
-                    "smoothstep(outerConeCos, innerConeCos, actualCos);\r\n        }\r\n        return 1." +
-                    "0;\r\n    }\r\n    return 0.0;\r\n}\r\n\r\nvec3 applyDirectionalLight(Light light, Materia" +
-                    "lInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    vec3 pointToLight = -light.d" +
-                    "irection;\r\n    vec3 shade = getPointShade(pointToLight, materialInfo, normal, vi" +
-                    "ew);\r\n    return light.intensity * light.color * shade;\r\n}\r\n\r\nvec3 applyPointLig" +
-                    "ht(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    vec3 " +
-                    "pointToLight = light.position - v_Position;\r\n    float distance = length(pointTo" +
-                    "Light);\r\n    float attenuation = getRangeAttenuation(light.range, distance);\r\n  " +
-                    "  vec3 shade = getPointShade(pointToLight, materialInfo, normal, view);\r\n    ret" +
-                    "urn attenuation * light.intensity * light.color * shade;\r\n}\r\n\r\nvec3 applySpotLig" +
-                    "ht(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    vec3 " +
-                    "pointToLight = light.position - v_Position;\r\n    float distance = length(pointTo" +
-                    "Light);\r\n    float rangeAttenuation = getRangeAttenuation(light.range, distance)" +
-                    ";\r\n    float spotAttenuation = getSpotAttenuation(pointToLight, light.direction," +
-                    " light.outerConeCos, light.innerConeCos);\r\n    vec3 shade = getPointShade(pointT" +
-                    "oLight, materialInfo, normal, view);\r\n    return rangeAttenuation * spotAttenuat" +
-                    "ion * light.intensity * light.color * shade;\r\n}\r\n\r\nvoid main()\r\n{\r\n    // Metall" +
-                    "ic and Roughness material properties are packed together\r\n    // In glTF, these " +
-                    "factors can be specified by fixed scalar values\r\n    // or from a metallic-rough" +
-                    "ness map\r\n    float perceptualRoughness = 0.0;\r\n    float metallic = 0.0;\r\n    v" +
-                    "ec4 baseColor = vec4(0.0, 0.0, 0.0, 1.0);\r\n    vec3 diffuseColor = vec3(0.0);\r\n " +
-                    "   vec3 specularColor= vec3(0.0);\r\n    vec3 f0 = vec3(0.04);\r\n\r\n#ifdef MATERIAL_" +
-                    "SPECULARGLOSSINESS\r\n\r\n#ifdef HAS_SPECULAR_GLOSSINESS_MAP\r\n    vec4 sgSample = SR" +
-                    "GBtoLINEAR(texture(sampler2D(SpecularGlossinessTexture, SpecularGlossinessSample" +
-                    "r), getSpecularGlossinessUV()));\r\n    perceptualRoughness = (1.0 - sgSample.a * " +
-                    "GlossinessFactor); // glossiness to roughness\r\n    f0 = sgSample.rgb * SpecularF" +
-                    "actor; // specular\r\n#else\r\n    f0 = SpecularFactor;\r\n    perceptualRoughness = 1" +
-                    ".0 - GlossinessFactor;\r\n#endif // ! HAS_SPECULAR_GLOSSINESS_MAP\r\n\r\n#ifdef HAS_DI" +
-                    "FFUSE_MAP\r\n    baseColor = SRGBtoLINEAR(texture(sampler2D(DiffuseTexture, Diffus" +
-                    "eSampler), getDiffuseUV())) * DiffuseFactor;\r\n#else\r\n    baseColor = DiffuseFact" +
-                    "or;\r\n#endif // !HAS_DIFFUSE_MAP\r\n\r\n    baseColor *= getVertexColor();\r\n\r\n    // " +
-                    "f0 = specular\r\n    specularColor = f0;\r\n    float oneMinusSpecularStrength = 1.0" +
-                    " - max(max(f0.r, f0.g), f0.b);\r\n    diffuseColor = baseColor.rgb * oneMinusSpecu" +
-                    "larStrength;\r\n\r\n#ifdef DEBUG_METALLIC\r\n    // do conversion between metallic M-R" +
-                    " and S-G metallic\r\n    metallic = solveMetallic(baseColor.rgb, specularColor, on" +
-                    "eMinusSpecularStrength);\r\n#endif // ! DEBUG_METALLIC\r\n\r\n#endif // ! MATERIAL_SPE" +
-                    "CULARGLOSSINESS\r\n\r\n#ifdef MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef HAS_METALLIC_ROUG" +
-                    "HNESS_MAP\r\n    // Roughness is stored in the \'g\' channel, metallic is stored in " +
-                    "the \'b\' channel.\r\n    // This layout intentionally reserves the \'r\' channel for " +
-                    "(optional) occlusion map data\r\n    vec4 mrSample = texture(sampler2D(MetallicRou" +
-                    "ghnessTexture, MetallicRoughnessSampler), getMetallicRoughnessUV());\r\n    percep" +
-                    "tualRoughness = mrSample.g * RoughnessFactor;\r\n    metallic = mrSample.b * Metal" +
-                    "licFactor;\r\n#else\r\n    metallic = MetallicFactor;\r\n    perceptualRoughness = Rou" +
-                    "ghnessFactor;\r\n#endif\r\n\r\n    // The albedo may be defined from a base texture or" +
-                    " a flat color\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    baseColor = SRGBtoLINEAR(texture(s" +
-                    "ampler2D(BaseColorTexture, BaseColorSampler), getBaseColorUV())) * BaseColorFact" +
-                    "or;\r\n#else\r\n    baseColor = BaseColorFactor;\r\n#endif\r\n\r\n    baseColor *= getVert" +
-                    "exColor();\r\n\r\n    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metal" +
-                    "lic);\r\n\r\n    specularColor = mix(f0, baseColor.rgb, metallic);\r\n\r\n#endif // ! MA" +
-                    "TERIAL_METALLICROUGHNESS\r\n\r\n#ifdef ALPHAMODE_MASK\r\n    if(baseColor.a < u_AlphaC" +
-                    "utoff)\r\n    {\r\n        discard;\r\n    }\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef" +
-                    " ALPHAMODE_OPAQUE\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef MATERIAL_UNLIT\r\n    " +
-                    "outFragColor = vec4(LINEARtoSRGB(baseColor.rgb), baseColor.a);\r\n    return;\r\n#en" +
-                    "dif\r\n\r\n    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);\r\n    meta" +
-                    "llic = clamp(metallic, 0.0, 1.0);\r\n\r\n    // Roughness is authored as perceptual " +
-                    "roughness; as is convention,\r\n    // convert to material roughness by squaring t" +
-                    "he perceptual roughness [2].\r\n    float alphaRoughness = perceptualRoughness * p" +
-                    "erceptualRoughness;\r\n\r\n    // Compute reflectance.\r\n    float reflectance = max(" +
-                    "max(specularColor.r, specularColor.g), specularColor.b);\r\n\r\n    vec3 specularEnv" +
-                    "ironmentR0 = specularColor.rgb;\r\n    // Anything less than 2% is physically impo" +
-                    "ssible and is instead considered to be shadowing. Compare to \"Real-Time-Renderin" +
-                    "g\" 4th editon on page 325.\r\n    vec3 specularEnvironmentR90 = vec3(clamp(reflect" +
-                    "ance * 50.0, 0.0, 1.0));\r\n\r\n    MaterialInfo materialInfo = MaterialInfo(\r\n     " +
-                    "   perceptualRoughness,\r\n        specularEnvironmentR0,\r\n        alphaRoughness," +
-                    "\r\n        diffuseColor,\r\n        specularEnvironmentR90,\r\n        specularColor\r" +
-                    "\n    );\r\n\r\n    // LIGHTING\r\n\r\n    vec3 color = vec3(0.0, 0.0, 0.0);\r\n    vec3 no" +
-                    "rmal = getNormal();\r\n    vec3 view = normalize(u_Camera - v_Position);\r\n\r\n#ifdef" +
-                    " USE_PUNCTUAL\r\n    for (int i = 0; i < LIGHT_COUNT; ++i)\r\n    {\r\n        Light l" +
-                    "ight = u_Lights[i];\r\n        if (light.type == LightType_Directional)\r\n        {" +
-                    "\r\n            color += applyDirectionalLight(light, materialInfo, normal, view);" +
-                    "\r\n        }\r\n        else if (light.type == LightType_Point)\r\n        {\r\n       " +
-                    "     color += applyPointLight(light, materialInfo, normal, view);\r\n        }\r\n  " +
-                    "      else if (light.type == LightType_Spot)\r\n        {\r\n            color += ap" +
-                    "plySpotLight(light, materialInfo, normal, view);\r\n        }\r\n    }\r\n#endif\r\n\r\n  " +
-                    "  // Calculate lighting contribution from image based lighting source (IBL)\r\n#if" +
-                    "def USE_IBL\r\n    color += getIBLContribution(materialInfo, normal, view);\r\n#endi" +
-                    "f\r\n\r\n    float ao = 1.0;\r\n    // Apply optional PBR terms for additional (option" +
-                    "al) shading\r\n#ifdef HAS_OCCLUSION_MAP\r\n    ao = texture(sampler2D(OcclusionTextu" +
-                    "re, OcclusionSampler), getOcclusionUV()).r;\r\n    color = mix(color, color * ao, " +
-                    "u_OcclusionStrength);\r\n#endif\r\n\r\n    vec3 emissive = vec3(0);\r\n#ifdef HAS_EMISSI" +
-                    "VE_MAP\r\n    emissive = SRGBtoLINEAR(texture(sampler2D(EmissiveTexture, EmissiveS" +
-                    "ampler), getEmissiveUV())).rgb * EmissiveFactor;\r\n    color += emissive;\r\n#endif" +
-                    "\r\n\r\n#ifndef DEBUG_OUTPUT // no debug\r\n\r\n   // regular shading\r\n   outFragColor =" +
-                    " vec4(toneMap(color), baseColor.a);\r\n\r\n#else // debug output\r\n\r\n    #ifdef DEBUG" +
-                    "_METALLIC\r\n        outFragColor.rgb = vec3(metallic);\r\n    #endif\r\n\r\n    #ifdef " +
-                    "DEBUG_ROUGHNESS\r\n        outFragColor.rgb = vec3(perceptualRoughness);\r\n    #end" +
-                    "if\r\n\r\n    #ifdef DEBUG_NORMAL\r\n        #ifdef HAS_NORMAL_MAP\r\n            outFra" +
-                    "gColor.rgb = texture2D(NormalSampler, getNormalUV()).rgb;\r\n        #else\r\n      " +
-                    "      outFragColor.rgb = vec3(0.5, 0.5, 1.0);\r\n        #endif\r\n    #endif\r\n\r\n   " +
-                    " #ifdef DEBUG_BASECOLOR\r\n        outFragColor.rgb = LINEARtoSRGB(baseColor.rgb);" +
-                    "\r\n    #endif\r\n\r\n    #ifdef DEBUG_OCCLUSION\r\n        outFragColor.rgb = vec3(ao);" +
-                    "\r\n    #endif\r\n\r\n    #ifdef DEBUG_EMISSIVE\r\n        outFragColor.rgb = LINEARtoSR" +
-                    "GB(emissive);\r\n    #endif\r\n\r\n    #ifdef DEBUG_F0\r\n        outFragColor.rgb = vec" +
-                    "3(f0);\r\n    #endif\r\n\r\n    #ifdef DEBUG_ALPHA\r\n        outFragColor.rgb = vec3(ba" +
-                    "seColor.a);\r\n    #endif\r\n\r\n    outFragColor.a = 1.0;\r\n\r\n#endif // !DEBUG_OUTPUT\r" +
-                    "\n}");
+                    "orm sampler MetallicRoughnessSampler;\r\n#endif\r\n\r\n// IBL\r\n#ifdef USE_IBL\r\nlayout(" +
+                    "set = 0, binding = 1) uniform texture2D brdfLUTTexture;\r\nlayout(set = 0, binding" +
+                    " = 2) uniform sampler brdfLUTSampler;\r\n\r\nlayout(set = 1, binding = 0) uniform te" +
+                    "xtureCube DiffuseEnvTexture;\r\nlayout(set = 1, binding = 1) uniform sampler Diffu" +
+                    "seEnvSampler;\r\nlayout(set = 1, binding = 2) uniform textureCube SpecularEnvTextu" +
+                    "re;\r\nlayout(set = 1, binding = 3) uniform sampler SpecularEnvSampler;\r\n#endif\r\n\r" +
+                    "\nvec2 getNormalUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_NORMAL_" +
+                    "MAP\r\n    uv.xy = NormalUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_NORM" +
+                    "AL_UV_TRANSFORM\r\n    uv *= NormalUVTransform;\r\n    #endif\r\n#endif\r\n    return uv" +
+                    ".xy;\r\n}\r\n\r\nvec2 getEmissiveUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef" +
+                    " HAS_EMISSIVE_MAP\r\n    uv.xy = EmissiveUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n   " +
+                    " #ifdef HAS_EMISSIVE_UV_TRANSFORM\r\n    uv *= EmissiveUVTransform;\r\n    #endif\r\n#" +
+                    "endif\r\n\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getOcclusionUV()\r\n{\r\n    vec3 uv = vec3(v_" +
+                    "UVCoord1, 1.0);\r\n#ifdef HAS_OCCLUSION_MAP\r\n    uv.xy = OcclusionUVSet < 1 ? v_UV" +
+                    "Coord1 : v_UVCoord2;\r\n    #ifdef HAS_OCCLSION_UV_TRANSFORM\r\n    uv *= OcclusionU" +
+                    "VTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getBaseColorUV()\r\n" +
+                    "{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    uv.xy = " +
+                    "BaseColorUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_BASECOLOR_UV_TRANS" +
+                    "FORM\r\n    uv *= BaseColorUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r" +
+                    "\n\r\nvec2 getMetallicRoughnessUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifde" +
+                    "f HAS_METALLIC_ROUGHNESS_MAP\r\n    uv.xy = MetallicRoughnessUVSet < 1 ? v_UVCoord" +
+                    "1 : v_UVCoord2;\r\n    #ifdef HAS_METALLICROUGHNESS_UV_TRANSFORM\r\n    uv *= Metall" +
+                    "icRoughnessUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getSpe" +
+                    "cularGlossinessUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_SPECULA" +
+                    "R_GLOSSINESS_MAP\r\n    uv.xy = SpecularGlossinessUVSet < 1 ? v_UVCoord1 : v_UVCoo" +
+                    "rd2;\r\n    #ifdef HAS_SPECULARGLOSSINESS_UV_TRANSFORM\r\n    uv *= SpecularGlossine" +
+                    "ssUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getDiffuseUV()\r" +
+                    "\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_DIFFUSE_MAP\r\n    uv.xy = Di" +
+                    "ffuseUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_DIFFUSE_UV_TRANSFORM\r\n" +
+                    "    uv *= DiffuseUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nconst" +
+                    " float M_PI = 3.141592653589793;\r\nconst float c_MinReflectance = 0.04;\r\n\r\nstruct" +
+                    " AngularInfo\r\n{\r\n    float NdotL;                  // cos angle between normal a" +
+                    "nd light direction\r\n    float NdotV;                  // cos angle between norma" +
+                    "l and view direction\r\n    float NdotH;                  // cos angle between nor" +
+                    "mal and half vector\r\n    float LdotH;                  // cos angle between ligh" +
+                    "t direction and half vector\r\n\r\n    float VdotH;                  // cos angle be" +
+                    "tween view direction and half vector\r\n\r\n    vec3 padding;\r\n};\r\n\r\nvec4 getVertexC" +
+                    "olor()\r\n{\r\n   vec4 color = vec4(1.0, 1.0, 1.0, 1.0);\r\n\r\n#ifdef HAS_VERTEX_COLOR_" +
+                    "VEC3\r\n    color.rgb = v_Color;\r\n#endif\r\n#ifdef HAS_VERTEX_COLOR_VEC4\r\n    color " +
+                    "= v_Color;\r\n#endif\r\n\r\n   return color;\r\n}\r\n\r\n// Find the normal for this fragmen" +
+                    "t, pulling either from a predefined normal map\r\n// or from the interpolated mesh" +
+                    " normal and tangent attributes.\r\nvec3 getNormal()\r\n{\r\n    vec2 UV = getNormalUV(" +
+                    ");\r\n\r\n    // Retrieve the tangent space matrix\r\n#ifndef HAS_TANGENTS\r\n    vec3 p" +
+                    "os_dx = dFdx(v_Position);\r\n    vec3 pos_dy = dFdy(v_Position);\r\n    vec3 tex_dx " +
+                    "= dFdx(vec3(UV, 0.0));\r\n    vec3 tex_dy = dFdy(vec3(UV, 0.0));\r\n    vec3 t = (te" +
+                    "x_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx." +
+                    "t);\r\n\r\n#ifdef HAS_NORMALS\r\n    vec3 ng = normalize(v_Normal);\r\n#else\r\n    vec3 n" +
+                    "g = cross(pos_dx, pos_dy);\r\n#endif\r\n\r\n    t = normalize(t - ng * dot(ng, t));\r\n " +
+                    "   vec3 b = normalize(cross(ng, t));\r\n    mat3 tbn = mat3(t, b, ng);\r\n#else // H" +
+                    "AS_TANGENTS\r\n    mat3 tbn = v_TBN;\r\n#endif\r\n\r\n#ifdef HAS_NORMAL_MAP\r\n    vec3 n " +
+                    "= texture(sampler2D(NormalTexture, NormalSampler), UV).rgb;\r\n    n = normalize(t" +
+                    "bn * ((2.0 * n - 1.0) * vec3(NormalScale, NormalScale, 1.0)));\r\n#else\r\n    // Th" +
+                    "e tbn matrix is linearly interpolated, so we need to re-normalize\r\n    vec3 n = " +
+                    "normalize(tbn[2].xyz);\r\n#endif\r\n\r\n    return n;\r\n}\r\n\r\nfloat getPerceivedBrightne" +
+                    "ss(vec3 vector)\r\n{\r\n    return sqrt(0.299 * vector.r * vector.r + 0.587 * vector" +
+                    ".g * vector.g + 0.114 * vector.b * vector.b);\r\n}\r\n\r\n// https://github.com/Khrono" +
+                    "sGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossine" +
+                    "ss/examples/convert-between-workflows/js/three.pbrUtilities.js#L34\r\nfloat solveM" +
+                    "etallic(vec3 diffuse, vec3 specular, float oneMinusSpecularStrength) {\r\n    floa" +
+                    "t specularBrightness = getPerceivedBrightness(specular);\r\n\r\n    if (specularBrig" +
+                    "htness < c_MinReflectance) {\r\n        return 0.0;\r\n    }\r\n\r\n    float diffuseBri" +
+                    "ghtness = getPerceivedBrightness(diffuse);\r\n\r\n    float a = c_MinReflectance;\r\n " +
+                    "   float b = diffuseBrightness * oneMinusSpecularStrength / (1.0 - c_MinReflecta" +
+                    "nce) + specularBrightness - 2.0 * c_MinReflectance;\r\n    float c = c_MinReflecta" +
+                    "nce - specularBrightness;\r\n    float D = b * b - 4.0 * a * c;\r\n\r\n    return clam" +
+                    "p((-b + sqrt(D)) / (2.0 * a), 0.0, 1.0);\r\n}\r\n\r\nAngularInfo getAngularInfo(vec3 p" +
+                    "ointToLight, vec3 normal, vec3 view)\r\n{\r\n    // Standard one-letter names\r\n    v" +
+                    "ec3 n = normalize(normal);           // Outward direction of surface point\r\n    " +
+                    "vec3 v = normalize(view);             // Direction from surface point to view\r\n " +
+                    "   vec3 l = normalize(pointToLight);     // Direction from surface point to ligh" +
+                    "t\r\n    vec3 h = normalize(l + v);            // Direction of the vector between " +
+                    "l and v\r\n\r\n    float NdotL = clamp(dot(n, l), 0.0, 1.0);\r\n    float NdotV = clam" +
+                    "p(dot(n, v), 0.0, 1.0);\r\n    float NdotH = clamp(dot(n, h), 0.0, 1.0);\r\n    floa" +
+                    "t LdotH = clamp(dot(l, h), 0.0, 1.0);\r\n    float VdotH = clamp(dot(v, h), 0.0, 1" +
+                    ".0);\r\n\r\n    return AngularInfo(\r\n        NdotL,\r\n        NdotV,\r\n        NdotH,\r" +
+                    "\n        LdotH,\r\n        VdotH,\r\n        vec3(0, 0, 0)\r\n    );\r\n}\r\n\r\n// KHR_ligh" +
+                    "ts_punctual extension.\r\n// see https://github.com/KhronosGroup/glTF/tree/master/" +
+                    "extensions/2.0/Khronos/KHR_lights_punctual\r\n\r\nstruct Light\r\n{\r\n    vec3 directio" +
+                    "n;\r\n    float range;\r\n\r\n    vec3 color;\r\n    float intensity;\r\n\r\n    vec3 positi" +
+                    "on;\r\n    float innerConeCos;\r\n\r\n    float outerConeCos;\r\n    int type;\r\n\r\n    ve" +
+                    "c2 padding;\r\n};\r\n\r\nconst int LightType_Directional = 0;\r\nconst int LightType_Poi" +
+                    "nt = 1;\r\nconst int LightType_Spot = 2;\r\n\r\n#ifdef USE_PUNCTUAL\r\nuniform Light u_L" +
+                    "ights[LIGHT_COUNT];\r\n#endif\r\n\r\n#ifdef ALPHAMODE_MASK\r\nuniform float u_AlphaCutof" +
+                    "f;\r\n#endif\r\n\r\nstruct MaterialInfo\r\n{\r\n    float perceptualRoughness;    // rough" +
+                    "ness value, as authored by the model creator (input to shader)\r\n    vec3 reflect" +
+                    "ance0;            // full reflectance color (normal incidence angle)\r\n\r\n    floa" +
+                    "t alphaRoughness;         // roughness mapped to a more linear change in the rou" +
+                    "ghness (proposed by [2])\r\n    vec3 diffuseColor;            // color contributio" +
+                    "n from diffuse lighting\r\n\r\n    vec3 reflectance90;           // reflectance colo" +
+                    "r at grazing angle\r\n    vec3 specularColor;           // color contribution from" +
+                    " specular lighting\r\n};\r\n\r\n// Calculation of the lighting contribution from an op" +
+                    "tional Image Based Light source.\r\n// Precomputed Environment Maps are required u" +
+                    "niform inputs and are computed as outlined in [1].\r\n// See our README.md on Envi" +
+                    "ronment Maps [3] for additional discussion.\r\n#ifdef USE_IBL\r\nvec3 getIBLContribu" +
+                    "tion(MaterialInfo materialInfo, vec3 n, vec3 v)\r\n{\r\n    float NdotV = clamp(dot(" +
+                    "n, v), 0.0, 1.0);\r\n\r\n    float lod = clamp(materialInfo.perceptualRoughness * fl" +
+                    "oat(u_MipCount), 0.0, float(u_MipCount));\r\n    vec3 reflection = normalize(refle" +
+                    "ct(-v, n));\r\n\r\n    vec2 brdfSamplePoint = clamp(vec2(NdotV, materialInfo.percept" +
+                    "ualRoughness), vec2(0.0, 0.0), vec2(1.0, 1.0));\r\n    // retrieve a scale and bia" +
+                    "s to F0. See [1], Figure 3\r\n    vec2 brdf = texture(sampler2D(brdfLUTTexture, br" +
+                    "dfLUTSampler), brdfSamplePoint).rg;\r\n\r\n    //vec4 diffuseSample = texture(sample" +
+                    "rCube(DiffuseEnvTexture, DiffuseEnvSampler), n);\r\n\tvec4 diffuseSample = textureL" +
+                    "od(samplerCube(SpecularEnvTexture, SpecularEnvSampler), n, 6);\r\n\r\n#ifdef USE_TEX" +
+                    "_LOD\r\n    vec4 specularSample = textureLod(samplerCube(SpecularEnvTexture, Specu" +
+                    "larEnvSampler), reflection, lod);\r\n#else\r\n    vec4 specularSample = texture(samp" +
+                    "lerCube(SpecularEnvTexture, SpecularEnvSampler), reflection);\r\n#endif\r\n\r\n#ifdef " +
+                    "USE_HDR\r\n    // Already linear.\r\n    vec3 diffuseLight = diffuseSample.rgb;\r\n   " +
+                    " vec3 specularLight = specularSample.rgb;\r\n#else\r\n    vec3 diffuseLight = SRGBto" +
+                    "LINEAR(diffuseSample).rgb;\r\n    vec3 specularLight = SRGBtoLINEAR(specularSample" +
+                    ").rgb;\r\n#endif\r\n\r\n    vec3 diffuse = diffuseLight * materialInfo.diffuseColor;\r\n" +
+                    "    vec3 specular = specularLight * (materialInfo.specularColor * brdf.x + brdf." +
+                    "y);\r\n\r\n    return diffuse + specular;\r\n}\r\n#endif\r\n\r\n// Lambert lighting\r\n// see " +
+                    "https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equ" +
+                    "ation/\r\nvec3 diffuse(MaterialInfo materialInfo)\r\n{\r\n    return materialInfo.diff" +
+                    "useColor / M_PI;\r\n}\r\n\r\n// The following equation models the Fresnel reflectance " +
+                    "term of the spec equation (aka F())\r\n// Implementation of fresnel from [4], Equa" +
+                    "tion 15\r\nvec3 specularReflection(MaterialInfo materialInfo, AngularInfo angularI" +
+                    "nfo)\r\n{\r\n    return materialInfo.reflectance0 + (materialInfo.reflectance90 - ma" +
+                    "terialInfo.reflectance0) * pow(clamp(1.0 - angularInfo.VdotH, 0.0, 1.0), 5.0);\r\n" +
+                    "}\r\n\r\n// Smith Joint GGX\r\n// Note: Vis = G / (4 * NdotL * NdotV)\r\n// see Eric Hei" +
+                    "tz. 2014. Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs" +
+                    ". Journal of Computer Graphics Techniques, 3\r\n// see Real-Time Rendering. Page 3" +
+                    "31 to 336.\r\n// see https://google.github.io/filament/Filament.md.html#materialsy" +
+                    "stem/specularbrdf/geometricshadowing(specularg)\r\nfloat visibilityOcclusion(Mater" +
+                    "ialInfo materialInfo, AngularInfo angularInfo)\r\n{\r\n    float NdotL = angularInfo" +
+                    ".NdotL;\r\n    float NdotV = angularInfo.NdotV;\r\n    float alphaRoughnessSq = mate" +
+                    "rialInfo.alphaRoughness * materialInfo.alphaRoughness;\r\n\r\n    float GGXV = NdotL" +
+                    " * sqrt(NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);\r\n    float" +
+                    " GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq" +
+                    ");\r\n\r\n    float GGX = GGXV + GGXL;\r\n    if (GGX > 0.0)\r\n    {\r\n        return 0." +
+                    "5 / GGX;\r\n    }\r\n    return 0.0;\r\n}\r\n\r\n// The following equation(s) model the di" +
+                    "stribution of microfacet normals across the area being drawn (aka D())\r\n// Imple" +
+                    "mentation from \"Average Irregularity Representation of a Roughened Surface for R" +
+                    "ay Reflection\" by T. S. Trowbridge, and K. P. Reitz\r\n// Follows the distribution" +
+                    " function recommended in the SIGGRAPH 2013 course notes from EPIC Games [1], Equ" +
+                    "ation 3.\r\nfloat microfacetDistribution(MaterialInfo materialInfo, AngularInfo an" +
+                    "gularInfo)\r\n{\r\n    float alphaRoughnessSq = materialInfo.alphaRoughness * materi" +
+                    "alInfo.alphaRoughness;\r\n    float f = (angularInfo.NdotH * alphaRoughnessSq - an" +
+                    "gularInfo.NdotH) * angularInfo.NdotH + 1.0;\r\n    return alphaRoughnessSq / (M_PI" +
+                    " * f * f);\r\n}\r\n\r\nvec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo" +
+                    ", vec3 normal, vec3 view)\r\n{\r\n    AngularInfo angularInfo = getAngularInfo(point" +
+                    "ToLight, normal, view);\r\n\r\n    if (angularInfo.NdotL > 0.0 || angularInfo.NdotV " +
+                    "> 0.0)\r\n    {\r\n        // Calculate the shading terms for the microfacet specula" +
+                    "r shading model\r\n        vec3 F = specularReflection(materialInfo, angularInfo);" +
+                    "\r\n        float Vis = visibilityOcclusion(materialInfo, angularInfo);\r\n        f" +
+                    "loat D = microfacetDistribution(materialInfo, angularInfo);\r\n\r\n        // Calcul" +
+                    "ation of analytical lighting contribution\r\n        vec3 diffuseContrib = (1.0 - " +
+                    "F) * diffuse(materialInfo);\r\n        vec3 specContrib = F * Vis * D;\r\n\r\n        " +
+                    "// Obtain final intensity as reflectance (BRDF) scaled by the energy of the ligh" +
+                    "t (cosine law)\r\n        return angularInfo.NdotL * (diffuseContrib + specContrib" +
+                    ");\r\n    }\r\n\r\n    return vec3(0.0, 0.0, 0.0);\r\n}\r\n\r\n// https://github.com/Khronos" +
+                    "Group/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#rang" +
+                    "e-property\r\nfloat getRangeAttenuation(float range, float distance)\r\n{\r\n    if (r" +
+                    "ange < 0.0)\r\n    {\r\n        // negative range means unlimited\r\n        return 1." +
+                    "0;\r\n    }\r\n    return max(min(1.0 - pow(distance / range, 4.0), 1.0), 0.0) / pow" +
+                    "(distance, 2.0);\r\n}\r\n\r\n// https://github.com/KhronosGroup/glTF/blob/master/exten" +
+                    "sions/2.0/Khronos/KHR_lights_punctual/README.md#inner-and-outer-cone-angles\r\nflo" +
+                    "at getSpotAttenuation(vec3 pointToLight, vec3 spotDirection, float outerConeCos," +
+                    " float innerConeCos)\r\n{\r\n    float actualCos = dot(normalize(spotDirection), nor" +
+                    "malize(-pointToLight));\r\n    if (actualCos > outerConeCos)\r\n    {\r\n        if (a" +
+                    "ctualCos < innerConeCos)\r\n        {\r\n            return smoothstep(outerConeCos," +
+                    " innerConeCos, actualCos);\r\n        }\r\n        return 1.0;\r\n    }\r\n    return 0." +
+                    "0;\r\n}\r\n\r\nvec3 applyDirectionalLight(Light light, MaterialInfo materialInfo, vec3" +
+                    " normal, vec3 view)\r\n{\r\n    vec3 pointToLight = -light.direction;\r\n    vec3 shad" +
+                    "e = getPointShade(pointToLight, materialInfo, normal, view);\r\n    return light.i" +
+                    "ntensity * light.color * shade;\r\n}\r\n\r\nvec3 applyPointLight(Light light, Material" +
+                    "Info materialInfo, vec3 normal, vec3 view)\r\n{\r\n    vec3 pointToLight = light.pos" +
+                    "ition - v_Position;\r\n    float distance = length(pointToLight);\r\n    float atten" +
+                    "uation = getRangeAttenuation(light.range, distance);\r\n    vec3 shade = getPointS" +
+                    "hade(pointToLight, materialInfo, normal, view);\r\n    return attenuation * light." +
+                    "intensity * light.color * shade;\r\n}\r\n\r\nvec3 applySpotLight(Light light, Material" +
+                    "Info materialInfo, vec3 normal, vec3 view)\r\n{\r\n    vec3 pointToLight = light.pos" +
+                    "ition - v_Position;\r\n    float distance = length(pointToLight);\r\n    float range" +
+                    "Attenuation = getRangeAttenuation(light.range, distance);\r\n    float spotAttenua" +
+                    "tion = getSpotAttenuation(pointToLight, light.direction, light.outerConeCos, lig" +
+                    "ht.innerConeCos);\r\n    vec3 shade = getPointShade(pointToLight, materialInfo, no" +
+                    "rmal, view);\r\n    return rangeAttenuation * spotAttenuation * light.intensity * " +
+                    "light.color * shade;\r\n}\r\n\r\nvoid main()\r\n{\r\n    // Metallic and Roughness materia" +
+                    "l properties are packed together\r\n    // In glTF, these factors can be specified" +
+                    " by fixed scalar values\r\n    // or from a metallic-roughness map\r\n    float perc" +
+                    "eptualRoughness = 0.0;\r\n    float metallic = 0.0;\r\n    vec4 baseColor = vec4(0.0" +
+                    ", 0.0, 0.0, 1.0);\r\n    vec3 diffuseColor = vec3(0.0);\r\n    vec3 specularColor= v" +
+                    "ec3(0.0);\r\n    vec3 f0 = vec3(0.04);\r\n\r\n#ifdef MATERIAL_SPECULARGLOSSINESS\r\n\r\n#i" +
+                    "fdef HAS_SPECULAR_GLOSSINESS_MAP\r\n    vec4 sgSample = SRGBtoLINEAR(texture(sampl" +
+                    "er2D(SpecularGlossinessTexture, SpecularGlossinessSampler), getSpecularGlossines" +
+                    "sUV()));\r\n    perceptualRoughness = (1.0 - sgSample.a * GlossinessFactor); // gl" +
+                    "ossiness to roughness\r\n    f0 = sgSample.rgb * SpecularFactor; // specular\r\n#els" +
+                    "e\r\n    f0 = SpecularFactor;\r\n    perceptualRoughness = 1.0 - GlossinessFactor;\r\n" +
+                    "#endif // ! HAS_SPECULAR_GLOSSINESS_MAP\r\n\r\n#ifdef HAS_DIFFUSE_MAP\r\n    baseColor" +
+                    " = SRGBtoLINEAR(texture(sampler2D(DiffuseTexture, DiffuseSampler), getDiffuseUV(" +
+                    "))) * DiffuseFactor;\r\n#else\r\n    baseColor = DiffuseFactor;\r\n#endif // !HAS_DIFF" +
+                    "USE_MAP\r\n\r\n    baseColor *= getVertexColor();\r\n\r\n    // f0 = specular\r\n    specu" +
+                    "larColor = f0;\r\n    float oneMinusSpecularStrength = 1.0 - max(max(f0.r, f0.g), " +
+                    "f0.b);\r\n    diffuseColor = baseColor.rgb * oneMinusSpecularStrength;\r\n\r\n#ifdef D" +
+                    "EBUG_METALLIC\r\n    // do conversion between metallic M-R and S-G metallic\r\n    m" +
+                    "etallic = solveMetallic(baseColor.rgb, specularColor, oneMinusSpecularStrength);" +
+                    "\r\n#endif // ! DEBUG_METALLIC\r\n\r\n#endif // ! MATERIAL_SPECULARGLOSSINESS\r\n\r\n#ifde" +
+                    "f MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef HAS_METALLIC_ROUGHNESS_MAP\r\n    // Roughn" +
+                    "ess is stored in the \'g\' channel, metallic is stored in the \'b\' channel.\r\n    //" +
+                    " This layout intentionally reserves the \'r\' channel for (optional) occlusion map" +
+                    " data\r\n    vec4 mrSample = texture(sampler2D(MetallicRoughnessTexture, MetallicR" +
+                    "oughnessSampler), getMetallicRoughnessUV());\r\n    perceptualRoughness = mrSample" +
+                    ".g * RoughnessFactor;\r\n    metallic = mrSample.b * MetallicFactor;\r\n#else\r\n    m" +
+                    "etallic = MetallicFactor;\r\n    perceptualRoughness = RoughnessFactor;\r\n#endif\r\n\r" +
+                    "\n    // The albedo may be defined from a base texture or a flat color\r\n#ifdef HA" +
+                    "S_BASE_COLOR_MAP\r\n    baseColor = SRGBtoLINEAR(texture(sampler2D(BaseColorTextur" +
+                    "e, BaseColorSampler), getBaseColorUV())) * BaseColorFactor;\r\n#else\r\n    baseColo" +
+                    "r = BaseColorFactor;\r\n#endif\r\n\r\n    baseColor *= getVertexColor();\r\n\r\n    diffus" +
+                    "eColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);\r\n\r\n    specularCol" +
+                    "or = mix(f0, baseColor.rgb, metallic);\r\n\r\n#endif // ! MATERIAL_METALLICROUGHNESS" +
+                    "\r\n\r\n#ifdef ALPHAMODE_MASK\r\n    if(baseColor.a < u_AlphaCutoff)\r\n    {\r\n        d" +
+                    "iscard;\r\n    }\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef ALPHAMODE_OPAQUE\r\n    b" +
+                    "aseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef MATERIAL_UNLIT\r\n    outFragColor = vec4(LINE" +
+                    "ARtoSRGB(baseColor.rgb), baseColor.a);\r\n    return;\r\n#endif\r\n\r\n    perceptualRou" +
+                    "ghness = clamp(perceptualRoughness, 0.0, 1.0);\r\n    metallic = clamp(metallic, 0" +
+                    ".0, 1.0);\r\n\r\n    // Roughness is authored as perceptual roughness; as is convent" +
+                    "ion,\r\n    // convert to material roughness by squaring the perceptual roughness " +
+                    "[2].\r\n    float alphaRoughness = perceptualRoughness * perceptualRoughness;\r\n\r\n " +
+                    "   // Compute reflectance.\r\n    float reflectance = max(max(specularColor.r, spe" +
+                    "cularColor.g), specularColor.b);\r\n\r\n    vec3 specularEnvironmentR0 = specularCol" +
+                    "or.rgb;\r\n    // Anything less than 2% is physically impossible and is instead co" +
+                    "nsidered to be shadowing. Compare to \"Real-Time-Rendering\" 4th editon on page 32" +
+                    "5.\r\n    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));" +
+                    "\r\n\r\n    MaterialInfo materialInfo = MaterialInfo(\r\n        perceptualRoughness,\r" +
+                    "\n        specularEnvironmentR0,\r\n        alphaRoughness,\r\n        diffuseColor,\r" +
+                    "\n        specularEnvironmentR90,\r\n        specularColor\r\n    );\r\n\r\n    // LIGHTI" +
+                    "NG\r\n\r\n    vec3 color = vec3(0.0, 0.0, 0.0);\r\n    vec3 normal = getNormal();\r\n   " +
+                    " vec3 view = normalize(u_Camera - v_Position);\r\n\r\n#ifdef USE_PUNCTUAL\r\n    for (" +
+                    "int i = 0; i < LIGHT_COUNT; ++i)\r\n    {\r\n        Light light = u_Lights[i];\r\n   " +
+                    "     if (light.type == LightType_Directional)\r\n        {\r\n            color += a" +
+                    "pplyDirectionalLight(light, materialInfo, normal, view);\r\n        }\r\n        els" +
+                    "e if (light.type == LightType_Point)\r\n        {\r\n            color += applyPoint" +
+                    "Light(light, materialInfo, normal, view);\r\n        }\r\n        else if (light.typ" +
+                    "e == LightType_Spot)\r\n        {\r\n            color += applySpotLight(light, mate" +
+                    "rialInfo, normal, view);\r\n        }\r\n    }\r\n#endif\r\n\r\n    // Calculate lighting " +
+                    "contribution from image based lighting source (IBL)\r\n#ifdef USE_IBL\r\n    color +" +
+                    "= getIBLContribution(materialInfo, normal, view);\r\n#endif\r\n\r\n    float ao = 1.0;" +
+                    "\r\n    // Apply optional PBR terms for additional (optional) shading\r\n#ifdef HAS_" +
+                    "OCCLUSION_MAP\r\n    ao = texture(sampler2D(OcclusionTexture, OcclusionSampler), g" +
+                    "etOcclusionUV()).r;\r\n    color = mix(color, color * ao, OcclusionStrength);\r\n#en" +
+                    "dif\r\n\r\n    vec3 emissive = vec3(0);\r\n#ifdef HAS_EMISSIVE_MAP\r\n    emissive = SRG" +
+                    "BtoLINEAR(texture(sampler2D(EmissiveTexture, EmissiveSampler), getEmissiveUV()))" +
+                    ".rgb * EmissiveFactor;\r\n    color += emissive;\r\n#endif\r\n\r\n#ifndef DEBUG_OUTPUT /" +
+                    "/ no debug\r\n\r\n   // regular shading\r\n   outFragColor = vec4(toneMap(color), base" +
+                    "Color.a);\r\n\r\n#else // debug output\r\n\r\n    #ifdef DEBUG_METALLIC\r\n        outFrag" +
+                    "Color.rgb = vec3(metallic);\r\n    #endif\r\n\r\n    #ifdef DEBUG_ROUGHNESS\r\n        o" +
+                    "utFragColor.rgb = vec3(perceptualRoughness);\r\n    #endif\r\n\r\n    #ifdef DEBUG_NOR" +
+                    "MAL\r\n        #ifdef HAS_NORMAL_MAP\r\n            outFragColor.rgb = texture2D(Nor" +
+                    "malSampler, getNormalUV()).rgb;\r\n        #else\r\n            outFragColor.rgb = v" +
+                    "ec3(0.5, 0.5, 1.0);\r\n        #endif\r\n    #endif\r\n\r\n    #ifdef DEBUG_BASECOLOR\r\n " +
+                    "       outFragColor.rgb = LINEARtoSRGB(baseColor.rgb);\r\n    #endif\r\n\r\n    #ifdef" +
+                    " DEBUG_OCCLUSION\r\n        outFragColor.rgb = vec3(ao);\r\n    #endif\r\n\r\n    #ifdef" +
+                    " DEBUG_EMISSIVE\r\n        outFragColor.rgb = LINEARtoSRGB(emissive);\r\n    #endif\r" +
+                    "\n\r\n    #ifdef DEBUG_F0\r\n        outFragColor.rgb = vec3(f0);\r\n    #endif\r\n\r\n    " +
+                    "#ifdef DEBUG_ALPHA\r\n        outFragColor.rgb = vec3(baseColor.a);\r\n    #endif\r\n\r" +
+                    "\n    outFragColor.a = 1.0;\r\n\r\n#endif // !DEBUG_OUTPUT\r\n}");
             return this.GenerationEnvironment.ToString();
         }
     }

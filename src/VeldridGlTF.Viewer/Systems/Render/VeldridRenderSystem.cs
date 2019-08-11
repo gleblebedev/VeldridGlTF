@@ -279,22 +279,21 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
         }
 
-        private void ScheduleDrawCalls(DrawCallCollection renderCache, ref ObjectProperties objectProperties)
+        private void ScheduleDrawCalls(DrawCallCollection drawCallCollection, ref ObjectProperties objectProperties)
         {
-            _cl.SetIndexBuffer(renderCache.IndexBuffer, IndexFormat.UInt16);
+            _cl.SetIndexBuffer(drawCallCollection.IndexBuffer, IndexFormat.UInt16);
             _cl.UpdateBuffer(_objectProperties, 0, ref objectProperties);
-            for (var index = 0; index < renderCache.DrawCalls.Count; index++)
+            for (var index = 0; index < drawCallCollection.DrawCalls.Count; index++)
             {
-                var drawCall = renderCache.DrawCalls[index];
+                var drawCall = drawCallCollection.DrawCalls[index];
                 if (drawCall != null)
                 {
-                    var indexRange = renderCache.DrawCalls[index].Primitive;
+                    var indexRange = drawCallCollection.DrawCalls[index].Primitive;
                     var material = drawCall.Material;
                     if (material != null)
                     {
                         drawCall.Pipeline.Set(_cl, this, material);
-                        _cl.SetVertexBuffer(0, renderCache.VertexBuffer, indexRange.DataOffset);
-                        material.UpdateBuffer(_cl, MaterialBuffer);
+                        _cl.SetVertexBuffer(0, drawCallCollection.VertexBuffer, indexRange.DataOffset);
                         _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
                     }
                 }
@@ -312,7 +311,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             var resourceLayouts = shaderAndLayout.Layouts.Select(_=>_resourceFactory.CreateResourceLayout(_)).ToArray();
             var graphicsPipelineDescription = new GraphicsPipelineDescription(
-                BlendStateDescription.SingleOverrideBlend,
+                GetBlendStateDescription(pipelineKey.AlphaMode),
                 pipelineKey.DepthStencilState,
                 new RasterizerStateDescription
                 {
@@ -328,8 +327,27 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 MainSwapchain.Framebuffer.OutputDescription);
             var graphicsPipeline = _resourceFactory.CreateGraphicsPipeline(graphicsPipelineDescription);
 
-            return new PipelineAndLayouts(){Pipeline = graphicsPipeline, ResourceLayouts = resourceLayouts, Layouts = shaderAndLayout.Layouts};
+            return new PipelineAndLayouts()
+            {
+                Pipeline = graphicsPipeline, ResourceLayouts = resourceLayouts, Layouts = shaderAndLayout.Layouts, AlphaMode = pipelineKey.AlphaMode
+            };
         }
+
+        private BlendStateDescription GetBlendStateDescription(AlphaMode pipelineKeyAlphaMode)
+        {
+            switch (pipelineKeyAlphaMode)
+            {
+                case AlphaMode.Opaque:
+                    return BlendStateDescription.SingleOverrideBlend;
+                case AlphaMode.Mask:
+                    return BlendStateDescription.SingleOverrideBlend;
+                case AlphaMode.Blend:
+                    return BlendStateDescription.SingleAlphaBlend;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(pipelineKeyAlphaMode), pipelineKeyAlphaMode, null);
+            }
+        }
+
         public async Task<PipelineBinder> GetPipeline(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
         {
             var pipelineKey = EvaulatePipelineKey(primitive, material, pass);
@@ -364,9 +382,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
             {
                 Shader = shaderKey,
                 PrimitiveTopology = primitive.PrimitiveTopology,
-                VertexLayout = primitive.Elements
+                VertexLayout = primitive.Elements,
+                DepthStencilState = material.DepthStencilState,
+                AlphaMode = material.AlphaMode
             };
-            pipelineKey.DepthStencilState = material.DepthStencilState;
             return pipelineKey;
         }
 

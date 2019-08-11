@@ -73,4 +73,13 @@
     <Folder Include="Assets\Textures\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\AlphaBlendModeTest\glTF-Binary\AlphaBlendModeTest.glb" Link="Assets\AlphaBlendModeTest.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\modules\glTF-Sample-Models\2.0\AntiqueCamera\glTF-Binary\AntiqueCamera.glb" Link="Assets\AntiqueCamera.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
