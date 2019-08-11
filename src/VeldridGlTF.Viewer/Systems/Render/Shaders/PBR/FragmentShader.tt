@@ -438,10 +438,6 @@ const int LightType_Spot = 2;
 uniform Light u_Lights[LIGHT_COUNT];
 #endif
 
-#ifdef ALPHAMODE_MASK
-uniform float u_AlphaCutoff;
-#endif
-
 struct MaterialInfo
 {
     float perceptualRoughness;    // roughness value, as authored by the model creator (input to shader)
@@ -469,12 +465,11 @@ vec3 getIBLContribution(MaterialInfo materialInfo, vec3 n, vec3 v)
     // retrieve a scale and bias to F0. See [1], Figure 3
     vec2 brdf = texture(sampler2D(brdfLUTTexture, brdfLUTSampler), brdfSamplePoint).rg;
 
-    //vec4 diffuseSample = texture(samplerCube(DiffuseEnvTexture, DiffuseEnvSampler), n);
-	vec4 diffuseSample = textureLod(samplerCube(SpecularEnvTexture, SpecularEnvSampler), n, 6);
-
 #ifdef USE_TEX_LOD
+	vec4 diffuseSample = textureLod(samplerCube(SpecularEnvTexture, SpecularEnvSampler), n, 6);
     vec4 specularSample = textureLod(samplerCube(SpecularEnvTexture, SpecularEnvSampler), reflection, lod);
 #else
+    vec4 diffuseSample = texture(samplerCube(DiffuseEnvTexture, DiffuseEnvSampler), n);
     vec4 specularSample = texture(samplerCube(SpecularEnvTexture, SpecularEnvSampler), reflection);
 #endif
 
@@ -686,7 +681,7 @@ void main()
 #endif // ! MATERIAL_METALLICROUGHNESS
 
 #ifdef ALPHAMODE_MASK
-    if(baseColor.a < u_AlphaCutoff)
+    if(baseColor.a < AlphaCutoff)
     {
         discard;
     }

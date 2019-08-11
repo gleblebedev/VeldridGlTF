@@ -43,6 +43,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                 if (metallicRoughness != null)
                 {
                     var metallicRoughnessParameters = MetallicRoughness.Identity;
+                    metallicRoughnessParameters.AlphaCutoff = description.AlphaCutoff;
 
                     var baseColorMapParameters = metallicRoughness.BaseColor;
                     if (baseColorMapParameters != null)
@@ -79,6 +80,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                 if (specularGlossiness != null)
                 {
                     var specularGlossinessParameters = SpecularGlossiness.Identity;
+                    specularGlossinessParameters.AlphaCutoff = description.AlphaCutoff;
 
                     var diffuseMapParameters = specularGlossiness.Diffuse;
                     if (diffuseMapParameters != null)

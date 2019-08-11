@@ -27,6 +27,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
         [FieldOffset(144)]
         public Vector4 DiffuseFactor;
 
+        [FieldOffset(148)]
+        public float AlphaCutoff;
+
         public static readonly SpecularGlossiness Identity = new SpecularGlossiness()
         {
             DiffuseUVTransform = Matrix3x3.Identity,
@@ -35,7 +38,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             SpecularGlossinessUVSet = 0,
             SpecularFactor = Vector3.One,
             GlossinessFactor = 1.0f,
-            DiffuseFactor = Vector4.One
+            DiffuseFactor = Vector4.One,
+            AlphaCutoff = 1.0f,
         };
     }
 }

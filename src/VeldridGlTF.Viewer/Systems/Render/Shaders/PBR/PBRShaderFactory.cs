@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Veldrid.SPIRV;
+using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
 
@@ -23,6 +24,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             //    shaderKey.SetFlag(ShaderFlag.HAS_DIFFUSE_MAP);
             //}
 
+            var hasSpecGloss = material.ResourceSetBuilder.TryResolve(MaterialResource.Slots.SpecularGlossiness, out var specGloss);
+            var hasMetRough = material.ResourceSetBuilder.TryResolve(MaterialResource.Slots.MetallicRoughness, out var metRough);
+
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.DiffuseSampler, ShaderFlag.HAS_DIFFUSE_MAP);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.SpecularGlossinessSampler, ShaderFlag.HAS_SPECULAR_GLOSSINESS_MAP);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.SpecularGlossiness, ShaderFlag.MATERIAL_SPECULARGLOSSINESS);
@@ -35,8 +39,16 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.EmissiveSampler, ShaderFlag.HAS_EMISSIVE_MAP);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.OcclusionSampler, ShaderFlag.HAS_OCCLUSION_MAP);
 
+            if ((hasSpecGloss || hasMetRough) && material.AlphaMode == AlphaMode.Mask)
+            {
+                shaderKey.SetFlag(ShaderFlag.ALPHAMODE_MASK);
+            }
+
             if (material.Unlit)
+            {
                 shaderKey.SetFlag(ShaderFlag.MATERIAL_UNLIT);
+            }
+
             shaderKey.SetFlag(ShaderFlag.USE_IBL);
             shaderKey.SetFlag(ShaderFlag.USE_TEX_LOD);
 

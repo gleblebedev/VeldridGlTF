@@ -11,6 +11,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         public DefaultShaderGenerator(DefaultShaderKey shaderKey)
         {
             _shaderKey = shaderKey;
+
             if (_shaderKey.IsFlagSet(ShaderFlag.HAS_NORMALS))
             {
                 if (_shaderKey.IsFlagSet(ShaderFlag.HAS_TANGENTS))

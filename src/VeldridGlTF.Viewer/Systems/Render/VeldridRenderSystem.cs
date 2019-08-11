@@ -31,7 +31,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private Texture _surfaceTexture;
 
         protected Camera _camera;
-        private CommandList _cl;
+        private CommandList _opaqueCL;
+        private CommandList _transparentCL;
         private TextureView _defaultDiffuseTextureView;
         private GraphicsDevice _graphicsDevice;
         //private DeviceBuffer _projectionBuffer;
@@ -140,11 +141,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var deltaSeconds = _stepContext.DeltaSeconds;
             //_ticks += deltaSeconds * 1000f;
 
-            _cl.Begin();
+            _opaqueCL.Begin();
+            _opaqueCL.SetFramebuffer(MainSwapchain.Framebuffer);
 
-            _cl.SetFramebuffer(MainSwapchain.Framebuffer);
+            _transparentCL.Begin();
+            _transparentCL.SetFramebuffer(MainSwapchain.Framebuffer);
+
             //_cl.SetFullViewports();
-            _cl.ClearDepthStencil(1f);
+            _opaqueCL.ClearDepthStencil(1f);
 
             RenderSkybox();
 
@@ -182,7 +186,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 _camera.FarDistance = sceneRadius * 4.0f;
             }
 
-            UpdateEnvironment();
+            UpdateEnvironment(_opaqueCL);
+            UpdateEnvironment(_transparentCL);
 
             var objectProperties = new ObjectProperties();
             foreach (var modelIndex in _staticModels)
@@ -213,13 +218,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 }
             }
 
-            _cl.End();
-            _graphicsDevice.SubmitCommands(_cl);
+            _opaqueCL.End();
+            _transparentCL.End();
+            _graphicsDevice.SubmitCommands(_opaqueCL);
+            _graphicsDevice.SubmitCommands(_transparentCL);
             _graphicsDevice.WaitForIdle();
             _graphicsDevice.SwapBuffers(MainSwapchain);
         }
 
-        private void UpdateEnvironment()
+        private void UpdateEnvironment(CommandList cl)
         {
             var lookAt = _camera.ViewMatrix;
             var perspectiveFieldOfView = _camera.ProjectionMatrix;
@@ -228,7 +235,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             data.u_Camera = _camera.Position;
             data.u_Exposure = 2.0f;
             data.u_MipCount = 10;
-            _cl.UpdateBuffer(_environmentProperties, 0, data);
+            cl.UpdateBuffer(_environmentProperties, 0, data);
         }
 
         public IStaticModel AddStaticModel(EcsEntity entity)
@@ -275,26 +282,33 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 ScheduleDrawCalls(drawCallCollection, ref identity);
                 return;
             }
+            if (_skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
+            {
+                ScheduleDrawCalls(drawCallCollection, ref identity);
+                return;
+            }
 
-            _cl.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
+            _opaqueCL.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
         }
 
         private void ScheduleDrawCalls(DrawCallCollection drawCallCollection, ref ObjectProperties objectProperties)
         {
-            _cl.SetIndexBuffer(drawCallCollection.IndexBuffer, IndexFormat.UInt16);
-            _cl.UpdateBuffer(_objectProperties, 0, ref objectProperties);
             for (var index = 0; index < drawCallCollection.DrawCalls.Count; index++)
             {
                 var drawCall = drawCallCollection.DrawCalls[index];
                 if (drawCall != null)
                 {
+                    var commandList = (drawCall.Material.AlphaMode == AlphaMode.Blend)?_transparentCL:_opaqueCL;
+                    commandList.SetIndexBuffer(drawCallCollection.IndexBuffer, IndexFormat.UInt16);
+                    commandList.UpdateBuffer(_objectProperties, 0, ref objectProperties);
+
                     var indexRange = drawCallCollection.DrawCalls[index].Primitive;
                     var material = drawCall.Material;
                     if (material != null)
                     {
-                        drawCall.Pipeline.Set(_cl, this, material);
-                        _cl.SetVertexBuffer(0, drawCallCollection.VertexBuffer, indexRange.DataOffset);
-                        _cl.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
+                        drawCall.Pipeline.Set(commandList, this, material);
+                        commandList.SetVertexBuffer(0, drawCallCollection.VertexBuffer, indexRange.DataOffset);
+                        commandList.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
                     }
                 }
             }
@@ -477,7 +491,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 new ResourceSetSlot(MaterialResource.Slots.SpecularEnvSampler, ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler)
                 );
 
-            _cl = factory.CreateCommandList();
+            _opaqueCL = factory.CreateCommandList();
+            _transparentCL = factory.CreateCommandList();
 
             MainPass = new RenderPass("Main");
 

@@ -24,6 +24,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
         [FieldOffset(120)]
         public float RoughnessFactor;
 
+        [FieldOffset(124)]
+        public float AlphaCutoff;
+
         [FieldOffset(128)]
         public Vector4 BaseColorFactor;
 
@@ -35,6 +38,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             MetallicRoughnessUVSet = 0,
             MetallicFactor = 1.0f,
             RoughnessFactor = 1.0f,
+            AlphaCutoff = 1.0f,
             BaseColorFactor = Vector4.One
         };
     }
