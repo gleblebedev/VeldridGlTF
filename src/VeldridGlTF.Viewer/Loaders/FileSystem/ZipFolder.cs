@@ -6,7 +6,7 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Loaders.FileSystem
 {
-    public class ZipFolder : IFolder
+    public class ZipFolder : AbstractFolder, IFolder
     {
         private readonly Dictionary<string, ManualResourceHandler<IFile>> _files =
             new Dictionary<string, ManualResourceHandler<IFile>>();
@@ -15,12 +15,10 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
         private readonly object _gate = new object();
 
 
-        public ZipFolder(string mountPoint)
+        public ZipFolder(string mountPoint):base(mountPoint)
         {
-            Path = mountPoint;
         }
 
-        public string Path { get; }
 
         public IFolder GetFolder(string folderName)
         {
@@ -54,7 +52,7 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
             }
         }
 
-        private string GetChildLogicalPath(string name)
+        public string GetChildLogicalPath(string name)
         {
             if (string.IsNullOrWhiteSpace(Path))
                 return name;

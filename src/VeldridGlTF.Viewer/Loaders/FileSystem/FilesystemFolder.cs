@@ -5,7 +5,7 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Loaders.FileSystem
 {
-    public class FilesystemFolder : IFolder
+    public class FilesystemFolder : AbstractFolder, IFolder
     {
         private readonly string _physicalPath;
 
@@ -15,10 +15,9 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
         private readonly Dictionary<string, IFolder> _folders = new Dictionary<string, IFolder>();
         private readonly object _gate = new object();
 
-        public FilesystemFolder(string physicalPath, string logicalPath)
+        public FilesystemFolder(string physicalPath, string logicalPath): base(logicalPath)
         {
             _physicalPath = physicalPath;
-            Path = logicalPath;
         }
 
         public IResourceHandler<IFile> GetFile(string fileName)
@@ -47,8 +46,6 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
             }
         }
 
-        public string Path { get; }
-
         public IFolder GetFolder(string folderName)
         {
             lock (_gate)
@@ -61,13 +58,6 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
                 _folders.Add(folderName, folder);
                 return folder;
             }
-        }
-
-        private string GetChildLogicalPath(string name)
-        {
-            if (string.IsNullOrWhiteSpace(Path))
-                return name;
-            return Path + "/" + name;
         }
 
         public override string ToString()
