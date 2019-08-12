@@ -11,8 +11,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox
 
 layout(set = 0, binding = 0) uniform EnvironmentProperties
 {
-    mat4 u_ViewProjectionMatrix;
-	vec3 u_Camera;
+"
++Glsl.WriteMembers<EnvironmentProperties>()+
+@"
 };
 
 
@@ -34,6 +35,13 @@ void main()
         {
             return @"#version 450
 
+layout(set = 0, binding = 0) uniform EnvironmentProperties
+{
+"
++ Glsl.WriteMembers<EnvironmentProperties>() +
+@"
+};
+
 layout(set = 3, binding = 1) uniform textureCube DiffuseTexture;
 layout(set = 3, binding = 2) uniform sampler DiffuseSampler;
 
@@ -42,7 +50,7 @@ layout(location = 0) out vec4 OutputColor;
 
 void main()
 {
-    vec4 skybox = textureLod(samplerCube(DiffuseTexture, DiffuseSampler), fsin_0, 3);
+    vec4 skybox = textureLod(samplerCube(DiffuseTexture, DiffuseSampler), fsin_0, u_MipCount/4.0f);
     OutputColor = skybox;
 }";
         }

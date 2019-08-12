@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
 using Veldrid.ImageSharp;
 using Veldrid.Utilities;
@@ -47,7 +50,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         private Skybox _skybox;
 
-        private ImageSharpCubemapTexture _specularEnvImage;
+        private ImageSharpCubemapTexture2 _specularEnvImage;
         private Texture _specularEnvTexture;
         private TextureView _specularEnvTextureView;
 
@@ -104,13 +107,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
             //    , "VeldridGlTF.Viewer.Assets.Sky.PosZ.png"
             //    , "VeldridGlTF.Viewer.Assets.Sky.NegZ.png"
             //);
-            _specularEnvImage = LoadCubemapTexture(GetType().Assembly
-                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_right_0.jpg"
-                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_left_0.jpg"
-                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_top_0.jpg"
-                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_bottom_0.jpg"
-                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_front_0.jpg"
-                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_back_0.jpg"
+            _specularEnvImage = LoadCubemapTexture2(GetType().Assembly
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_right_"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_left_"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_top_"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_bottom_"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_front_"
+                , "VeldridGlTF.Viewer.Assets.Sky.papermill.specular.specular_back_"
+                , 10, ".jpg"
             );
             _diffuseEnvImage = LoadCubemapTexture(GetType().Assembly
                 , "VeldridGlTF.Viewer.Assets.Sky.papermill.diffuse.diffuse_right_0.jpg"
@@ -447,7 +451,30 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             return cubemapTexture;
         }
+        private ImageSharpCubemapTexture2 LoadCubemapTexture2(Assembly assembly, string posX, string negX, string posY,
+            string negY, string posZ, string negZ, int mips, string extension)
+        {
+            var indices = Enumerable.Range(0, mips);
+            Image<Rgba32>[] LoadMips(string prefix)
+            {
+                return indices.Select(_ =>
+                {
+                    using (var manifestResourceStream = assembly.GetManifestResourceStream(prefix + _ + extension))
+                    {
+                        return Image.Load(manifestResourceStream);
+                    }
+                }).ToArray();
+            }
+            var cubemapTexture = new ImageSharpCubemapTexture2(
+                    LoadMips(posX),
+                    LoadMips(negX),
+                    LoadMips(posY),
+                    LoadMips(negY),
+                    LoadMips(posZ),
+                    LoadMips(negZ));
 
+            return cubemapTexture;
+        }
         protected void CreateResources(ResourceFactory factory)
         {
             _shaderManager = new ShaderManager(factory);

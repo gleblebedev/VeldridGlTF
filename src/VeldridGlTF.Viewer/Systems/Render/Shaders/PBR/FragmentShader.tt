@@ -5,6 +5,9 @@
 <#@ import namespace="System.Collections.Generic" #>
 #version 450
 
+//#define DEBUG_OUTPUT
+//#define DEBUG_ROUGHNESS
+
 //
 // This fragment shader defines a reference implementation for Physically Based Shading of
 // a microfacet surface material defined by a glTF model.
@@ -458,7 +461,8 @@ vec3 getIBLContribution(MaterialInfo materialInfo, vec3 n, vec3 v)
 {
     float NdotV = clamp(dot(n, v), 0.0, 1.0);
 
-    float lod = clamp(materialInfo.perceptualRoughness * float(u_MipCount), 0.0, float(u_MipCount));
+	int MipCount = u_MipCount;
+    float lod = clamp(materialInfo.perceptualRoughness * float(MipCount), 0.0, float(MipCount));
     vec3 reflection = normalize(reflect(-v, n));
 
     vec2 brdfSamplePoint = clamp(vec2(NdotV, materialInfo.perceptualRoughness), vec2(0.0, 0.0), vec2(1.0, 1.0));

@@ -104,6 +104,27 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
             throw new NotImplementedException(format.ToString());
         }
 
+        public static string WriteMembers<T>()
+        {
+            var stringBuilder = new StringBuilder();
+            WriteMembers<T>(new ShaderTemplateProxy(stringBuilder));
+            return stringBuilder.ToString();
+        }
+
+        private class ShaderTemplateProxy:IShaderTemplate
+        {
+            private readonly StringBuilder _stringBuilder;
+
+            public ShaderTemplateProxy(StringBuilder stringBuilder)
+            {
+                _stringBuilder = stringBuilder;
+            }
+
+            public void WriteLine(string textToAppend)
+            {
+                _stringBuilder.AppendLine(textToAppend);
+            }
+        }
         public static void WriteMembers<T>(IShaderTemplate template)
         {
             foreach (var fieldInfo in typeof(T).GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
