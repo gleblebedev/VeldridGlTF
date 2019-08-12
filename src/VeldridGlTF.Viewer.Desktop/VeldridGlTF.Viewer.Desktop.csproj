@@ -89,4 +89,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Assets\**\*.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
