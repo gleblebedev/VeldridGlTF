@@ -241,7 +241,16 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
 
                 map.Color = baseColor.Value.Parameter;
                 map.UVSet = baseColor.Value.TextureCoordinate;
-                //map.UVTransform = baseColor.Value.TextureTransform;
+                var transform = baseColor.Value.TextureTransform;
+                if (transform != null)
+                {
+                    var scale = Matrix4x4.CreateScale(new Vector3(transform.Scale.X, transform.Scale.Y, 1));
+                    var offset = Matrix4x4.CreateTranslation(new Vector3(-transform.Offset.X, -transform.Offset.Y, 1));
+                    var rot = Matrix4x4.CreateFromAxisAngle(Vector3.UnitZ, transform.Rotation);
+                    var m = offset * rot * scale;
+                    map.UVTransform = new Matrix3x3(m.M11, m.M12, m.M13, m.M21, m.M22, m.M23, m.M31, m.M32, m.M33);
+                }
+
                 return map;
             }
 

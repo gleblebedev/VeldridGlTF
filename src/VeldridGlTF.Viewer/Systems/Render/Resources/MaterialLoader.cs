@@ -57,6 +57,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                                 renderContext.Device.Aniso4xSampler));
                         }
 
+                        metallicRoughnessParameters.BaseColorUVSet = baseColorMapParameters.UVSet;
+                        metallicRoughnessParameters.BaseColorUVTransform= baseColorMapParameters.UVTransform;
                         metallicRoughnessParameters.BaseColorFactor = baseColorMapParameters.Color;
                     }
                     var metallicRoughnessMapParameters = metallicRoughness.MetallicRoughnessMap;
@@ -70,6 +72,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.MetallicRoughnessSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
+                        metallicRoughnessParameters.MetallicRoughnessUVSet = metallicRoughnessMapParameters.UVSet;
+                        metallicRoughnessParameters.MetallicRoughnessUVTransform = metallicRoughnessMapParameters.UVTransform;
                         metallicRoughnessParameters.MetallicFactor = metallicRoughnessMapParameters.Color.X;
                         metallicRoughnessParameters.RoughnessFactor = metallicRoughnessMapParameters.Color.Y;
                     }
@@ -93,6 +97,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.DiffuseSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
+                        specularGlossinessParameters.DiffuseUVSet = diffuseMapParameters.UVSet;
+                        specularGlossinessParameters.DiffuseUVTransform = diffuseMapParameters.UVTransform;
                         specularGlossinessParameters.DiffuseFactor = diffuseMapParameters.Color;
                     }
                     var specularGlossinessMapParameters = specularGlossiness.SpecularGlossinessMap;
@@ -106,6 +112,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                             slots.Add(new ResourceSetSlot(MaterialResource.Slots.SpecularGlossinessSampler, ResourceKind.Sampler,
                                 renderContext.Device.Aniso4xSampler));
                         }
+
+                        specularGlossinessParameters.SpecularGlossinessUVSet = specularGlossinessMapParameters.UVSet;
+                        specularGlossinessParameters.SpecularGlossinessUVTransform = specularGlossinessMapParameters.UVTransform;
                         specularGlossinessParameters.SpecularFactor = new Vector3(specularGlossinessMapParameters.Color.X, specularGlossinessMapParameters.Color.Y, specularGlossinessMapParameters.Color.Z);
                         specularGlossinessParameters.GlossinessFactor = specularGlossinessMapParameters.Color.W;
                     }
