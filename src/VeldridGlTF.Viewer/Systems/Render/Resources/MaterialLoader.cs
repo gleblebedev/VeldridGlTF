@@ -131,6 +131,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                         slots.Add(new ResourceSetSlot(MaterialResource.Slots.EmissiveSampler, ResourceKind.Sampler,
                             renderContext.Device.Aniso4xSampler));
                         var emissiveMapProperties = EmissiveMapProperties.Identity;
+                        emissiveMapProperties.EmissiveUVSet = description.Emissive.UVSet;
+                        emissiveMapProperties.EmissiveUVTransform = description.Emissive.UVTransform;
                         slots.Add(AddUniformBuffer(renderContext, disposables, ref emissiveMapProperties, MaterialResource.Slots.EmissiveMapProperties));
                     }
                 }
@@ -145,6 +147,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                         slots.Add(new ResourceSetSlot(MaterialResource.Slots.NormalSampler, ResourceKind.Sampler,
                             renderContext.Device.Aniso4xSampler));
                         var normalMapProperties = NormalMapProperties.Identity;
+                        normalMapProperties.NormalUVSet = description.Normal.UVSet;
+                        normalMapProperties.NormalUVTransform = description.Normal.UVTransform;
                         slots.Add(AddUniformBuffer(renderContext, disposables, ref normalMapProperties, MaterialResource.Slots.NormalMapProperties));
                     }
                 }
@@ -159,6 +163,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                         slots.Add(new ResourceSetSlot(MaterialResource.Slots.OcclusionSampler, ResourceKind.Sampler,
                             renderContext.Device.Aniso4xSampler));
                         var occlustionMapProperties = OcclusionMapProperties.Identity;
+                        occlustionMapProperties.OcclusionUVSet = description.Occlusion.UVSet;
+                        occlustionMapProperties.OcclusionUVTransform = description.Occlusion.UVTransform;
                         slots.Add(AddUniformBuffer(renderContext, disposables, ref occlustionMapProperties, MaterialResource.Slots.OcclusionMapProperties));
                     }
                 }
