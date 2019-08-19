@@ -2,8 +2,24 @@
 using System.Runtime.InteropServices;
 using Veldrid;
 
-namespace VeldridGlTF.Viewer.Systems.Render
+namespace VeldridGlTF.Viewer.Systems.Render.Buffers
 {
+    public class DynamicUniformBuffer<T> : DynamicUniformBuffer where T:struct
+    {
+        protected readonly uint _elementSize;
+
+        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer)
+            : base(renderContext, sizeInBytes, localBuffer)
+        {
+            _elementSize = (uint)Marshal.SizeOf<T>();
+        }
+
+        public uint ElementSize
+        {
+            get { return _elementSize; }
+        }
+    }
+
     public class DynamicUniformBuffer: IDisposable
     {
         private readonly uint _localBufferSizeInBytes;
@@ -11,8 +27,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private DeviceBuffer _buffer;
         private uint _sizeInBytes;
         private uint _position;
-        private uint _uncommitedPosition;
-        private byte[] _localBuffer;
+        protected uint _uncommitedPosition;
+        protected byte[] _localBuffer;
         private GraphicsDevice _graphicsDevice;
 
         public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer)

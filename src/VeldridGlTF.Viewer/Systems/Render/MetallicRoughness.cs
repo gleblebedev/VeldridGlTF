@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace VeldridGlTF.Viewer.Systems.Render
 {
     [StructLayout(LayoutKind.Explicit)]
-    public struct MetallicRoughness
+    public partial struct MetallicRoughness
     {
         [FieldOffset(0)]
         public Matrix3x3 BaseColorUVTransform;

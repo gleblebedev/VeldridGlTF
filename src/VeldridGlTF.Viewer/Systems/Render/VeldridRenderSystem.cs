@@ -17,6 +17,7 @@ using VeldridGlTF.Viewer.Loaders.GlTF;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
+using VeldridGlTF.Viewer.Systems.Render.Uniforms;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {

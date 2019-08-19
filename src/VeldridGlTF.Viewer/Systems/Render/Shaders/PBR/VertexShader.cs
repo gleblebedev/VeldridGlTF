@@ -12,6 +12,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
     using System.Linq;
     using System.Text;
     using System.Collections.Generic;
+    using VeldridGlTF.Viewer.Systems.Render.Uniforms;
     using System;
     
     /// <summary>
@@ -30,7 +31,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
         {
             this.Write("#version 450\r\n\r\n");
             
-            #line 8 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
+            #line 9 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
 	WriteDefines();
 
@@ -39,7 +40,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             #line hidden
             this.Write("\r\n");
             
-            #line 12 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
+            #line 13 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
 	for (int location=0; location<Context.VertexElements.Count; ++location)
 	{
@@ -50,7 +51,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             #line default
             #line hidden
             
-            #line 18 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
+            #line 19 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
 	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
@@ -62,7 +63,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             #line hidden
             this.Write("\r\nlayout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
             
-            #line 27 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
+            #line 28 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
 	WriteMembers<EnvironmentProperties>();
 
@@ -71,7 +72,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             #line hidden
             this.Write("};\r\nlayout(set = 2, binding = 0) uniform ObjectProperties\r\n{\r\n");
             
-            #line 33 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
+            #line 34 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\VertexShader.tt"
 
 	WriteMembers<ObjectProperties>();
 

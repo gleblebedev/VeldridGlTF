@@ -12,6 +12,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
     using System.Linq;
     using System.Text;
     using System.Collections.Generic;
+    using VeldridGlTF.Viewer.Systems.Render.Uniforms;
     using System;
     
     /// <summary>
@@ -30,7 +31,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         {
             this.Write("#version 450\r\n\r\nlayout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
             
-            #line 10 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 11 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	Glsl.WriteMembers<EnvironmentProperties>(this);
 
@@ -39,7 +40,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             #line hidden
             this.Write("};\r\nlayout(set = 2, binding = 0) uniform ObjectProperties\r\n{\r\n");
             
-            #line 16 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 17 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	Glsl.WriteMembers<ObjectProperties>(this);
 
@@ -48,7 +49,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             #line hidden
             this.Write("};\r\n\r\n");
             
-            #line 21 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 22 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	for (int location=0; location<Context.VertexElements.Count; ++location)
 	{
@@ -59,7 +60,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             #line default
             #line hidden
             
-            #line 27 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 28 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	for (int location=0; location<Context.Varyings.Count; ++location)
 	{
@@ -71,14 +72,14 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             #line hidden
             this.Write("\r\nvoid main()\r\n{\r\n    vec4 worldPosition = u_ModelMatrix * vec4(POSITION, 1);\r\n\t");
             
-            #line 37 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Context.WorldPosition));
             
             #line default
             #line hidden
             this.Write(" = worldPosition.xyz;\r\n\t");
             
-            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 39 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Context.CameraPosition));
             
             #line default
@@ -86,7 +87,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
             this.Write(" = u_Camera;\r\n    vec4 clipPosition = u_ViewProjectionMatrix * worldPosition;\r\n  " +
                     "  gl_Position = clipPosition;\r\n");
             
-            #line 41 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            #line 42 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
 	if (Context.Normal != null)
 	{

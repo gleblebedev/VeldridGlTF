@@ -6,31 +6,28 @@ using VeldridGlTF.Viewer.Resources;
 
 namespace VeldridGlTF.Viewer.Android
 {
-    public class AssetFolder : IFolder
+    public class AssetFolder : AbstractFolder, IFolder
     {
-        public AssetFolder(AssetManager assetManager, string path)
+        public AssetFolder(AssetManager assetManager, string path):base(path)
         {
             _assetManager = assetManager;
-            _path = path;
         }
 
         private readonly AssetManager _assetManager;
-        private string _path;
-
-        public string Path => _path;
 
         public IFolder GetFolder(string folderName)
         {
-            if (string.IsNullOrWhiteSpace(_path))
+            if (string.IsNullOrWhiteSpace(Path))
                 return new AssetFolder(_assetManager, folderName);
-            return new AssetFolder(_assetManager, _path + "/"+folderName);
+            return new AssetFolder(_assetManager, Path + "/"+folderName);
         }
+
 
         public IResourceHandler<IFile> GetFile(string fileName)
         {
             string id = fileName;
-            if (!string.IsNullOrWhiteSpace(_path))
-                id = _path + "/" + fileName;
+            if (!string.IsNullOrWhiteSpace(Path))
+                id = Path + "/" + fileName;
             return new ManualResourceHandler<IFile>(new ResourceId(id), new AssetFile(_assetManager, id));
         }
 

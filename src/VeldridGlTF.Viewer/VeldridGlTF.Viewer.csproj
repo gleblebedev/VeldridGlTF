@@ -141,6 +141,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>VertexShader.tt</DependentUpon>
     </Compile>
+    <Compile Update="Systems\Render\Uniforms.vert.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Uniforms.vert.glsl</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -159,6 +164,10 @@
     <None Update="Systems\Render\Shaders\PBR\VertexShader.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>VertexShader.cs</LastGenOutput>
+    </None>
+    <None Update="Systems\Render\Uniforms.vert.glsl">
+      <Generator>SPIRVReflection</Generator>
+      <LastGenOutput>Uniforms.vert.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
