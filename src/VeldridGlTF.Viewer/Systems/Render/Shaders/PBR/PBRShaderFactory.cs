@@ -28,21 +28,24 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             var hasMetRough = material.ResourceSetBuilder.TryResolve(MaterialResource.Slots.MetallicRoughness, out var metRough);
 
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.DiffuseSampler, ShaderFlag.HAS_DIFFUSE_MAP);
-            //if (shaderKey.HasFlag(ShaderFlag.HAS_DIFFUSE_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_DIFFUSE_UV_TRANSFORM);
+            if (shaderKey.HasFlag(ShaderFlag.HAS_DIFFUSE_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_DIFFUSE_UV_TRANSFORM);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.SpecularGlossinessSampler, ShaderFlag.HAS_SPECULAR_GLOSSINESS_MAP);
-            //if (shaderKey.HasFlag(ShaderFlag.HAS_SPECULAR_GLOSSINESS_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_SPECULARGLOSSINESS_UV_TRANSFORM);
+            if (shaderKey.HasFlag(ShaderFlag.HAS_SPECULAR_GLOSSINESS_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_SPECULARGLOSSINESS_UV_TRANSFORM);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.SpecularGlossiness, ShaderFlag.MATERIAL_SPECULARGLOSSINESS);
 
 
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.BaseColorSampler, ShaderFlag.HAS_BASE_COLOR_MAP);
-            //if (shaderKey.HasFlag(ShaderFlag.HAS_BASE_COLOR_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_BASECOLOR_UV_TRANSFORM);
+            if (shaderKey.HasFlag(ShaderFlag.HAS_BASE_COLOR_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_BASECOLOR_UV_TRANSFORM);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.MetallicRoughnessSampler, ShaderFlag.HAS_METALLIC_ROUGHNESS_MAP);
-            //if (shaderKey.HasFlag(ShaderFlag.HAS_METALLIC_ROUGHNESS_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_METALLICROUGHNESS_UV_TRANSFORM);
+            if (shaderKey.HasFlag(ShaderFlag.HAS_METALLIC_ROUGHNESS_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_METALLICROUGHNESS_UV_TRANSFORM);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.MetallicRoughness, ShaderFlag.MATERIAL_METALLICROUGHNESS);
             
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.NormalSampler, ShaderFlag.HAS_NORMAL_MAP);
+            if (shaderKey.HasFlag(ShaderFlag.HAS_NORMAL_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_NORMAL_UV_TRANSFORM);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.EmissiveSampler, ShaderFlag.HAS_EMISSIVE_MAP);
+            if (shaderKey.HasFlag(ShaderFlag.HAS_EMISSIVE_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_EMISSIVE_UV_TRANSFORM);
             SetFlagIfPresent(material, shaderKey, MaterialResource.Slots.OcclusionSampler, ShaderFlag.HAS_OCCLUSION_MAP);
+            if (shaderKey.HasFlag(ShaderFlag.HAS_OCCLUSION_MAP)) shaderKey.SetFlag(ShaderFlag.HAS_OCCLSION_UV_TRANSFORM);
 
             if ((hasSpecGloss || hasMetRough) && material.AlphaMode == AlphaMode.Mask)
             {

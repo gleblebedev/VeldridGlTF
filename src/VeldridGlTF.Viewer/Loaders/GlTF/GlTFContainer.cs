@@ -80,11 +80,14 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 RegisterMeshes(modelRoot, container);
             }
             {
+                var animation = modelRoot.LogicalAnimations.FirstOrDefault();
+
                 var index = 0;
                 var prefabs = new Dictionary<Node, EntityPrefab>();
                 foreach (var node in modelRoot.LogicalNodes)
                 {
                     var id = string.IsNullOrWhiteSpace(node.Name) ? "@" + index : node.Name;
+
                     while (Entities.ContainsId(id)) id += "_";
                     var resourceId = new ResourceId(container, id);
                     var prefab = new EntityPrefab(resourceId);
@@ -98,7 +101,27 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
 
                         foreach (var meshPrimitive in node.Mesh.Primitives)
                             prefab.Materials.Add(context.Resolve<IMaterial>(Materials[meshPrimitive.Material].Id));
+                        if (node.Skin != null)
+                        {
+                            var joints = Enumerable.Range(0, node.Skin.JointsCount).Select(node.Skin.GetJoint).ToList();
+                        }
                     }
+
+                    if (animation != null)
+                    {
+                        var scaleSamler = animation.FindScaleSampler(node);
+                        var translationSampler = animation.FindTranslationSampler(node);
+                        var rotationSampler = animation.FindRotationSampler(node);
+                        var morphSampler = animation.FindMorphSampler(node);
+                        if (scaleSamler != null ||
+                            translationSampler != null ||
+                            rotationSampler != null ||
+                            morphSampler != null)
+                        {
+
+                        }
+                    }
+
                     ++index;
                 }
 
@@ -232,6 +255,15 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var map = new MapParameters();
                 if (baseColor.Value.Texture != null)
                 {
+                    var textureSampler = baseColor.Value.Texture.Sampler;
+                    if (textureSampler != null)
+                    {
+                        map.AddressModeU = ConvertWrapMode(textureSampler.WrapS);
+                        map.AddressModeV = ConvertWrapMode(textureSampler.WrapT);
+                        //baseColor.Value.Texture.Sampler.MagFilter;
+                        //baseColor.Value.Texture.Sampler.MinFilter;
+                    }
+
                     var resourceHandler = Textures[baseColor.Value.Texture];
                     if (resourceHandler != null)
                     {
@@ -244,17 +276,39 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var transform = baseColor.Value.TextureTransform;
                 if (transform != null)
                 {
-                    var scale = Matrix4x4.CreateScale(new Vector3(transform.Scale.X, transform.Scale.Y, 1));
-                    var offset = Matrix4x4.CreateTranslation(new Vector3(-transform.Offset.X, -transform.Offset.Y, 0));
-                    var rot = Matrix4x4.CreateFromAxisAngle(Vector3.UnitZ, transform.Rotation);
-                    var m = offset * rot * scale;
-                    map.UVTransform = new Matrix3x3(m.M11, m.M12, m.M13, m.M21, m.M22, m.M23, m.M31, m.M32, m.M33);
+                    float num1 = (float)Math.Cos(transform.Rotation);
+                    float num2 = (float)Math.Sin(transform.Rotation);
+                    var M11 = num1 * transform.Scale.X;
+                    var M12 = num2 * transform.Scale.X;
+                    var M21 = -num2* transform.Scale.Y;
+                    var M22 = num1* transform.Scale.Y;
+
+                    var transformOffset = transform.Offset;
+                    //TODO: Remove woraround when the bug is fixed
+                    if (transformOffset == Vector2.One)
+                        transformOffset = Vector2.Zero;
+                    map.UVTransform = new Matrix3x3(M11, M12, transformOffset.X, M21, M22, transformOffset.Y, 0, 0, 1);
                 }
 
                 return map;
             }
 
             return null;
+        }
+
+        private WrapMode ConvertWrapMode(TextureWrapMode samplerWrapS)
+        {
+            switch (samplerWrapS)
+            {
+                case TextureWrapMode.CLAMP_TO_EDGE:
+                    return WrapMode.Clamp;
+                case TextureWrapMode.MIRRORED_REPEAT:
+                    return WrapMode.Mirror;
+                case TextureWrapMode.REPEAT:
+                    return WrapMode.Wrap;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(samplerWrapS), samplerWrapS, null);
+            }
         }
 
         private void RegisterTextures(ModelRoot modelRoot, string container)

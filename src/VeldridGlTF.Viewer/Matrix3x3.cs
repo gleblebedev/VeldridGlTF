@@ -11,12 +11,15 @@ namespace VeldridGlTF.Viewer
         public float M11;
         public float M12;
         public float M13;
+        public float p0;
         public float M21;
         public float M22;
         public float M23;
+        public float p1;
         public float M31;
         public float M32;
         public float M33;
+        public float p2;
 
         public static Matrix3x3 Identity
         {
@@ -46,6 +49,7 @@ namespace VeldridGlTF.Viewer
             this.M31 = m31;
             this.M32 = m32;
             this.M33 = m33;
+            p0 = p1 = p2 = 0;
         }
 
         public Matrix3x3(Matrix3x2 value)
@@ -59,11 +63,12 @@ namespace VeldridGlTF.Viewer
             this.M31 = 0.0f;
             this.M32 = 0.0f;
             this.M33 = 1f;
+            p0 = p1 = p2 = 0;
         }
 
         public static Matrix3x3 CreateScale(float xScale, float yScale, float zScale)
         {
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = xScale;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -78,7 +83,7 @@ namespace VeldridGlTF.Viewer
 
         public static Matrix3x3 CreateScale(Vector3 scales)
         {
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = scales.X;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -93,7 +98,7 @@ namespace VeldridGlTF.Viewer
 
         public static Matrix3x3 CreateScale(float scale)
         {
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = scale;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -111,7 +116,7 @@ namespace VeldridGlTF.Viewer
         {
             float num1 = (float)Math.Cos(radians);
             float num2 = (float)Math.Sin(radians);
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Matrix3x3.Identity;
             matrix4x4.M11 = 1f;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -129,7 +134,7 @@ namespace VeldridGlTF.Viewer
         {
             float num1 = (float)Math.Cos(radians);
             float num2 = (float)Math.Sin(radians);
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Matrix3x3.Identity;
             matrix4x4.M11 = num1;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = -num2;
@@ -148,7 +153,7 @@ namespace VeldridGlTF.Viewer
         {
             float num1 = (float)Math.Cos(radians);
             float num2 = (float)Math.Sin(radians);
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = num1;
             matrix4x4.M12 = num2;
             matrix4x4.M13 = 0.0f;
@@ -176,7 +181,7 @@ namespace VeldridGlTF.Viewer
             float num6 = x * y;
             float num7 = x * z;
             float num8 = y * z;
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = num3 + num2 * (1f - num3);
             matrix4x4.M12 = (float)((double)num6 - (double)num2 * (double)num6 + (double)num1 * (double)z);
             matrix4x4.M13 = (float)((double)num7 - (double)num2 * (double)num7 - (double)num1 * (double)y);
@@ -198,7 +203,7 @@ namespace VeldridGlTF.Viewer
             Vector3 vector3_1 = Vector3.Normalize(cameraPosition - cameraTarget);
             Vector3 vector3_2 = Vector3.Normalize(Vector3.Cross(cameraUpVector, vector3_1));
             Vector3 vector1 = Vector3.Cross(vector3_1, vector3_2);
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = vector3_2.X;
             matrix4x4.M12 = vector1.X;
             matrix4x4.M13 = vector3_1.X;
@@ -216,7 +221,7 @@ namespace VeldridGlTF.Viewer
             Vector3 vector3_1 = Vector3.Normalize(-forward);
             Vector3 vector2 = Vector3.Normalize(Vector3.Cross(up, vector3_1));
             Vector3 vector3_2 = Vector3.Cross(vector3_1, vector2);
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = vector2.X;
             matrix4x4.M12 = vector2.Y;
             matrix4x4.M13 = vector2.Z;
@@ -240,7 +245,7 @@ namespace VeldridGlTF.Viewer
             float num7 = quaternion.Y * quaternion.W;
             float num8 = quaternion.Y * quaternion.Z;
             float num9 = quaternion.X * quaternion.W;
-            Matrix3x3 matrix4x4;
+            Matrix3x3 matrix4x4 = Identity;
             matrix4x4.M11 = (float)(1.0 - 2.0 * ((double)num2 + (double)num3));
             matrix4x4.M12 = (float)(2.0 * ((double)num4 + (double)num5));
             matrix4x4.M13 = (float)(2.0 * ((double)num6 - (double)num7));

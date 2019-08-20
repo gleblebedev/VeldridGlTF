@@ -26,6 +26,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
     {
         private readonly LazyAsyncCollection<PipelineKey, PipelineAndLayouts> _pipelines;
 
+        private readonly LazyAsyncCollection<SamplerDescription, Sampler> _samplers;
+
         private readonly ManualResourceHandler<RenderContext> _renderContext =
             new ManualResourceHandler<RenderContext>(ResourceId.Null);
 
@@ -74,6 +76,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window, bool enableRenderDoc)
         {
             _pipelines = new LazyAsyncCollection<PipelineKey, PipelineAndLayouts>(CreatePipelineAsync);
+            _samplers = new LazyAsyncCollection<SamplerDescription, Sampler>(CreateSamplerAsync);
             _stepContext = stepContext;
             _enableRenderDoc = enableRenderDoc;
             Window = window;
@@ -84,6 +87,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
             {
                 RenderDoc.Load(out _renderDoc);
             }
+        }
+
+        private Sampler CreateSamplerAsync(SamplerDescription arg)
+        {
+            return _resourceFactory.CreateSampler(arg);
         }
 
         public IResourceHandler<RenderContext> RenderContext => _renderContext;
@@ -602,5 +610,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private EcsFilter<WorldTransform, Zone> _zones = null;
 
         #endregion
+
+        public Task<Sampler> GetOrCreateSampler(SamplerDescription samplerDescription)
+        {
+            return _samplers[samplerDescription];
+        }
     }
 }
