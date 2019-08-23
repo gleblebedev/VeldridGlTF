@@ -8,8 +8,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
     {
         protected readonly uint _elementSize;
 
-        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer)
-            : base(renderContext, sizeInBytes, localBuffer)
+        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer, CommandList commandList)
+            : base(renderContext, sizeInBytes, localBuffer, commandList)
         {
             _elementSize = (uint)Marshal.SizeOf<T>();
         }
@@ -17,6 +17,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
         public uint ElementSize
         {
             get { return _elementSize; }
+        }
+
+        public uint Allocate(out ArraySegment<byte> segment)
+        {
+            return Allocate(_elementSize, out segment);
         }
     }
 
@@ -29,11 +34,15 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
         private uint _position;
         protected uint _uncommitedPosition;
         protected byte[] _localBuffer;
+        private readonly CommandList _commandList;
         private GraphicsDevice _graphicsDevice;
 
-        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer)
+        public DeviceBuffer DeviceBuffer { get { return _buffer; } }
+
+        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer, CommandList commandList)
         {
             _localBuffer = localBuffer;
+            _commandList = commandList;
             _graphicsDevice = renderContext.Device;
             _offsetAlignment = _graphicsDevice.UniformBufferMinOffsetAlignment;
             _sizeInBytes = GetAlignedSize(sizeInBytes);
@@ -61,8 +70,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
             if (_position + alignedSizeInBytes > _sizeInBytes)
             {
                 Commit();
-                _position = 0;
-                _uncommitedPosition = 0;
+                Reset();
             }
 
             if (_position + alignedSizeInBytes > _localBuffer.Length)
@@ -71,7 +79,19 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
             }
             var pos = _position;
             _position += alignedSizeInBytes;
+
             return pos;
+        }
+        public uint Allocate(uint sizeInBytes, out ArraySegment<byte> segment)
+        {
+            var pos = Allocate(sizeInBytes);
+            segment = new ArraySegment<byte>(_localBuffer, (int)(pos - _uncommitedPosition), (int)sizeInBytes);
+            return pos;
+        }
+        public void Reset()
+        {
+            _position = 0;
+            _uncommitedPosition = 0;
         }
 
         public uint Add<T>(ref T value) where T: struct
@@ -88,7 +108,10 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
         {
             if (_position == _uncommitedPosition)
                 return;
-            _graphicsDevice.UpdateBuffer(_buffer, _uncommitedPosition, _localBuffer);
+            if (_commandList != null)
+                _commandList.UpdateBuffer(_buffer, _uncommitedPosition, ref _localBuffer[0], _position - _uncommitedPosition);
+            else
+                _graphicsDevice.UpdateBuffer(_buffer, _uncommitedPosition, ref _localBuffer[0], _position-_uncommitedPosition);
             _uncommitedPosition = _position;
         }
 

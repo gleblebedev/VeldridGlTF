@@ -69,7 +69,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var drawCall = new DrawCall
             {
                 Pipeline = PipelineBinder,
-                Material = material,
+                AlphaMode = material.AlphaMode,
                 Primitive = primitive
             };
             return drawCall;

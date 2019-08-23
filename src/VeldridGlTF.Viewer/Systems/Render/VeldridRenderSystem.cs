@@ -16,6 +16,7 @@ using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Loaders.GlTF;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
+using VeldridGlTF.Viewer.Systems.Render.Buffers;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
 using VeldridGlTF.Viewer.Systems.Render.Uniforms;
 
@@ -24,54 +25,42 @@ namespace VeldridGlTF.Viewer.Systems.Render
     [EcsInject]
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IRenderSystem
     {
+        private readonly bool _enableRenderDoc;
         private readonly LazyAsyncCollection<PipelineKey, PipelineAndLayouts> _pipelines;
-
-        private readonly LazyAsyncCollection<SamplerDescription, Sampler> _samplers;
 
         private readonly ManualResourceHandler<RenderContext> _renderContext =
             new ManualResourceHandler<RenderContext>(ResourceId.Null);
 
+        private readonly LazyAsyncCollection<SamplerDescription, Sampler> _samplers;
+
         private readonly StepContext _stepContext;
-        private readonly bool _enableRenderDoc;
         private ImageSharpTexture _albedoImage;
-        private Texture _surfaceTexture;
-
-        protected Camera _camera;
-        private CommandList _opaqueCL;
-        private CommandList _transparentCL;
-        private TextureView _defaultDiffuseTextureView;
-        private GraphicsDevice _graphicsDevice;
-        //private DeviceBuffer _projectionBuffer;
-        private RenderDoc _renderDoc;
-        private ResourceSetBuilder _resourceSetBuilder;
-
-        private ResourceFactory _resourceFactory;
-
-        private ShaderManager _shaderManager;
-
-        #region SKY
-
-        private Skybox _skybox;
-
-        private ImageSharpCubemapTexture2 _specularEnvImage;
-        private Texture _specularEnvTexture;
-        private TextureView _specularEnvTextureView;
-
-
-        private ImageSharpCubemapTexture _diffuseEnvImage;
-        private Texture _diffuseEnvTexture;
-        private TextureView _diffuseEnvTextureView;
-
-        #endregion
 
         private ImageSharpTexture _brdfLUTImage;
         private Texture _brdfLUTTexture;
         private TextureView _brdfLUTTextureView;
 
-        private DeviceBuffer _environmentProperties;
+        protected Camera _camera;
+        private TextureView _defaultDiffuseTextureView;
         private DeviceBuffer _emptyUniform;
 
-        private DeviceBuffer _objectProperties;
+        private DeviceBuffer _environmentProperties;
+        private GraphicsDevice _graphicsDevice;
+        private CommandList _opaqueCL;
+
+        private readonly List<ScheduledDrawCall> _opaqueDrawCalls = new List<ScheduledDrawCall>(512);
+
+        //private DeviceBuffer _projectionBuffer;
+        private RenderDoc _renderDoc;
+
+        private ResourceFactory _resourceFactory;
+
+        private ShaderManager _shaderManager;
+        private Texture _surfaceTexture;
+        private CommandList _transparentCL;
+        private readonly List<ScheduledDrawCall> _transparentDrawCalls = new List<ScheduledDrawCall>(512);
+
+        //private DeviceBuffer _objectProperties;
 
         public VeldridRenderSystem(StepContext stepContext, IApplicationWindow window, bool enableRenderDoc)
         {
@@ -83,15 +72,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             Window.Resized += HandleWindowResize;
             Window.GraphicsDeviceCreated += OnGraphicsDeviceCreated;
             Window.GraphicsDeviceDestroyed += OnDeviceDestroyed;
-            if (_enableRenderDoc)
-            {
-                RenderDoc.Load(out _renderDoc);
-            }
-        }
-
-        private Sampler CreateSamplerAsync(SamplerDescription arg)
-        {
-            return _resourceFactory.CreateSampler(arg);
+            if (_enableRenderDoc) RenderDoc.Load(out _renderDoc);
         }
 
         public IResourceHandler<RenderContext> RenderContext => _renderContext;
@@ -103,6 +84,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public DeviceBuffer MaterialBuffer { get; private set; }
 
         public BindableResource DefaultTextureView => _defaultDiffuseTextureView;
+
+
+        public RenderPass MainPass { get; set; }
+
+        public ResourceSetBuilder ResourceSetBuilder { get; private set; }
 
         public void Initialize()
         {
@@ -154,23 +140,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var deltaSeconds = _stepContext.DeltaSeconds;
             //_ticks += deltaSeconds * 1000f;
 
+            _dynamicObjectProperties.Reset();
+
             _opaqueCL.Begin();
+            var hasSkybox = RenderSkybox();
+            UpdateEnvironment(_opaqueCL);
             _opaqueCL.SetFramebuffer(MainSwapchain.Framebuffer);
-
-            _transparentCL.Begin();
-            _transparentCL.SetFramebuffer(MainSwapchain.Framebuffer);
-
-            //_cl.SetFullViewports();
             _opaqueCL.ClearDepthStencil(1f);
-
-            RenderSkybox();
-
-
-            //var perspectiveFieldOfView = Matrix4x4.CreatePerspectiveFieldOfView(
-            //    1.0f,
-            //    (float)Window.Width / Window.Height,
-            //    0.5f,
-            //    100f);
+            if (!hasSkybox)
+                _opaqueCL.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
 
             var sceneBbox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
             foreach (var modelIndex in _staticModels)
@@ -186,7 +164,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             _camera.Pitch = -0.5f;
             // Full turn = 7s, to match Gyazo GIF capture time.
-            _camera.Yaw += 2.0f*(float)Math.PI*0.98f/7.0f*deltaSeconds;
+            _camera.Yaw += 2.0f * (float) Math.PI * 0.98f / 7.0f * deltaSeconds;
             _camera.Position = _camera.Forward * -200;
             if (sceneBbox.Max.X > sceneBbox.Min.X)
             {
@@ -199,17 +177,18 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 _camera.FarDistance = sceneRadius * 4.0f;
             }
 
-            UpdateEnvironment(_opaqueCL);
-            UpdateEnvironment(_transparentCL);
-
-            var objectProperties = new ObjectProperties();
+            //var objectProperties = new ObjectProperties();
+            ArraySegment<byte> segment;
             foreach (var modelIndex in _staticModels)
             {
                 var model = _staticModels.Components2[modelIndex];
 
                 if (model.GetDrawCalls().TryGet(out var drawCallCollection) && drawCallCollection != null)
                 {
+                    var objectProperties = new ObjectProperties();
                     var worldTransform = _staticModels.Components1[modelIndex];
+                    //var objectDataOffset = _dynamicObjectProperties.Allocate(out segment);
+                    //ref var objectProperties = ref segment.AsObjectProperties();
                     objectProperties.ModelMatrix = worldTransform.WorldMatrix;
                     var n = worldTransform.WorldMatrix;
                     Matrix4x4 _n;
@@ -219,36 +198,39 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     unsafe
                     {
                         if (drawCallCollection.MorphWeights != null)
-                        {
                             for (var index = 0; index < drawCallCollection.MorphWeights.Count; index++)
-                            {
                                 objectProperties.MorphWeights[index] = drawCallCollection.MorphWeights[index];
-                            }
-                        }
                     }
+                    var objectDataOffset = _dynamicObjectProperties.Add(ref objectProperties);
 
-                    ScheduleDrawCalls(drawCallCollection, ref objectProperties);
+                    ScheduleDrawCalls(drawCallCollection, objectDataOffset);
                 }
             }
 
+            _dynamicObjectProperties.Commit();
+            foreach (var drawCall in _opaqueDrawCalls.Concat(_transparentDrawCalls))
+            {
+                drawCall.DrawCall.Pipeline.Set(_opaqueCL, drawCall.ObjectPropertyOffset);
+                _opaqueCL.SetIndexBuffer(drawCall.IndexBuffer, IndexFormat.UInt16);
+                _opaqueCL.SetVertexBuffer(0, drawCall.VertexBuffer, drawCall.DrawCall.Primitive.DataOffset);
+                _opaqueCL.DrawIndexed(drawCall.DrawCall.Primitive.Length, 1, drawCall.DrawCall.Primitive.Start, 0, 0);
+            }
+
+            _opaqueDrawCalls.Clear();
+            _transparentDrawCalls.Clear();
+
+            //_transparentCL.Begin();
+            //UpdateEnvironment(_transparentCL);
+            //_transparentCL.SetFramebuffer(MainSwapchain.Framebuffer);
+
+            //_cl.SetFullViewports();
+
             _opaqueCL.End();
-            _transparentCL.End();
+            //_transparentCL.End();
             _graphicsDevice.SubmitCommands(_opaqueCL);
-            _graphicsDevice.SubmitCommands(_transparentCL);
+            //_graphicsDevice.SubmitCommands(_transparentCL);
             _graphicsDevice.WaitForIdle();
             _graphicsDevice.SwapBuffers(MainSwapchain);
-        }
-
-        private void UpdateEnvironment(CommandList cl)
-        {
-            var lookAt = _camera.ViewMatrix;
-            var perspectiveFieldOfView = _camera.ProjectionMatrix;
-            var data = new EnvironmentProperties();
-            data.u_ViewProjectionMatrix = lookAt * perspectiveFieldOfView;
-            data.u_Camera = _camera.Position;
-            data.u_Exposure = 2.0f;
-            data.u_MipCount = 10;
-            cl.UpdateBuffer(_environmentProperties, 0, data);
         }
 
         public IStaticModel AddStaticModel(EcsEntity entity)
@@ -272,7 +254,24 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return zone;
         }
 
-        private void RenderSkybox()
+        private Sampler CreateSamplerAsync(SamplerDescription arg)
+        {
+            return _resourceFactory.CreateSampler(arg);
+        }
+
+        private void UpdateEnvironment(CommandList cl)
+        {
+            var lookAt = _camera.ViewMatrix;
+            var perspectiveFieldOfView = _camera.ProjectionMatrix;
+            var data = new EnvironmentProperties();
+            data.u_ViewProjectionMatrix = lookAt * perspectiveFieldOfView;
+            data.u_Camera = _camera.Position;
+            data.u_Exposure = 2.0f;
+            data.u_MipCount = 10;
+            cl.UpdateBuffer(_environmentProperties, 0, data);
+        }
+
+        private bool RenderSkybox()
         {
             var identity = new ObjectProperties();
             identity.ModelMatrix = Matrix4x4.Identity;
@@ -280,63 +279,60 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             DrawCallCollection drawCallCollection;
 
+            ObjectProperties o = new ObjectProperties();
+            //var objectDataOffset = _dynamicObjectProperties.Allocate(out var segment);
+            //ref var o = ref segment.AsObjectProperties();
+            o.ModelMatrix = Matrix4x4.Identity;
+            o.NormalMatrix = Matrix4x4.Identity;
+            var objectDataOffset = _dynamicObjectProperties.Add(ref o);
             foreach (var index in _skyboxes)
             {
                 var skybox = _skyboxes.Components2[index];
                 if (skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
-                {
-                    ScheduleDrawCalls(drawCallCollection, ref identity);
-                    return;
-                }
+                    if (ScheduleDrawCalls(drawCallCollection, objectDataOffset) > 0)
+                        return true;
             }
 
             if (_skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
-            {
-                ScheduleDrawCalls(drawCallCollection, ref identity);
-                return;
-            }
-            if (_skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
-            {
-                ScheduleDrawCalls(drawCallCollection, ref identity);
-                return;
-            }
+                if (ScheduleDrawCalls(drawCallCollection, objectDataOffset) > 0)
+                    return true;
 
-            _opaqueCL.ClearColorTarget(0, new RgbaFloat(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f, 1));
+            return false;
         }
 
-        private void ScheduleDrawCalls(DrawCallCollection drawCallCollection, ref ObjectProperties objectProperties)
+        private int ScheduleDrawCalls(DrawCallCollection drawCallCollection, uint objectPropertiesOffset)
         {
+            var counter = 0;
             for (var index = 0; index < drawCallCollection.DrawCalls.Count; index++)
             {
                 var drawCall = drawCallCollection.DrawCalls[index];
                 if (drawCall != null)
                 {
-                    var commandList = (drawCall.Material.AlphaMode == AlphaMode.Blend)?_transparentCL:_opaqueCL;
-                    commandList.SetIndexBuffer(drawCallCollection.IndexBuffer, IndexFormat.UInt16);
-                    commandList.UpdateBuffer(_objectProperties, 0, ref objectProperties);
-
-                    var indexRange = drawCallCollection.DrawCalls[index].Primitive;
-                    var material = drawCall.Material;
-                    if (material != null)
+                    var list = drawCall.AlphaMode == AlphaMode.Blend ? _transparentDrawCalls : _opaqueDrawCalls;
+                    list.Add(new ScheduledDrawCall
                     {
-                        drawCall.Pipeline.Set(commandList, this, material);
-                        commandList.SetVertexBuffer(0, drawCallCollection.VertexBuffer, indexRange.DataOffset);
-                        commandList.DrawIndexed(indexRange.Length, 1, indexRange.Start, 0, 0);
-                    }
+                        DrawCall = drawCall, ObjectPropertyOffset = objectPropertiesOffset,
+                        VertexBuffer = drawCallCollection.VertexBuffer, IndexBuffer = drawCallCollection.IndexBuffer
+                    });
+                    ++counter;
                 }
             }
+
+            return counter;
         }
+
         private async Task<PipelineAndLayouts> CreatePipelineAsync(PipelineKey pipelineKey)
         {
             var shaderAndLayout = await _shaderManager.GetShaders(pipelineKey.Shader);
 
             var shaderSet = new ShaderSetDescription(
-                new []{pipelineKey.VertexLayout.VertexLayoutDescription},
+                new[] {pipelineKey.VertexLayout.VertexLayoutDescription},
                 shaderAndLayout.Shaders);
 
             //BuildResourceBinder(material.ResourceSetBuilder, shaderAndLayout.Layouts,);
 
-            var resourceLayouts = shaderAndLayout.Layouts.Select(_=>_resourceFactory.CreateResourceLayout(_)).ToArray();
+            var resourceLayouts =
+                shaderAndLayout.Layouts.Select(_ => _resourceFactory.CreateResourceLayout(_)).ToArray();
             var graphicsPipelineDescription = new GraphicsPipelineDescription(
                 GetBlendStateDescription(pipelineKey.AlphaMode),
                 pipelineKey.DepthStencilState,
@@ -354,9 +350,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 MainSwapchain.Framebuffer.OutputDescription);
             var graphicsPipeline = _resourceFactory.CreateGraphicsPipeline(graphicsPipelineDescription);
 
-            return new PipelineAndLayouts()
+            return new PipelineAndLayouts
             {
-                Pipeline = graphicsPipeline, ResourceLayouts = resourceLayouts, Layouts = shaderAndLayout.Layouts, AlphaMode = pipelineKey.AlphaMode
+                Pipeline = graphicsPipeline, ResourceLayouts = resourceLayouts, Layouts = shaderAndLayout.Layouts,
+                AlphaMode = pipelineKey.AlphaMode
             };
         }
 
@@ -375,34 +372,36 @@ namespace VeldridGlTF.Viewer.Systems.Render
             }
         }
 
-        public async Task<PipelineBinder> GetPipeline(RenderPrimitive primitive, MaterialResource material, RenderPass pass)
+        public async Task<PipelineBinder> GetPipeline(RenderPrimitive primitive, MaterialResource material,
+            RenderPass pass)
         {
             var pipelineKey = EvaulatePipelineKey(primitive, material, pass);
             var pipelineAndLayout = await _pipelines[pipelineKey];
 
             var sets = new ResourceSet[pipelineAndLayout.Layouts.Length];
+            var dynamicResources = new DynamicResource[pipelineAndLayout.Layouts.Length][];
             for (var index = 0; index < sets.Length; index++)
             {
-                var resourceSetDescription = new ResourceSetDescription(pipelineAndLayout.ResourceLayouts[index], material.ResourceSetBuilder.Resolve(_emptyUniform, pipelineAndLayout.Layouts[index].Elements));
+                var resourceLayout = pipelineAndLayout.ResourceLayouts[index];
+                var elements = pipelineAndLayout.Layouts[index].Elements;
+                DynamicResource[] offsets;
+                var bindableResources = material.ResourceSetBuilder.Resolve(_emptyUniform, elements, out offsets);
+                var resourceSetDescription = new ResourceSetDescription(resourceLayout, bindableResources);
                 sets[index] = _resourceFactory.CreateResourceSet(resourceSetDescription);
+                dynamicResources[index] = offsets;
             }
-            return new PipelineBinder()
+
+            return new PipelineBinder
             {
                 Pipeline = pipelineAndLayout.Pipeline,
                 ResourceLayouts = pipelineAndLayout.ResourceLayouts,
-                Sets = sets
+                Sets = sets,
+                DynamicOffsets = dynamicResources
             };
         }
 
-
-        public RenderPass MainPass { get; set; }
-
-        public ResourceSetBuilder ResourceSetBuilder
-        {
-            get { return _resourceSetBuilder; }
-        }
-
-        private PipelineKey EvaulatePipelineKey(RenderPrimitive primitive, MaterialResource material, RenderPass renderPass)
+        private PipelineKey EvaulatePipelineKey(RenderPrimitive primitive, MaterialResource material,
+            RenderPass renderPass)
         {
             var shaderKey = _shaderManager.GetShaderKey(primitive, material, renderPass);
             var pipelineKey = new PipelineKey
@@ -421,9 +420,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _graphicsDevice = gd;
             _resourceFactory = factory;
             MainSwapchain = sc;
+            _renderContextValue = new RenderContext(gd, factory, sc, this);
             CreateResources(factory);
             CreateSwapchainResources(factory);
-            _renderContext.SetValue(new RenderContext(gd, factory, sc, this));
+            _renderContext.SetValue(_renderContextValue);
         }
 
         protected virtual void HandleWindowResize()
@@ -460,10 +460,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             return cubemapTexture;
         }
+
         private ImageSharpCubemapTexture2 LoadCubemapTexture2(Assembly assembly, string posX, string negX, string posY,
             string negY, string posZ, string negZ, int mips, string extension)
         {
             var indices = Enumerable.Range(0, mips);
+
             Image<Rgba32>[] LoadMips(string prefix)
             {
                 return indices.Select(_ =>
@@ -474,26 +476,35 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     }
                 }).ToArray();
             }
+
             var cubemapTexture = new ImageSharpCubemapTexture2(
-                    LoadMips(posX),
-                    LoadMips(negX),
-                    LoadMips(posY),
-                    LoadMips(negY),
-                    LoadMips(posZ),
-                    LoadMips(negZ));
+                LoadMips(posX),
+                LoadMips(negX),
+                LoadMips(posY),
+                LoadMips(negY),
+                LoadMips(posZ),
+                LoadMips(negZ));
 
             return cubemapTexture;
         }
+
         protected void CreateResources(ResourceFactory factory)
         {
+            _opaqueCL = factory.CreateCommandList();
+            _transparentCL = factory.CreateCommandList();
+
             _shaderManager = new ShaderManager(factory);
             _emptyUniform = factory.CreateBuffer(new BufferDescription(16, BufferUsage.UniformBuffer));
             //_projectionBuffer =
             //    factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             _environmentProperties =
-                factory.CreateBuffer(new BufferDescription(GetBufferSize<EnvironmentProperties>(), BufferUsage.UniformBuffer));
-            _objectProperties =
-                factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+                factory.CreateBuffer(new BufferDescription(GetBufferSize<EnvironmentProperties>(),
+                    BufferUsage.UniformBuffer));
+
+            _dynamicObjectProperties = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 4 * 1024 * 1024,
+                new byte[1024 * 1024], _opaqueCL);
+
+            //_objectProperties = factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             MaterialBuffer = CreateMaterialBuffer();
 
             _brdfLUTTexture = _brdfLUTImage.CreateDeviceTexture(_graphicsDevice, _resourceFactory);
@@ -514,21 +525,28 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _diffuseEnvTextureView = factory.CreateTextureView(_diffuseEnvTexture);
             //_skyTextureView.Name = _surfaceTexture.Name;
 
-            _resourceSetBuilder = new ResourceSetBuilder(
+            ResourceSetBuilder = new ResourceSetBuilder(
                 _resourceFactory,
-                new ResourceSetSlot("EnvironmentProperties", ResourceKind.UniformBuffer,  _environmentProperties),
-                new ResourceSetSlot(MaterialResource.Slots.brdfLUTTexture, ResourceKind.TextureReadOnly,  _brdfLUTTextureView), 
-                new ResourceSetSlot(MaterialResource.Slots.brdfLUTSampler, ResourceKind.Sampler,  _graphicsDevice.LinearSampler),
-                new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer, _objectProperties),
-                new ResourceSetSlot(null, ResourceKind.UniformBuffer, _objectProperties),
-                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly, _diffuseEnvTextureView),
-                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvSampler, ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler),
-                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvTexture, ResourceKind.TextureReadOnly, _specularEnvTextureView),
-                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvSampler, ResourceKind.Sampler, _graphicsDevice.Aniso4xSampler)
-                );
+                new ResourceSetSlot("EnvironmentProperties", ResourceKind.UniformBuffer, _environmentProperties),
+                new ResourceSetSlot(MaterialResource.Slots.brdfLUTTexture, ResourceKind.TextureReadOnly,
+                    _brdfLUTTextureView),
+                new ResourceSetSlot(MaterialResource.Slots.brdfLUTSampler, ResourceKind.Sampler,
+                    _graphicsDevice.LinearSampler),
+                new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer,
+                    ResourceLayoutElementOptions.DynamicBinding, _dynamicObjectProperties.DeviceBuffer,
+                    DynamicResource.ObjectProperties),
+                new ResourceSetSlot(null, ResourceKind.UniformBuffer, ResourceLayoutElementOptions.DynamicBinding,
+                    _dynamicObjectProperties.DeviceBuffer, DynamicResource.ObjectProperties),
+                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly,
+                    _diffuseEnvTextureView),
+                new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvSampler, ResourceKind.Sampler,
+                    _graphicsDevice.Aniso4xSampler),
+                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvTexture, ResourceKind.TextureReadOnly,
+                    _specularEnvTextureView),
+                new ResourceSetSlot(MaterialResource.Slots.SpecularEnvSampler, ResourceKind.Sampler,
+                    _graphicsDevice.Aniso4xSampler)
+            );
 
-            _opaqueCL = factory.CreateCommandList();
-            _transparentCL = factory.CreateCommandList();
 
             MainPass = new RenderPass("Main");
 
@@ -536,9 +554,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var skyboxMaterial = new MaterialDescription(ResourceId.Null)
             {
                 ShaderName = "Skybox",
-                SpecularGlossiness = new Data.SpecularGlossiness()
+                SpecularGlossiness = new Data.SpecularGlossiness
                 {
-                    Diffuse = new MapParameters()
+                    Diffuse = new MapParameters
                     {
                         Map = new ManualResourceHandler<ITexture>(ResourceId.Null,
                             new TextureResource(ResourceId.Null, _specularEnvTexture, _specularEnvTextureView))
@@ -551,14 +569,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _skybox.Material = materialHandler;
         }
 
-        public static uint GetBufferSize<T>() where T: struct
+        public static uint GetBufferSize<T>() where T : struct
         {
             var sizeOf = Marshal.SizeOf<T>();
-            if (0 != (sizeOf & 15))
-            {
-                sizeOf = (sizeOf & ~15) + 16;
-            }
-            return (uint)sizeOf;
+            if (0 != (sizeOf & 15)) sizeOf = (sizeOf & ~15) + 16;
+            return (uint) sizeOf;
         }
 
         protected virtual void OnDeviceDestroyed()
@@ -602,18 +617,35 @@ namespace VeldridGlTF.Viewer.Systems.Render
             return new StaticModel {RenderSystem = this};
         }
 
-        #region ECS
-
-        private EcsWorld _world = null;
-        private EcsFilter<WorldTransform, Skybox> _skyboxes = null;
-        private EcsFilter<WorldTransform, StaticModel> _staticModels = null;
-        private EcsFilter<WorldTransform, Zone> _zones = null;
-
-        #endregion
-
         public Task<Sampler> GetOrCreateSampler(SamplerDescription samplerDescription)
         {
             return _samplers[samplerDescription];
         }
+
+        #region SKY
+
+        private Skybox _skybox;
+
+        private ImageSharpCubemapTexture2 _specularEnvImage;
+        private Texture _specularEnvTexture;
+        private TextureView _specularEnvTextureView;
+
+
+        private ImageSharpCubemapTexture _diffuseEnvImage;
+        private Texture _diffuseEnvTexture;
+        private TextureView _diffuseEnvTextureView;
+
+        #endregion
+
+        #region ECS
+
+        private readonly EcsWorld _world = null;
+        private readonly EcsFilter<WorldTransform, Skybox> _skyboxes = null;
+        private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
+        private EcsFilter<WorldTransform, Zone> _zones = null;
+        private RenderContext _renderContextValue;
+        private DynamicUniformBuffer<ObjectProperties> _dynamicObjectProperties;
+
+        #endregion
     }
 }

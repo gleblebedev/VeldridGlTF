@@ -284,9 +284,6 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                     var M22 = num1* transform.Scale.Y;
 
                     var transformOffset = transform.Offset;
-                    //TODO: Remove woraround when the bug is fixed
-                    if (transformOffset == Vector2.One)
-                        transformOffset = Vector2.Zero;
                     map.UVTransform = new Matrix3x3(M11, M12, transformOffset.X, M21, M22, transformOffset.Y, 0, 0, 1);
                 }
 

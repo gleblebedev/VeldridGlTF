@@ -145,11 +145,20 @@ namespace Veldrid.SPIRV
                             uniformName = GetTypeName(type, types, names);
                     }
 
-                    if (uniformName == null && nameNameResolver != null)
+                    ResourceLayoutElementOptions options = ResourceLayoutElementOptions.None;
+                    if (nameNameResolver != null)
                     {
-                        uniformName = nameNameResolver.Resolve(set,binding,kind);
+                        if (uniformName == null)
+                        {
+                            uniformName = nameNameResolver.Resolve(set, binding, kind, out options);
+                        }
+                        else
+                        {
+                            options = nameNameResolver.Resolve(uniformName, set, binding, kind);
+                        }
                     }
-                    var element = new ResourceLayoutElementDescription(uniformName, kind, stage, ResourceLayoutElementOptions.None);
+
+                    var element = new ResourceLayoutElementDescription(uniformName, kind, stage, options);
 
                     while (sets.Count <= set) sets.Add(new List<ResourceLayoutElementDescription>());
                     var setCollection = sets[(int)set];

@@ -1,6 +1,7 @@
 ﻿using System;
 using Veldrid;
 using Veldrid.SPIRV;
+using VeldridGlTF.Viewer.Systems.Render.Uniforms;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -14,13 +15,24 @@ namespace VeldridGlTF.Viewer.Systems.Render
         }
         public string Name { get; private set; }
 
-        public string Resolve(uint set, uint binding, ResourceKind kind)
+        public string Resolve(uint set, uint binding, ResourceKind kind, out ResourceLayoutElementOptions options)
         {
+            options = ResourceLayoutElementOptions.None;
             if (_resourceLayouts == null || _resourceLayouts.Length <= set)
                 return null;
             var layout = _resourceLayouts[set];
-            return layout.ResolveName(binding);
+            var name = layout.ResolveName(binding);
+            options = Resolve(name, set, binding, kind);
+            return name;
         }
+
+        public ResourceLayoutElementOptions Resolve(string name, uint set, uint binding, ResourceKind kind)
+        {
+            if (name == nameof(ObjectProperties))
+                return ResourceLayoutElementOptions.DynamicBinding;
+            return ResourceLayoutElementOptions.None;
+        }
+
 
     }
 

@@ -1,4 +1,5 @@
-﻿using Veldrid;
+﻿using System;
+using Veldrid;
 using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
@@ -12,6 +13,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private Pipeline _pipeline;
         private ResourceLayout[] _resourceLayouts;
         private ResourceSet[] _sets;
+        private DynamicResource[][] _dynamicOffsets;
 
         public Pipeline Pipeline
         {
@@ -31,20 +33,43 @@ namespace VeldridGlTF.Viewer.Systems.Render
             set { _sets = value; }
         }
 
-        public void Set(CommandList cl, VeldridRenderSystem veldridRenderSystem, MaterialResource material)
+        public DynamicResource[][] DynamicOffsets
+        {
+            get { return _dynamicOffsets; }
+            set { _dynamicOffsets = value; }
+        }
+
+        public void Set(CommandList cl, uint objectProperties)
         {
             cl.SetPipeline(_pipeline);
             for (var index = 0; index < Sets.Length; index++)
             {
                 var resourceSet = Sets[index];
                 if (resourceSet != null)
-                    cl.SetGraphicsResourceSet((uint)index, resourceSet);
+                {
+                    var offsets = DynamicOffsets[index];
+                    if (offsets != null)
+                    {
+                        var offsetBuf = new uint[offsets.Length];
+                        for (var i = 0; i < offsets.Length; i++)
+                        {
+                            switch (offsets[i])
+                            {
+                                case DynamicResource.ObjectProperties:
+                                    offsetBuf[i] = objectProperties;
+                                    break;
+                                default:
+                                    throw new NotImplementedException();
+                            }
+                        }
+                        cl.SetGraphicsResourceSet((uint)index, resourceSet, offsetBuf);
+                    }
+                    else
+                    {
+                        cl.SetGraphicsResourceSet((uint)index, resourceSet);
+                    }
+                }
             }
-            //cl.SetGraphicsResourceSet(0, veldridRenderSystem.EnvironmentSet);
-            //cl.SetGraphicsResourceSet(1, veldridRenderSystem.ZoneSet);
-            //cl.SetGraphicsResourceSet(2, veldridRenderSystem.MeshSet);
-            //cl.SetGraphicsResourceSet(3, material.ResourceSetBuilder);
-
         }
     }
 }

@@ -65,12 +65,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             return res;
         }
-        public BindableResource[] Resolve(BindableResource emptyBindableResource, params ResourceLayoutElementDescription[] resources)
+        public BindableResource[] Resolve(BindableResource emptyBindableResource, ResourceLayoutElementDescription[] resources, out DynamicResource[] offsets)
         {
+            offsets = null;
             if (resources == null || resources.Length == 0)
             {
                 return _emptyBindableResourceArray;
             }
+
+            List<DynamicResource> offsetList = null;
             var res = new BindableResource[resources.Length];
             for (var index = 0; index < resources.Length; index++)
             {
@@ -79,9 +82,23 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     throw new KeyNotFoundException("Unknown bindable resource " + resources[index].Name);
                 }
 
-                res[index] = slot.GetResource() ?? emptyBindableResource;
+                if (slot.IsDynamic)
+                {
+                    offsetList = offsetList ?? new List<DynamicResource>();
+                    offsetList.Add(slot.DynamicResource);
+                    res[index] = slot.GetResource() ?? emptyBindableResource;
+                    //res[index] = new DeviceBufferRange((DeviceBuffer)slot.GetResource(), 256,256);
+                }
+                else
+                {
+                    res[index] = slot.GetResource() ?? emptyBindableResource;
+                }
+                //res[index] = slot.GetResource() ?? emptyBindableResource;
             }
-
+            if (offsetList != null)
+            {
+                offsets = offsetList.ToArray();
+            }
             return res;
         }
         public void Dispose()

@@ -9,6 +9,7 @@ using VeldridGlTF.Viewer.Systems.Render.Shaders;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.PBR;
 using VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox;
+using VeldridGlTF.Viewer.Systems.Render.Uniforms;
 using ShaderDescription = Veldrid.ShaderDescription;
 
 namespace VeldridGlTF.Viewer.Systems.Render
