@@ -502,7 +502,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     BufferUsage.UniformBuffer));
 
             _dynamicObjectProperties = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 4 * 1024 * 1024,
-                new byte[1024 * 1024], _opaqueCL);
+                new byte[1024 * 1024]);
 
             //_objectProperties = factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             MaterialBuffer = CreateMaterialBuffer();
@@ -533,10 +533,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 new ResourceSetSlot(MaterialResource.Slots.brdfLUTSampler, ResourceKind.Sampler,
                     _graphicsDevice.LinearSampler),
                 new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer,
-                    ResourceLayoutElementOptions.DynamicBinding, _dynamicObjectProperties.DeviceBuffer,
+                    ResourceLayoutElementOptions.DynamicBinding, _dynamicObjectProperties.BindableResource,
                     DynamicResource.ObjectProperties),
-                new ResourceSetSlot(null, ResourceKind.UniformBuffer, ResourceLayoutElementOptions.DynamicBinding,
-                    _dynamicObjectProperties.DeviceBuffer, DynamicResource.ObjectProperties),
+                new ResourceSetSlot(null, ResourceKind.UniformBuffer, ResourceLayoutElementOptions.DynamicBinding, 
+                    _dynamicObjectProperties.BindableResource, DynamicResource.ObjectProperties),
                 new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly,
                     _diffuseEnvTextureView),
                 new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvSampler, ResourceKind.Sampler,

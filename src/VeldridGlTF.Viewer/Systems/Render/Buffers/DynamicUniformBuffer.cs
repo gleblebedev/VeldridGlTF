@@ -8,15 +8,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
     {
         protected readonly uint _elementSize;
 
-        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer, CommandList commandList)
-            : base(renderContext, sizeInBytes, localBuffer, commandList)
+        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer)
+            : base(renderContext, (uint)Marshal.SizeOf<T>(), sizeInBytes, localBuffer)
         {
-            _elementSize = (uint)Marshal.SizeOf<T>();
-        }
-
-        public uint ElementSize
-        {
-            get { return _elementSize; }
         }
 
         public uint Allocate(out ArraySegment<byte> segment)
@@ -33,22 +27,34 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
         private uint _sizeInBytes;
         private uint _position;
         protected uint _uncommitedPosition;
+        private readonly uint _elementSize;
         protected byte[] _localBuffer;
         private readonly CommandList _commandList;
         private GraphicsDevice _graphicsDevice;
+        private readonly DeviceBufferRange _bindableResource;
 
-        public DeviceBuffer DeviceBuffer { get { return _buffer; } }
-
-        public DynamicUniformBuffer(RenderContext renderContext, uint sizeInBytes, byte[] localBuffer, CommandList commandList)
+        public DynamicUniformBuffer(RenderContext renderContext, uint elementSize, uint sizeInBytes, byte[] localBuffer)
         {
+            _elementSize = elementSize;
             _localBuffer = localBuffer;
-            _commandList = commandList;
             _graphicsDevice = renderContext.Device;
             _offsetAlignment = _graphicsDevice.UniformBufferMinOffsetAlignment;
             _sizeInBytes = GetAlignedSize(sizeInBytes);
             _buffer = renderContext.Factory.CreateBuffer(new BufferDescription(sizeInBytes,
                 BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+            _bindableResource = new DeviceBufferRange(_buffer, 0, _elementSize);
         }
+
+        public DeviceBufferRange BindableResource { get { return _bindableResource; } }
+
+        public DeviceBuffer DeviceBuffer { get { return _buffer; } }
+
+
+        public uint ElementSize
+        {
+            get { return _elementSize; }
+        }
+
 
         public uint OffsetAlignment 
         {
