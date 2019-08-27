@@ -42,9 +42,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var (vertexShader, fragmentShader) = SpirvReflection2.CompileGlslToSpirv(vertexShaderText,
                 fragmentShaderText, shaderKey.LayoutNameResolver);
 
+            var vertexBytes = vertexShader.SpirvBytes; // Encoding.UTF8.GetBytes(vertexShaderText);
+            var fragmentBytes = fragmentShader.SpirvBytes; // Encoding.UTF8.GetBytes(fragmentShaderText);
             var compiledShader = _factory.CreateFromSpirv(
-                new ShaderDescription(ShaderStages.Vertex, Encoding.UTF8.GetBytes(vertexShaderText), "main"),
-                new ShaderDescription(ShaderStages.Fragment, Encoding.UTF8.GetBytes(fragmentShaderText), "main"));
+                new ShaderDescription(ShaderStages.Vertex, vertexBytes, "main"),
+                new ShaderDescription(ShaderStages.Fragment, fragmentBytes, "main"));
 
             var shaderAndLayout = new ShaderAndLayout();
             shaderAndLayout.Shaders = compiledShader;
