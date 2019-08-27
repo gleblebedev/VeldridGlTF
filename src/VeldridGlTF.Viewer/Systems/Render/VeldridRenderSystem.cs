@@ -225,10 +225,22 @@ namespace VeldridGlTF.Viewer.Systems.Render
                         jointMatrices = _jointMatrices.Allocate(64 * jc);
                         jointNormalMatrices = _jointNormalMatrices.Allocate(64 * jc);
 
+                        var identity = Matrix4x4.Identity;
+                        var rotMatrix = Matrix4x4.CreateTranslation(10, 0, 0);// Matrix4x4.CreateRotationZ(_camera.Yaw);
                         for (uint i = 0; i < jc; ++i)
                         {
-                            _jointMatrices.SetAt(jointMatrices + i * 64, ref objectProperties.ModelMatrix);
-                            _jointNormalMatrices.SetAt(jointNormalMatrices + i * 64, ref objectProperties.NormalMatrix);
+                            //_jointMatrices.SetAt(jointMatrices + i * 64, ref objectProperties.ModelMatrix);
+                            //_jointNormalMatrices.SetAt(jointNormalMatrices + i * 64, ref objectProperties.NormalMatrix);
+                            if (i == 4)
+                            {
+                                _jointMatrices.SetAt(jointMatrices + i * 64, ref rotMatrix);
+                                _jointNormalMatrices.SetAt(jointNormalMatrices + i * 64, ref rotMatrix);
+                            }
+                            else
+                            {
+                                _jointMatrices.SetAt(jointMatrices + i * 64, ref identity);
+                                _jointNormalMatrices.SetAt(jointNormalMatrices + i * 64, ref identity);
+                            }
                         }
                     }
 
@@ -537,11 +549,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 factory.CreateBuffer(new BufferDescription(GetBufferSize<EnvironmentProperties>(),
                     BufferUsage.UniformBuffer));
 
-            _dynamicObjectProperties = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 1024 * 1024,
+            _dynamicObjectProperties = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 4*1024 * 1024,
                 new byte[1024 * 1024]);
-            _jointMatrices = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 1024 * 1024,
+            const uint MaxJoints = 256;
+            _jointMatrices = new DynamicUniformBuffer(_renderContextValue, 64* MaxJoints, 4 * 1024 * 1024,
                 new byte[1024 * 1024]);
-            _jointNormalMatrices = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 1024 * 1024,
+            _jointNormalMatrices = new DynamicUniformBuffer(_renderContextValue, 64 * MaxJoints, 4 * 1024 * 1024,
                 new byte[1024 * 1024]);
 
             //_objectProperties = factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
