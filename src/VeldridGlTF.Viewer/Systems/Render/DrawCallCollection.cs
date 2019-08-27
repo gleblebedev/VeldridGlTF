@@ -14,12 +14,15 @@ namespace VeldridGlTF.Viewer.Systems.Render
             VertexBuffer = mesh.VertexBuffer;
             BoundingBox = mesh.BoundingBox;
             MorphWeights = mesh.DefaultMorphWeights;
+            JointCount = mesh.JointCount;
             foreach (var drawCall in drawCalls)
                 if (drawCall != null)
                     DrawCalls.Add(drawCall);
         }
 
         public IReadOnlyList<float> MorphWeights { get; set; }
+
+        public uint JointCount { get; set; }
 
         public List<DrawCall> DrawCalls { get; set; }
 

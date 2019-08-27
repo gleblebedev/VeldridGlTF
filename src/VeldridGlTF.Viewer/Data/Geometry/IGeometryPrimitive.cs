@@ -7,5 +7,6 @@ namespace VeldridGlTF.Viewer.Data.Geometry
         IReadOnlyList<IGeometryStream> Streams { get; }
         PrimitiveTopology Topology { get; }
         IReadOnlyCollection<int> Indices { get; }
+        bool HasSkin { get; }
     }
 }

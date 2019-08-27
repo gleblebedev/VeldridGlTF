@@ -12,6 +12,7 @@ namespace VeldridGlTF.Viewer.Data
         public IReadOnlyList<IGeometryPrimitive> Primitives { get; } = new[] {new BoxGeometryPrimitive()};
 
         public IReadOnlyList<float> MorphWeights => _morphWeights;
+        public uint JointCount { get; }
 
         internal class BoxGeometryPrimitive : IGeometryPrimitive
         {
@@ -58,6 +59,8 @@ namespace VeldridGlTF.Viewer.Data
             public PrimitiveTopology Topology => PrimitiveTopology.TriangleList;
 
             public IReadOnlyCollection<int> Indices { get; }
+
+            public bool HasSkin { get; }
         }
     }
 }

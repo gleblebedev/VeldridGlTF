@@ -145,13 +145,23 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
 
         private void RegisterMeshes(ModelRoot modelRoot, string container)
         {
+            var meshSkins = new Dictionary<Mesh, Skin>();
+            foreach (var node in modelRoot.LogicalNodes)
+            {
+                if (node.Mesh != null && node.Skin != null)
+                {
+                    meshSkins[node.Mesh] = node.Skin;
+                }
+            }
+
             var index = 0;
             foreach (var mesh in modelRoot.LogicalMeshes)
             {
+                meshSkins.TryGetValue(mesh, out var skin);
                 var id = string.IsNullOrWhiteSpace(mesh.Name) ? "@" + index : mesh.Name;
                 var resourceId = new ResourceId(container, id);
                 Meshes.Add(mesh, id,
-                    new ManualResourceHandler<IGeometry>(resourceId, new MeshGeometry(resourceId, mesh)));
+                    new ManualResourceHandler<IGeometry>(resourceId, new MeshGeometry(resourceId, mesh, skin)));
                 ++index;
             }
         }

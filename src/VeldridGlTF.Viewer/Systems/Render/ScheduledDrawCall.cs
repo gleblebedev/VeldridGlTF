@@ -8,6 +8,9 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public uint ObjectPropertyOffset { get; set; }
 
+        public uint JointMatrices { get; set; }
+        public uint JointNormalMatrices { get; set; }
+
         public DeviceBuffer VertexBuffer { get; set; }
 
         public DeviceBuffer IndexBuffer { get; set; }

@@ -7,6 +7,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
     {
         None,
         ObjectProperties,
+        JointMatrices,
+        JointNormalMatrices,
         MaxValue
     }
 

@@ -17,7 +17,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
         public readonly List<RenderPrimitive> _primitives;
         public DeviceBuffer IndexBuffer;
         public DeviceBuffer VertexBuffer;
-
+        public uint JointCount;
         private Mesh(ResourceId id, DeviceBuffer vertexBuffer, DeviceBuffer indexBuffer, BoundingBox boundingBox,
             List<RenderPrimitive> primitives) : base(id)
         {
@@ -49,11 +49,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
 
             var boundingBox = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
 
-
             foreach (var meshPrimitive in geometry.Primitives)
             {
                 var map = new Dictionary<int, ushort>();
                 var range = new RenderPrimitive();
+
+                range.JointCount = meshPrimitive.HasSkin ? geometry.JointCount : 0;
                 range.Elements = new RenderVertexLayout(meshPrimitive.Streams.Select(GetVertexElementDescription));
                 range.PrimitiveTopology = GetPrimitiveTopology(meshPrimitive.Topology);
                 range.DataOffset = (uint) memory.Position;
@@ -104,6 +105,15 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             renderContext.Device.UpdateBuffer(indexBuffer, 0, indices.ToArray());
 
             var mesh = new Mesh(context.Id, vertexBuffer, indexBuffer, boundingBox, primitives);
+            if (geometry.JointCount > 0)
+            {
+                uint jointCount = 1;
+                while (jointCount < geometry.JointCount)
+                {
+                    jointCount *= 2;
+                }
+                mesh.JointCount = jointCount;
+            }
             mesh.DefaultMorphWeights = geometry.MorphWeights;
             return mesh;
         }

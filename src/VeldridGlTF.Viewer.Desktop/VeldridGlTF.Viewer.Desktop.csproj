@@ -118,6 +118,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\modules\glTF-Sample-Models\2.0\Monster\glTF-Binary\Monster.glb" Link="Assets\Monster.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\modules\glTF-Sample-Models\2.0\TextureTransformTest\glTF\TextureTransformTest.bin" Link="Assets\TextureTransformTest\TextureTransformTest.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

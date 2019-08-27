@@ -7,6 +7,8 @@ namespace VeldridGlTF.Viewer.Data
     {
         IReadOnlyList<IGeometryPrimitive> Primitives { get; }
 
+        uint JointCount { get; }
+
         IReadOnlyList<float> MorphWeights { get; }
     }
 }

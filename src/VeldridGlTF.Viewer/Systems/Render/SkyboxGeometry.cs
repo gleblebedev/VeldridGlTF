@@ -33,6 +33,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public IReadOnlyList<IGeometryPrimitive> Primitives => _primitives;
 
         public IReadOnlyList<float> MorphWeights => _morphWeights;
+        public uint JointCount { get; }
 
         internal class SkyboxPrimitive : IGeometryPrimitive
         {
@@ -41,6 +42,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             public PrimitiveTopology Topology => PrimitiveTopology.TriangleList;
 
             public IReadOnlyCollection<int> Indices => _indices;
+
+            public bool HasSkin => false;
         }
     }
 }

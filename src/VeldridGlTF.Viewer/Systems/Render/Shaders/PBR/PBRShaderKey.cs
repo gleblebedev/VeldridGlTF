@@ -6,9 +6,10 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
 {
     public class PBRShaderKey : ShaderKey, IEquatable<PBRShaderKey>
     {
-        public PBRShaderKey(IShaderFactory factory, ILayoutNameResolver layoutNameResolver, RenderVertexLayout layout) :
+        public PBRShaderKey(IShaderFactory factory, ILayoutNameResolver layoutNameResolver, RenderVertexLayout layout, uint jointCount = 0) :
             base(factory, layoutNameResolver)
         {
+            JointCount = jointCount;
             VertexLayout = layout;
             foreach (var element in VertexLayout.VertexLayoutDescription.Elements)
                 switch (element.Name)
@@ -67,6 +68,18 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
                     case "TEXCOORD_0":
                         SetFlag(ShaderFlag.HAS_UV_SET1);
                         break;
+                    case "JOINTS_0":
+                        SetFlag(ShaderFlag.HAS_JOINT_SET1);
+                        break;
+                    case "WEIGHTS_0":
+                        SetFlag(ShaderFlag.HAS_WEIGHT_SET1);
+                        break;
+                    case "JOINTS_1":
+                        SetFlag(ShaderFlag.HAS_JOINT_SET2);
+                        break;
+                    case "WEIGHTS_1":
+                        SetFlag(ShaderFlag.HAS_WEIGHT_SET2);
+                        break;
                     case "TEXCOORD_1":
                         SetFlag(ShaderFlag.HAS_UV_SET2);
                         break;
@@ -81,20 +94,22 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
 
         public RenderVertexLayout VertexLayout { get; }
 
+        public uint JointCount { get; }
+
         public ulong Flags { get; set; }
 
         public bool Equals(PBRShaderKey other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) && Equals(VertexLayout, other.VertexLayout) && Flags == other.Flags;
+            return base.Equals(other) && Flags == other.Flags && JointCount == other.JointCount && Equals(VertexLayout, other.VertexLayout);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (obj.GetType() != this.GetType()) return false;
             return Equals((PBRShaderKey) obj);
         }
 
@@ -102,7 +117,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
         {
             unchecked
             {
-                return ((VertexLayout != null ? VertexLayout.GetHashCode() : 0) * 397) ^ Flags.GetHashCode();
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ Flags.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)JointCount;
+                hashCode = (hashCode * 397) ^ (VertexLayout != null ? VertexLayout.GetHashCode() : 0);
+                return hashCode;
             }
         }
 

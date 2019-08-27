@@ -40,6 +40,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
         public IList<VertexElementDescription> VertexElements =>
             _shaderKey.VertexLayout.VertexLayoutDescription.Elements;
 
+        public uint JointCount => _shaderKey.JointCount;
 
         public string GetVertexShader()
         {

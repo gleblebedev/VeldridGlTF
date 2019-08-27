@@ -7,6 +7,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         public uint DataOffset;
         public uint Start;
         public uint Length;
+        public uint JointCount;
         public RenderVertexLayout Elements;
         public PrimitiveTopology PrimitiveTopology;
     }

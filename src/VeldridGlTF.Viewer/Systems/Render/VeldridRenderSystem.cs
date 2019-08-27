@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Leopotam.Ecs;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
@@ -59,6 +60,11 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private ShaderManager _shaderManager;
         private Texture _surfaceTexture;
         private CommandList _transparentCL;
+
+        private RenderContext _renderContextValue;
+        private DynamicUniformBuffer<ObjectProperties> _dynamicObjectProperties;
+        private DynamicUniformBuffer _jointMatrices;
+        private DynamicUniformBuffer _jointNormalMatrices;
 
         //private DeviceBuffer _objectProperties;
 
@@ -148,6 +154,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
             //_ticks += deltaSeconds * 1000f;
 
             _dynamicObjectProperties.Reset();
+            _jointMatrices.Reset();
+            _jointNormalMatrices.Reset();
 
             _opaqueCL.Begin();
             var hasSkybox = RenderSkybox();
@@ -209,16 +217,34 @@ namespace VeldridGlTF.Viewer.Systems.Render
                                 objectProperties.MorphWeights[index] = drawCallCollection.MorphWeights[index];
                     }
 
+                    var jc = drawCallCollection.JointCount;
+                    uint jointMatrices = 0;
+                    uint jointNormalMatrices = 0;
+                    if (jc > 0)
+                    {
+                        jointMatrices = _jointMatrices.Allocate(64 * jc);
+                        jointNormalMatrices = _jointNormalMatrices.Allocate(64 * jc);
+
+                        for (uint i = 0; i < jc; ++i)
+                        {
+                            _jointMatrices.SetAt(jointMatrices + i * 64, ref objectProperties.ModelMatrix);
+                            _jointNormalMatrices.SetAt(jointNormalMatrices + i * 64, ref objectProperties.NormalMatrix);
+                        }
+                    }
+
                     var objectDataOffset = _dynamicObjectProperties.Add(ref objectProperties);
 
-                    ScheduleDrawCalls(drawCallCollection, objectDataOffset);
+                    ScheduleDrawCalls(drawCallCollection, objectDataOffset, jointMatrices, jointNormalMatrices);
                 }
             }
 
             _dynamicObjectProperties.Commit();
+            _jointMatrices.Commit();
+            _jointNormalMatrices.Commit();
+            
             foreach (var drawCall in _opaqueDrawCalls.Concat(_transparentDrawCalls))
             {
-                drawCall.DrawCall.Pipeline.Set(_opaqueCL, drawCall.ObjectPropertyOffset);
+                drawCall.DrawCall.Pipeline.Set(_opaqueCL, drawCall.ObjectPropertyOffset, drawCall.JointMatrices, drawCall.JointNormalMatrices);
                 _opaqueCL.SetIndexBuffer(drawCall.IndexBuffer, IndexFormat.UInt16);
                 _opaqueCL.SetVertexBuffer(0, drawCall.VertexBuffer, drawCall.DrawCall.Primitive.DataOffset);
                 _opaqueCL.DrawIndexed(drawCall.DrawCall.Primitive.Length, 1, drawCall.DrawCall.Primitive.Start, 0, 0);
@@ -297,12 +323,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
             {
                 var skybox = _skyboxes.Components2[index];
                 if (skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
-                    if (ScheduleDrawCalls(drawCallCollection, objectDataOffset) > 0)
+                    if (ScheduleDrawCalls(drawCallCollection, objectDataOffset,0 ,0) > 0)
                         return true;
             }
 
             if (_skybox.GetDrawCalls().TryGet(out drawCallCollection) && drawCallCollection != null)
-                if (ScheduleDrawCalls(drawCallCollection, objectDataOffset) > 0)
+                if (ScheduleDrawCalls(drawCallCollection, objectDataOffset,0,0) > 0)
                     return true;
 
             return false;
@@ -310,7 +336,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
 
 
-        private int ScheduleDrawCalls(DrawCallCollection drawCallCollection, uint objectPropertiesOffset)
+        private int ScheduleDrawCalls(DrawCallCollection drawCallCollection, uint objectPropertiesOffset, uint jointMatrices, uint jointNormalMatrices)
         {
             var counter = 0;
             for (var index = 0; index < drawCallCollection.DrawCalls.Count; index++)
@@ -513,6 +539,10 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             _dynamicObjectProperties = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 1024 * 1024,
                 new byte[1024 * 1024]);
+            _jointMatrices = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 1024 * 1024,
+                new byte[1024 * 1024]);
+            _jointNormalMatrices = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 1024 * 1024,
+                new byte[1024 * 1024]);
 
             //_objectProperties = factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             MaterialBuffer = CreateMaterialBuffer();
@@ -537,14 +567,20 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             ResourceSetBuilder = new ResourceSetBuilder(
                 _resourceFactory,
-                new ResourceSetSlot("EnvironmentProperties", ResourceKind.UniformBuffer, _environmentProperties),
+                new ResourceSetSlot(nameof(EnvironmentProperties), ResourceKind.UniformBuffer, _environmentProperties),
                 new ResourceSetSlot(MaterialResource.Slots.brdfLUTTexture, ResourceKind.TextureReadOnly,
                     _brdfLUTTextureView),
                 new ResourceSetSlot(MaterialResource.Slots.brdfLUTSampler, ResourceKind.Sampler,
                     _graphicsDevice.LinearSampler),
-                new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer,
+                new ResourceSetSlot(nameof(ObjectProperties), ResourceKind.UniformBuffer,
                     ResourceLayoutElementOptions.DynamicBinding, _dynamicObjectProperties.BindableResource,
                     DynamicResource.ObjectProperties),
+                new ResourceSetSlot("JointMatrices", ResourceKind.UniformBuffer,
+                    ResourceLayoutElementOptions.DynamicBinding, _jointMatrices.BindableResource,
+                    DynamicResource.JointMatrices),
+                new ResourceSetSlot("JointNormalMatrices", ResourceKind.UniformBuffer,
+                    ResourceLayoutElementOptions.DynamicBinding, _jointNormalMatrices.BindableResource,
+                    DynamicResource.JointNormalMatrices),
                 new ResourceSetSlot(null, ResourceKind.UniformBuffer, ResourceLayoutElementOptions.DynamicBinding,
                     _dynamicObjectProperties.BindableResource, DynamicResource.ObjectProperties),
                 new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly,
@@ -653,8 +689,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private readonly EcsFilter<WorldTransform, Skybox> _skyboxes = null;
         private readonly EcsFilter<WorldTransform, StaticModel> _staticModels = null;
         private EcsFilter<WorldTransform, Zone> _zones = null;
-        private RenderContext _renderContextValue;
-        private DynamicUniformBuffer<ObjectProperties> _dynamicObjectProperties;
 
         #endregion
     }

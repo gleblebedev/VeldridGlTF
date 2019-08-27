@@ -29,7 +29,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public ResourceLayoutElementOptions Resolve(string name, uint set, uint binding, ResourceKind kind)
         {
-            if (name == nameof(ObjectProperties))
+            if (name == nameof(ObjectProperties) || name == "JointMatrices" || name == "JointNormalMatrices")
                 return ResourceLayoutElementOptions.DynamicBinding;
             return ResourceLayoutElementOptions.None;
         }

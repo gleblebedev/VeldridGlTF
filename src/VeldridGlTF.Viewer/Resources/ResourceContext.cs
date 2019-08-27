@@ -68,9 +68,9 @@ namespace VeldridGlTF.Viewer.Resources
         private async Task<Dependency> GetTaskFromHandler<Dependency>(IResourceHandler<Dependency> handler)
         {
             var task = handler.GetAsync();
-            if (task.IsCompleted || task.IsFaulted)
-                return task.Result;
-            return await task.ConfigureAwait(false);
+            //if (task.IsCompleted || task.IsFaulted)
+            //    return task.Result;
+            return await task;//.ConfigureAwait(false);
         }
 
         public Task<Dependency> ResolveDependencyAsync<Dependency>(IResourceHandler<Dependency> handler)

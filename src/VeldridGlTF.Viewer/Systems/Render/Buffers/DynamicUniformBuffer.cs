@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Veldrid;
 
@@ -90,11 +91,9 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
 
         public uint Add<T>(ref T value) where T : struct
         {
-            var pinStructure = GCHandle.Alloc(value, GCHandleType.Pinned);
             var size = Marshal.SizeOf(typeof(T));
-            var pos = Allocate((uint) size);
-            Marshal.Copy(pinStructure.AddrOfPinnedObject(), _localBuffer, (int) (pos - _uncommitedPosition), size);
-            pinStructure.Free();
+            var pos = Allocate((uint)size);
+            SetAt(pos, ref value);
             return pos;
         }
 
@@ -115,6 +114,14 @@ namespace VeldridGlTF.Viewer.Systems.Render.Buffers
         {
             var alignedSizeInBlocks = (sizeInBytes + OffsetAlignment - 1) / OffsetAlignment;
             return alignedSizeInBlocks * OffsetAlignment;
+        }
+
+        public void SetAt<T>(uint pos, ref T value) where T : struct
+        {
+            var pinStructure = GCHandle.Alloc(value, GCHandleType.Pinned);
+            var size = Marshal.SizeOf(typeof(T));
+            Marshal.Copy(pinStructure.AddrOfPinnedObject(), _localBuffer, (int)(pos - _uncommitedPosition), size);
+            pinStructure.Free();
         }
     }
 }

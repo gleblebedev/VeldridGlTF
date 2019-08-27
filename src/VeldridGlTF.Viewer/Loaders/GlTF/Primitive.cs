@@ -36,6 +36,10 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 _streams.Add(GeometryStream.Create(key, accessor));
             }
 
+            if (_streams.Any(_ => _.Key == "JOINTS_0" || _.Key == "JOINTS_1"))
+            {
+                HasSkin = true;
+            }
 
             for (var targetIndex = 0; targetIndex < meshPrimitive.MorphTargetsCount; ++targetIndex)
                 foreach (var accessorKeyValuePair in meshPrimitive.GetMorphTargetAccessors(targetIndex))
@@ -53,5 +57,6 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
         public PrimitiveTopology Topology { get; set; }
 
         public IReadOnlyCollection<int> Indices { get; }
+        public bool HasSkin { get; set; }
     }
 }

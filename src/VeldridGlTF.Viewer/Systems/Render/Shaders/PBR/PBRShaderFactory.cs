@@ -11,14 +11,24 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             return new PBRShaderGenerator((PBRShaderKey) key);
         }
 
-        public ShaderKey GetShaderKey(RenderPrimitive primitive, MaterialResource material,
+        public ShaderKey GetShaderKey(RenderPrimitive primitive,  MaterialResource material,
             ILayoutNameResolver renderPass)
         {
-            var shaderKey = new PBRShaderKey(this, renderPass, primitive.Elements);
+            var shaderKey = new PBRShaderKey(this, renderPass, primitive.Elements, primitive.JointCount);
             //if (material.DiffuseTexture != null)
             //{
             //    shaderKey.SetFlag(ShaderFlag.HAS_DIFFUSE_MAP);
             //}
+
+            if (primitive.JointCount > 0
+                &&
+                ((shaderKey.HasFlag(ShaderFlag.HAS_JOINT_SET1) && shaderKey.HasFlag(ShaderFlag.HAS_WEIGHT_SET1)) ||
+                 (shaderKey.HasFlag(ShaderFlag.HAS_JOINT_SET2) && shaderKey.HasFlag(ShaderFlag.HAS_WEIGHT_SET2)))
+            )
+            {
+                shaderKey.SetFlag(ShaderFlag.USE_SKINNING);
+            }
+
 
             var hasSpecGloss =
                 material.ResourceSetBuilder.TryResolve(MaterialResource.Slots.SpecularGlossiness, out var specGloss);
