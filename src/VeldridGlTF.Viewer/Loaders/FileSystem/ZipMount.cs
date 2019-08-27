@@ -7,10 +7,10 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
 {
     public class ZipMount : ZipFolder, IDisposable
     {
-        private readonly string _archiveFileName;
         private readonly ZipArchive _archive;
-        private Dictionary<string, IFolder> _folders = new Dictionary<string, IFolder>();
+        private readonly string _archiveFileName;
         private readonly FileStream _stream;
+        private Dictionary<string, IFolder> _folders = new Dictionary<string, IFolder>();
 
         public ZipMount(string archiveFileName, string mountPoint) : base(mountPoint)
         {

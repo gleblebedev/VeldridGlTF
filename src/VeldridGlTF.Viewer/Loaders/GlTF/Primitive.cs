@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using SharpGLTF.Schema2;
-using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Data.Geometry;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
@@ -38,15 +37,13 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             }
 
 
-            for (var targetIndex=0; targetIndex<meshPrimitive.MorphTargetsCount;++targetIndex)
-            {
+            for (var targetIndex = 0; targetIndex < meshPrimitive.MorphTargetsCount; ++targetIndex)
                 foreach (var accessorKeyValuePair in meshPrimitive.GetMorphTargetAccessors(targetIndex))
                 {
                     var key = accessorKeyValuePair.Key;
                     var accessor = accessorKeyValuePair.Value;
-                    _streams.Add(GeometryStream.Create("TARGET_"+key+targetIndex, accessor));
+                    _streams.Add(GeometryStream.Create("TARGET_" + key + targetIndex, accessor));
                 }
-            }
 
             Indices = meshPrimitive.GetTriangleIndices().SelectMany(_ => new[] {_.Item1, _.Item2, _.Item3}).ToList();
         }

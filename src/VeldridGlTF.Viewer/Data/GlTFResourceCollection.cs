@@ -49,17 +49,15 @@ namespace VeldridGlTF.Viewer.Data
             if (res != null)
                 _byType.Add(res, val);
             if (id == null)
+            {
                 _nullId = val;
+            }
             else
             {
                 if (_byId.ContainsKey(id))
-                {
-                    Debug.WriteLine("Duplicate resource"+id);
-                }
+                    Debug.WriteLine("Duplicate resource" + id);
                 else
-                {
                     _byId.Add(id, val);
-                }
             }
         }
 

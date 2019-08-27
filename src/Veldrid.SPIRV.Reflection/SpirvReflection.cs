@@ -37,8 +37,8 @@ namespace Veldrid.SPIRV
             var res = CompileGlslToSpirv(
                 nameNameResolver,
                 new[] {
-                    new ShaderArgs {FileName = "vert.glsl", Source = vertex, Stage = ShaderStages.Vertex},
-                    new ShaderArgs {FileName = "frag.glsl", Source = fragment, Stage = ShaderStages.Fragment}
+                    new ShaderArgs {Source = vertex, Stage = ShaderStages.Vertex},
+                    new ShaderArgs {Source = fragment, Stage = ShaderStages.Fragment}
                 });
             return ValueTuple.Create(res[0], res[1]);
         }

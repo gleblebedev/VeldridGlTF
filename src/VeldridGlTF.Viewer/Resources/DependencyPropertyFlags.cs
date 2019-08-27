@@ -6,6 +6,6 @@ namespace VeldridGlTF.Viewer.Resources
     public enum DependencyPropertyFlags
     {
         None = 0,
-        StickyValue = 1,
+        StickyValue = 1
     }
 }

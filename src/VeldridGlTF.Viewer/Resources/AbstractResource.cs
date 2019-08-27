@@ -2,7 +2,7 @@
 
 namespace VeldridGlTF.Viewer.Resources
 {
-    public class AbstractResource: IDisposable
+    public class AbstractResource : IDisposable
     {
         public AbstractResource(ResourceId id)
         {
@@ -11,14 +11,13 @@ namespace VeldridGlTF.Viewer.Resources
 
         public ResourceId Id { get; }
 
+        public virtual void Dispose()
+        {
+        }
+
         public override string ToString()
         {
             return $"{Id.Path}#{Id.Id}<{GetType().Name}>";
-        }
-
-        public virtual void Dispose()
-        {
-            
         }
     }
 }

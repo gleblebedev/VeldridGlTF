@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace VeldridGlTF.Viewer.Resources
 {
-    public class DependencyProperty<T>: IResourceHandler<T>
+    public class DependencyProperty<T> : IResourceHandler<T>
     {
-        private Task<T> _task;
+        private readonly DependencyPropertyFlags _flags;
+        private readonly object _gate = new object();
         private IResourceHandler<T> _parent;
-        private object _gate = new object();
-        private DependencyPropertyFlags _flags;
+        private Task<T> _task;
 
         public DependencyProperty(DependencyPropertyFlags flags = DependencyPropertyFlags.StickyValue)
         {
@@ -17,46 +16,45 @@ namespace VeldridGlTF.Viewer.Resources
             _flags = flags;
         }
 
+        public IResourceHandler<T> Parent
+        {
+            get => _parent;
+            private set
+            {
+                if (_parent == value) return;
+
+                lock (_gate)
+                {
+                    if (_parent == value) return;
+
+                    if (_parent != null) _parent.ResourceChanged -= OnResourceChanged;
+
+                    _parent = value;
+
+                    if (_parent != null) _parent.ResourceChanged += OnResourceChanged;
+                }
+            }
+        }
+
         public Task<T> GetAsync()
         {
             return _task;
         }
 
-        public IResourceHandler<T> Parent
+        public void Dispose()
         {
-            get { return _parent; }
-            private set
-            {
-                if (_parent == value)
-                {
-                    return;
-                }
-
-                lock (_gate)
-                {
-                    if (_parent == value)
-                    {
-                        return;
-                    }
-
-                    if (_parent != null)
-                    {
-                        _parent.ResourceChanged -= OnResourceChanged;
-                    }
-
-                    _parent = value;
-
-                    if (_parent != null)
-                    {
-                        _parent.ResourceChanged += OnResourceChanged;
-                    }
-                }
-            }
+            SetValue(default(T));
         }
+
+        public ResourceId Id => _parent?.Id ?? ResourceId.Null;
+
+        public TaskStatus Status => _task.Status;
+
+        public event EventHandler ResourceChanged;
 
         private void OnResourceChanged(object sender, EventArgs e)
         {
-            FetchValueFromParent((IResourceHandler<T>)sender);
+            FetchValueFromParent((IResourceHandler<T>) sender);
         }
 
         public void SetValue(IResourceHandler<T> handler)
@@ -67,36 +65,27 @@ namespace VeldridGlTF.Viewer.Resources
 
         private void FetchValueFromParent(IResourceHandler<T> handler)
         {
-            if (handler != Parent)
-            {
-                return;
-            }
+            if (handler != Parent) return;
 
             lock (_gate)
             {
-                if (handler != Parent)
-                {
-                    return;
-                }
+                if (handler != Parent) return;
 
                 var task = handler.GetAsync();
-                if ((task.Status == TaskStatus.RanToCompletion) || (task.Status == TaskStatus.Faulted) ||
-                    (task.Status == TaskStatus.Canceled))
+                if (task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Faulted ||
+                    task.Status == TaskStatus.Canceled)
                 {
                     _task = task;
                 }
                 else
                 {
                     if (DependencyPropertyFlags.StickyValue == (_flags & DependencyPropertyFlags.StickyValue))
-                    {
                         task.ContinueWith(_ => SetTaskResult(_, handler));
-                    }
                     else
-                    {
                         _task = task;
-                    }
                 }
             }
+
             ResourceChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -112,7 +101,6 @@ namespace VeldridGlTF.Viewer.Resources
         private void SetTaskResult(Task<T> sourceTask, IResourceHandler<T> parent)
         {
             if (_parent == parent)
-            {
                 lock (_gate)
                 {
                     if (_parent == parent)
@@ -121,19 +109,7 @@ namespace VeldridGlTF.Viewer.Resources
                         ResourceChanged?.Invoke(this, EventArgs.Empty);
                     }
                 }
-            }
         }
-
-        public void Dispose()
-        {
-            SetValue(default(T));
-        }
-
-        public ResourceId Id => _parent?.Id ?? ResourceId.Null;
-
-        public TaskStatus Status => _task.Status;
-
-        public event EventHandler ResourceChanged;
 
         public override string ToString()
         {

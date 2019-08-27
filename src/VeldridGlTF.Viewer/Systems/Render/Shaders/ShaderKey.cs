@@ -5,6 +5,16 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
 {
     public class ShaderKey : IEquatable<ShaderKey>
     {
+        public ShaderKey(IShaderFactory factory, ILayoutNameResolver layoutNameResolver = null)
+        {
+            Factory = factory;
+            LayoutNameResolver = layoutNameResolver;
+        }
+
+        public IShaderFactory Factory { get; }
+
+        public ILayoutNameResolver LayoutNameResolver { get; }
+
         public virtual bool Equals(ShaderKey other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -16,7 +26,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((ShaderKey) obj);
         }
 
@@ -24,7 +34,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
         {
             unchecked
             {
-                return ((Factory != null ? Factory.GetHashCode() : 0) * 397) ^ (LayoutNameResolver != null ? LayoutNameResolver.GetHashCode() : 0);
+                return ((Factory != null ? Factory.GetHashCode() : 0) * 397) ^
+                       (LayoutNameResolver != null ? LayoutNameResolver.GetHashCode() : 0);
             }
         }
 
@@ -37,17 +48,5 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
         {
             return !Equals(left, right);
         }
-
-        public ShaderKey(IShaderFactory factory, ILayoutNameResolver layoutNameResolver = null)
-        {
-            Factory = factory;
-            LayoutNameResolver = layoutNameResolver;
-        }
-
-        public IShaderFactory Factory { get; }
-
-        public ILayoutNameResolver LayoutNameResolver { get; }
-
-    
     }
 }

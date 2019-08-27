@@ -9,7 +9,7 @@ using SharpGLTF.Materials;
 using SharpGLTF.Schema2;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
-using AlphaMode = VeldridGlTF.Viewer.Data.AlphaMode;
+using AlphaMode = SharpGLTF.Schema2.AlphaMode;
 
 namespace VeldridGlTF.Viewer.Loaders.GlTF
 {
@@ -118,7 +118,6 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                             rotationSampler != null ||
                             morphSampler != null)
                         {
-
                         }
                     }
 
@@ -172,7 +171,9 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 //var resourceHandler = Textures[material.GetDiffuseTexture()];
                 //if (resourceHandler != null) result.DiffuseTexture = context.Resolve<ITexture>(resourceHandler.Id);
 
-                Materials.Add(material, id, new ManualResourceHandler<IMaterialDescription>(resourceId, MakeMaterialDescription(resourceId, material, context)));
+                Materials.Add(material, id,
+                    new ManualResourceHandler<IMaterialDescription>(resourceId,
+                        MakeMaterialDescription(resourceId, material, context)));
                 ++index;
             }
         }
@@ -184,18 +185,19 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
             {
                 switch (material.Alpha)
                 {
-                    case SharpGLTF.Schema2.AlphaMode.OPAQUE:
-                        result.AlphaMode = AlphaMode.Opaque;
+                    case AlphaMode.OPAQUE:
+                        result.AlphaMode = Data.AlphaMode.Opaque;
                         break;
-                    case SharpGLTF.Schema2.AlphaMode.MASK:
-                        result.AlphaMode = AlphaMode.Mask;
+                    case AlphaMode.MASK:
+                        result.AlphaMode = Data.AlphaMode.Mask;
                         break;
-                    case SharpGLTF.Schema2.AlphaMode.BLEND:
-                        result.AlphaMode = AlphaMode.Blend;
+                    case AlphaMode.BLEND:
+                        result.AlphaMode = Data.AlphaMode.Blend;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
                 result.AlphaCutoff = material.AlphaCutoff;
             }
 
@@ -207,7 +209,8 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var materialMap = ResolveTexture(material, context, "BaseColor");
                 if (materialMap != null)
                 {
-                    var metallicRoughness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
+                    var metallicRoughness =
+                        result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
                     metallicRoughness.BaseColor = materialMap;
                 }
             }
@@ -215,7 +218,8 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var materialMap = ResolveTexture(material, context, "MetallicRoughness");
                 if (materialMap != null)
                 {
-                    var metallicRoughness = result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
+                    var metallicRoughness =
+                        result.MetallicRoughness ?? (result.MetallicRoughness = new MetallicRoughness());
                     metallicRoughness.MetallicRoughnessMap = materialMap;
                 }
             }
@@ -223,7 +227,8 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var materialMap = ResolveTexture(material, context, "Diffuse");
                 if (materialMap != null)
                 {
-                    var specularGlossiness = result.SpecularGlossiness ?? (result.SpecularGlossiness = new SpecularGlossiness());
+                    var specularGlossiness = result.SpecularGlossiness ??
+                                             (result.SpecularGlossiness = new SpecularGlossiness());
                     specularGlossiness.Diffuse = materialMap;
                 }
             }
@@ -231,7 +236,8 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var materialMap = ResolveTexture(material, context, "SpecularGlossiness");
                 if (materialMap != null)
                 {
-                    var specularGlossiness = result.SpecularGlossiness ?? (result.SpecularGlossiness = new SpecularGlossiness());
+                    var specularGlossiness = result.SpecularGlossiness ??
+                                             (result.SpecularGlossiness = new SpecularGlossiness());
                     specularGlossiness.SpecularGlossinessMap = materialMap;
                 }
             }
@@ -265,10 +271,7 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                     }
 
                     var resourceHandler = Textures[baseColor.Value.Texture];
-                    if (resourceHandler != null)
-                    {
-                        map.Map = context.Resolve<ITexture>(resourceHandler.Id);
-                    }
+                    if (resourceHandler != null) map.Map = context.Resolve<ITexture>(resourceHandler.Id);
                 }
 
                 map.Color = baseColor.Value.Parameter;
@@ -276,12 +279,12 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 var transform = baseColor.Value.TextureTransform;
                 if (transform != null)
                 {
-                    float num1 = (float)Math.Cos(transform.Rotation);
-                    float num2 = (float)Math.Sin(transform.Rotation);
+                    var num1 = (float) Math.Cos(transform.Rotation);
+                    var num2 = (float) Math.Sin(transform.Rotation);
                     var M11 = num1 * transform.Scale.X;
                     var M12 = num2 * transform.Scale.X;
-                    var M21 = -num2* transform.Scale.Y;
-                    var M22 = num1* transform.Scale.Y;
+                    var M21 = -num2 * transform.Scale.Y;
+                    var M22 = num1 * transform.Scale.Y;
 
                     var transformOffset = transform.Offset;
                     map.UVTransform = new Matrix3x3(M11, M12, transformOffset.X, M21, M22, transformOffset.Y, 0, 0, 1);

@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using VeldridGlTF.Viewer.Components;
 using VeldridGlTF.Viewer.Resources;
 using VeldridGlTF.Viewer.SceneGraph;
-using VeldridGlTF.Viewer.Systems.Render;
 
 namespace VeldridGlTF.Viewer.Data
 {

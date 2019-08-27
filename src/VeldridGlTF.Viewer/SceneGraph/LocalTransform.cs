@@ -38,10 +38,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
             set
             {
                 UpdatePRSIfNeeded();
-                if (_scale == value)
-                {
-                    return;
-                }
+                if (_scale == value) return;
                 InvalidateFlag(Flags.InvalidMatrix);
                 _scale = value;
             }
@@ -57,10 +54,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
             set
             {
                 UpdatePRSIfNeeded();
-                if (_rotation == value)
-                {
-                    return;
-                }
+                if (_rotation == value) return;
 
                 InvalidateFlag(Flags.InvalidMatrix);
                 _rotation = value;
@@ -77,10 +71,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
             set
             {
                 UpdatePRSIfNeeded();
-                if (_position == value)
-                {
-                    return;
-                }
+                if (_position == value) return;
 
                 InvalidateFlag(Flags.InvalidMatrix);
                 _position = value;

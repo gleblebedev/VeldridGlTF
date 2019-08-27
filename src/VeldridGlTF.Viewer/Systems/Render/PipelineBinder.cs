@@ -1,47 +1,21 @@
 ﻿using System;
 using Veldrid;
-using VeldridGlTF.Viewer.Systems.Render.Resources;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class PipelineBinder
     {
-        public PipelineBinder()
-        {
-        }
+        public Pipeline Pipeline { get; set; }
 
-        private Pipeline _pipeline;
-        private ResourceLayout[] _resourceLayouts;
-        private ResourceSet[] _sets;
-        private DynamicResource[][] _dynamicOffsets;
+        public ResourceLayout[] ResourceLayouts { get; set; }
 
-        public Pipeline Pipeline
-        {
-            get { return _pipeline; }
-            set { _pipeline = value; }
-        }
+        public ResourceSet[] Sets { get; set; }
 
-        public ResourceLayout[] ResourceLayouts
-        {
-            get { return _resourceLayouts; }
-            set { _resourceLayouts = value; }
-        }
-
-        public ResourceSet[] Sets
-        {
-            get { return _sets; }
-            set { _sets = value; }
-        }
-
-        public DynamicResource[][] DynamicOffsets
-        {
-            get { return _dynamicOffsets; }
-            set { _dynamicOffsets = value; }
-        }
+        public DynamicResource[][] DynamicOffsets { get; set; }
 
         public void Set(CommandList cl, uint objectProperties)
         {
-            cl.SetPipeline(_pipeline);
+            cl.SetPipeline(Pipeline);
             for (var index = 0; index < Sets.Length; index++)
             {
                 var resourceSet = Sets[index];
@@ -52,7 +26,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
                     {
                         var offsetBuf = new uint[offsets.Length];
                         for (var i = 0; i < offsets.Length; i++)
-                        {
                             switch (offsets[i])
                             {
                                 case DynamicResource.ObjectProperties:
@@ -61,12 +34,12 @@ namespace VeldridGlTF.Viewer.Systems.Render
                                 default:
                                     throw new NotImplementedException();
                             }
-                        }
-                        cl.SetGraphicsResourceSet((uint)index, resourceSet, offsetBuf);
+
+                        cl.SetGraphicsResourceSet((uint) index, resourceSet, offsetBuf);
                     }
                     else
                     {
-                        cl.SetGraphicsResourceSet((uint)index, resourceSet);
+                        cl.SetGraphicsResourceSet((uint) index, resourceSet);
                     }
                 }
             }

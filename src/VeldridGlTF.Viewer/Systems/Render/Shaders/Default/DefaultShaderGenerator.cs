@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Veldrid;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
@@ -78,7 +77,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
         public DefaultShaderGenerator Context { get; set; }
     }
 
-    partial class VertexShader:IShaderTemplate
+    partial class VertexShader : IShaderTemplate
     {
         public VertexShader(DefaultShaderGenerator key)
         {

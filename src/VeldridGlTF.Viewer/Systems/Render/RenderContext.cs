@@ -4,7 +4,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class RenderContext
     {
-        public RenderContext(GraphicsDevice device, ResourceFactory factory, Swapchain swapchain, VeldridRenderSystem renderSystem)
+        public RenderContext(GraphicsDevice device, ResourceFactory factory, Swapchain swapchain,
+            VeldridRenderSystem renderSystem)
         {
             Device = device;
             Factory = factory;

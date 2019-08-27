@@ -4,6 +4,6 @@
     {
         Opaque,
         Mask,
-        Blend,
+        Blend
     }
 }

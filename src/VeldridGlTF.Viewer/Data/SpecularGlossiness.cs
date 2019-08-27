@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace VeldridGlTF.Viewer.Data
+﻿namespace VeldridGlTF.Viewer.Data
 {
     public class SpecularGlossiness : PBRParameters
     {

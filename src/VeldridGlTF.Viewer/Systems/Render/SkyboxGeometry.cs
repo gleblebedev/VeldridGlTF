@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using Veldrid;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Data.Geometry;
 using VeldridGlTF.Viewer.Resources;
-using VeldridGlTF.Viewer.Systems.Render.Resources;
-using PrimitiveTopology = VeldridGlTF.Viewer.Data.Geometry.PrimitiveTopology;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -31,7 +28,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         };
 
         private static readonly IReadOnlyList<IGeometryPrimitive> _primitives = new[] {new SkyboxPrimitive()};
-        private static IReadOnlyList<float>  _morphWeights = new float[0];
+        private static readonly IReadOnlyList<float> _morphWeights = new float[0];
 
         public IReadOnlyList<IGeometryPrimitive> Primitives => _primitives;
 

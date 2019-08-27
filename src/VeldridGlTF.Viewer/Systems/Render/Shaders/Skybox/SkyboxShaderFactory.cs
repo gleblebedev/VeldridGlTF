@@ -12,9 +12,7 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Skybox
 layout(set = 0, binding = 0) uniform EnvironmentProperties
 {
 "
-+Glsl.WriteMembers<EnvironmentProperties>()+
-@"
-};
+                   + Glsl.WriteMembers<EnvironmentProperties>() + @"};
 
 
 layout(location = 0) in vec3 POSITION;
@@ -38,8 +36,8 @@ void main()
 layout(set = 0, binding = 0) uniform EnvironmentProperties
 {
 "
-+ Glsl.WriteMembers<EnvironmentProperties>() +
-@"
+                   + Glsl.WriteMembers<EnvironmentProperties>() +
+                   @"
 };
 
 layout(set = 3, binding = 1) uniform textureCube DiffuseTexture;

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using SharpGLTF.Geometry;
 using Veldrid;
 using Veldrid.Utilities;
 using VeldridGlTF.Viewer.Systems.Render.Resources;

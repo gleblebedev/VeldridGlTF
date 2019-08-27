@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Veldrid;
-using VeldridGlTF.Viewer.Systems.Render.Shaders.Default;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
 {
-    public class PBRShaderGenerator:IShaderGenerator
+    public class PBRShaderGenerator : IShaderGenerator
     {
         private readonly PBRShaderKey _shaderKey;
-        public IList<VaryingDescription> Varyings { get; } = new List<VaryingDescription>();
 
         public PBRShaderGenerator(PBRShaderKey shaderKey)
         {
@@ -18,24 +15,17 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
             if (HasFlag(ShaderFlag.HAS_NORMALS))
             {
                 if (HasFlag(ShaderFlag.HAS_TANGENTS))
-                {
                     Varyings.Add(new VaryingDescription("v_TBN", VaryingFormat.Mat3));
-                }
                 else
-                {
                     Varyings.Add(new VaryingDescription("v_Normal", VaryingFormat.Float3));
-                }
             }
+
             Varyings.Add(new VaryingDescription("v_UVCoord1", VaryingFormat.Float2));
             Varyings.Add(new VaryingDescription("v_UVCoord2", VaryingFormat.Float2));
             if (HasFlag(ShaderFlag.HAS_VERTEX_COLOR_VEC3))
-            {
                 Varyings.Add(new VaryingDescription("v_Color", VaryingFormat.Float3));
-            }
             if (HasFlag(ShaderFlag.HAS_VERTEX_COLOR_VEC4))
-            {
                 Varyings.Add(new VaryingDescription("v_Color", VaryingFormat.Float4));
-            }
 
             var location = 0;
             foreach (var varying in Varyings)
@@ -44,6 +34,11 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
                 location += varying.Size;
             }
         }
+
+        public IList<VaryingDescription> Varyings { get; } = new List<VaryingDescription>();
+
+        public IList<VertexElementDescription> VertexElements =>
+            _shaderKey.VertexLayout.VertexLayoutDescription.Elements;
 
 
         public string GetVertexShader()
@@ -60,11 +55,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
         {
             return _shaderKey.HasFlag(flag);
         }
-
-        public IList<VertexElementDescription> VertexElements =>
-            _shaderKey.VertexLayout.VertexLayoutDescription.Elements;
-
     }
+
     partial class FragmentShader : IShaderTemplate
     {
         public FragmentShader(PBRShaderGenerator key)
@@ -73,22 +65,21 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
         }
 
         public PBRShaderGenerator Context { get; set; }
+
         public void WriteMembers<T>()
         {
             Glsl.WriteMembers<T>(this);
         }
+
         public void WriteDefines()
         {
             foreach (ShaderFlag value in Enum.GetValues(typeof(ShaderFlag)))
-            {
                 if (Context.HasFlag(value))
                     WriteLine("#define " + value);
-            }
         }
-
     }
 
-    partial class VertexShader: IShaderTemplate
+    partial class VertexShader : IShaderTemplate
     {
         public VertexShader(PBRShaderGenerator key)
         {
@@ -101,13 +92,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
         {
             Glsl.WriteMembers<T>(this);
         }
+
         public void WriteDefines()
         {
             foreach (ShaderFlag value in Enum.GetValues(typeof(ShaderFlag)))
-            {
                 if (Context.HasFlag(value))
-                    WriteLine("#define "+ value);
-            }
+                    WriteLine("#define " + value);
         }
     }
 }

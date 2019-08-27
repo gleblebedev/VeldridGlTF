@@ -7,7 +7,6 @@ namespace VeldridGlTF.Viewer
     [StructLayout(LayoutKind.Sequential)]
     public struct Matrix3x3
     {
-        private static readonly Matrix3x3 _identity = new Matrix3x3(1f, 0.0f, 0.0f, 0.0f, 1f, 0.0f, 0.0f, 0.0f, 1f);
         public float M11;
         public float M12;
         public float M13;
@@ -21,13 +20,7 @@ namespace VeldridGlTF.Viewer
         public float M33;
         public float p2;
 
-        public static Matrix3x3 Identity
-        {
-            get
-            {
-                return Matrix3x3._identity;
-            }
-        }
+        public static Matrix3x3 Identity { get; } = new Matrix3x3(1f, 0.0f, 0.0f, 0.0f, 1f, 0.0f, 0.0f, 0.0f, 1f);
 
 
         public Matrix3x3(float m11,
@@ -40,35 +33,35 @@ namespace VeldridGlTF.Viewer
             float m32,
             float m33)
         {
-            this.M11 = m11;
-            this.M12 = m12;
-            this.M13 = m13;
-            this.M21 = m21;
-            this.M22 = m22;
-            this.M23 = m23;
-            this.M31 = m31;
-            this.M32 = m32;
-            this.M33 = m33;
+            M11 = m11;
+            M12 = m12;
+            M13 = m13;
+            M21 = m21;
+            M22 = m22;
+            M23 = m23;
+            M31 = m31;
+            M32 = m32;
+            M33 = m33;
             p0 = p1 = p2 = 0;
         }
 
         public Matrix3x3(Matrix3x2 value)
         {
-            this.M11 = value.M11;
-            this.M12 = value.M12;
-            this.M13 = 0.0f;
-            this.M21 = value.M21;
-            this.M22 = value.M22;
-            this.M23 = 0.0f;
-            this.M31 = 0.0f;
-            this.M32 = 0.0f;
-            this.M33 = 1f;
+            M11 = value.M11;
+            M12 = value.M12;
+            M13 = 0.0f;
+            M21 = value.M21;
+            M22 = value.M22;
+            M23 = 0.0f;
+            M31 = 0.0f;
+            M32 = 0.0f;
+            M33 = 1f;
             p0 = p1 = p2 = 0;
         }
 
         public static Matrix3x3 CreateScale(float xScale, float yScale, float zScale)
         {
-            Matrix3x3 matrix4x4 = Identity;
+            var matrix4x4 = Identity;
             matrix4x4.M11 = xScale;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -83,7 +76,7 @@ namespace VeldridGlTF.Viewer
 
         public static Matrix3x3 CreateScale(Vector3 scales)
         {
-            Matrix3x3 matrix4x4 = Identity;
+            var matrix4x4 = Identity;
             matrix4x4.M11 = scales.X;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -98,7 +91,7 @@ namespace VeldridGlTF.Viewer
 
         public static Matrix3x3 CreateScale(float scale)
         {
-            Matrix3x3 matrix4x4 = Identity;
+            var matrix4x4 = Identity;
             matrix4x4.M11 = scale;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -114,9 +107,9 @@ namespace VeldridGlTF.Viewer
 
         public static Matrix3x3 CreateRotationX(float radians)
         {
-            float num1 = (float)Math.Cos(radians);
-            float num2 = (float)Math.Sin(radians);
-            Matrix3x3 matrix4x4 = Matrix3x3.Identity;
+            var num1 = (float) Math.Cos(radians);
+            var num2 = (float) Math.Sin(radians);
+            var matrix4x4 = Identity;
             matrix4x4.M11 = 1f;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = 0.0f;
@@ -129,12 +122,12 @@ namespace VeldridGlTF.Viewer
             return matrix4x4;
         }
 
-      
+
         public static Matrix3x3 CreateRotationY(float radians)
         {
-            float num1 = (float)Math.Cos(radians);
-            float num2 = (float)Math.Sin(radians);
-            Matrix3x3 matrix4x4 = Matrix3x3.Identity;
+            var num1 = (float) Math.Cos(radians);
+            var num2 = (float) Math.Sin(radians);
+            var matrix4x4 = Identity;
             matrix4x4.M11 = num1;
             matrix4x4.M12 = 0.0f;
             matrix4x4.M13 = -num2;
@@ -148,12 +141,11 @@ namespace VeldridGlTF.Viewer
         }
 
 
-
         public static Matrix3x3 CreateRotationZ(float radians)
         {
-            float num1 = (float)Math.Cos(radians);
-            float num2 = (float)Math.Sin(radians);
-            Matrix3x3 matrix4x4 = Identity;
+            var num1 = (float) Math.Cos(radians);
+            var num2 = (float) Math.Sin(radians);
+            var matrix4x4 = Identity;
             matrix4x4.M11 = num1;
             matrix4x4.M12 = num2;
             matrix4x4.M13 = 0.0f;
@@ -166,44 +158,43 @@ namespace VeldridGlTF.Viewer
             return matrix4x4;
         }
 
-      
 
         public static Matrix3x3 CreateFromAxisAngle(Vector3 axis, float angle)
         {
-            float x = axis.X;
-            float y = axis.Y;
-            float z = axis.Z;
-            float num1 = (float)Math.Sin(angle);
-            float num2 = (float)Math.Cos(angle);
-            float num3 = x * x;
-            float num4 = y * y;
-            float num5 = z * z;
-            float num6 = x * y;
-            float num7 = x * z;
-            float num8 = y * z;
-            Matrix3x3 matrix4x4 = Identity;
+            var x = axis.X;
+            var y = axis.Y;
+            var z = axis.Z;
+            var num1 = (float) Math.Sin(angle);
+            var num2 = (float) Math.Cos(angle);
+            var num3 = x * x;
+            var num4 = y * y;
+            var num5 = z * z;
+            var num6 = x * y;
+            var num7 = x * z;
+            var num8 = y * z;
+            var matrix4x4 = Identity;
             matrix4x4.M11 = num3 + num2 * (1f - num3);
-            matrix4x4.M12 = (float)((double)num6 - (double)num2 * (double)num6 + (double)num1 * (double)z);
-            matrix4x4.M13 = (float)((double)num7 - (double)num2 * (double)num7 - (double)num1 * (double)y);
-            matrix4x4.M21 = (float)((double)num6 - (double)num2 * (double)num6 - (double)num1 * (double)z);
+            matrix4x4.M12 = (float) (num6 - num2 * (double) num6 + num1 * (double) z);
+            matrix4x4.M13 = (float) (num7 - num2 * (double) num7 - num1 * (double) y);
+            matrix4x4.M21 = (float) (num6 - num2 * (double) num6 - num1 * (double) z);
             matrix4x4.M22 = num4 + num2 * (1f - num4);
-            matrix4x4.M23 = (float)((double)num8 - (double)num2 * (double)num8 + (double)num1 * (double)x);
-            matrix4x4.M31 = (float)((double)num7 - (double)num2 * (double)num7 + (double)num1 * (double)y);
-            matrix4x4.M32 = (float)((double)num8 - (double)num2 * (double)num8 - (double)num1 * (double)x);
+            matrix4x4.M23 = (float) (num8 - num2 * (double) num8 + num1 * (double) x);
+            matrix4x4.M31 = (float) (num7 - num2 * (double) num7 + num1 * (double) y);
+            matrix4x4.M32 = (float) (num8 - num2 * (double) num8 - num1 * (double) x);
             matrix4x4.M33 = num5 + num2 * (1f - num5);
             return matrix4x4;
         }
 
 
         public static Matrix3x3 CreateLookAt(
-          Vector3 cameraPosition,
-          Vector3 cameraTarget,
-          Vector3 cameraUpVector)
+            Vector3 cameraPosition,
+            Vector3 cameraTarget,
+            Vector3 cameraUpVector)
         {
-            Vector3 vector3_1 = Vector3.Normalize(cameraPosition - cameraTarget);
-            Vector3 vector3_2 = Vector3.Normalize(Vector3.Cross(cameraUpVector, vector3_1));
-            Vector3 vector1 = Vector3.Cross(vector3_1, vector3_2);
-            Matrix3x3 matrix4x4 = Identity;
+            var vector3_1 = Vector3.Normalize(cameraPosition - cameraTarget);
+            var vector3_2 = Vector3.Normalize(Vector3.Cross(cameraUpVector, vector3_1));
+            var vector1 = Vector3.Cross(vector3_1, vector3_2);
+            var matrix4x4 = Identity;
             matrix4x4.M11 = vector3_2.X;
             matrix4x4.M12 = vector1.X;
             matrix4x4.M13 = vector3_1.X;
@@ -218,10 +209,10 @@ namespace VeldridGlTF.Viewer
 
         public static Matrix3x3 CreateWorld(Vector3 forward, Vector3 up)
         {
-            Vector3 vector3_1 = Vector3.Normalize(-forward);
-            Vector3 vector2 = Vector3.Normalize(Vector3.Cross(up, vector3_1));
-            Vector3 vector3_2 = Vector3.Cross(vector3_1, vector2);
-            Matrix3x3 matrix4x4 = Identity;
+            var vector3_1 = Vector3.Normalize(-forward);
+            var vector2 = Vector3.Normalize(Vector3.Cross(up, vector3_1));
+            var vector3_2 = Vector3.Cross(vector3_1, vector2);
+            var matrix4x4 = Identity;
             matrix4x4.M11 = vector2.X;
             matrix4x4.M12 = vector2.Y;
             matrix4x4.M13 = vector2.Z;
@@ -236,32 +227,31 @@ namespace VeldridGlTF.Viewer
 
         public static Matrix3x3 CreateFromQuaternion(Quaternion quaternion)
         {
-            float num1 = quaternion.X * quaternion.X;
-            float num2 = quaternion.Y * quaternion.Y;
-            float num3 = quaternion.Z * quaternion.Z;
-            float num4 = quaternion.X * quaternion.Y;
-            float num5 = quaternion.Z * quaternion.W;
-            float num6 = quaternion.Z * quaternion.X;
-            float num7 = quaternion.Y * quaternion.W;
-            float num8 = quaternion.Y * quaternion.Z;
-            float num9 = quaternion.X * quaternion.W;
-            Matrix3x3 matrix4x4 = Identity;
-            matrix4x4.M11 = (float)(1.0 - 2.0 * ((double)num2 + (double)num3));
-            matrix4x4.M12 = (float)(2.0 * ((double)num4 + (double)num5));
-            matrix4x4.M13 = (float)(2.0 * ((double)num6 - (double)num7));
-            matrix4x4.M21 = (float)(2.0 * ((double)num4 - (double)num5));
-            matrix4x4.M22 = (float)(1.0 - 2.0 * ((double)num3 + (double)num1));
-            matrix4x4.M23 = (float)(2.0 * ((double)num8 + (double)num9));
-            matrix4x4.M31 = (float)(2.0 * ((double)num6 + (double)num7));
-            matrix4x4.M32 = (float)(2.0 * ((double)num8 - (double)num9));
-            matrix4x4.M33 = (float)(1.0 - 2.0 * ((double)num2 + (double)num1));
+            var num1 = quaternion.X * quaternion.X;
+            var num2 = quaternion.Y * quaternion.Y;
+            var num3 = quaternion.Z * quaternion.Z;
+            var num4 = quaternion.X * quaternion.Y;
+            var num5 = quaternion.Z * quaternion.W;
+            var num6 = quaternion.Z * quaternion.X;
+            var num7 = quaternion.Y * quaternion.W;
+            var num8 = quaternion.Y * quaternion.Z;
+            var num9 = quaternion.X * quaternion.W;
+            var matrix4x4 = Identity;
+            matrix4x4.M11 = (float) (1.0 - 2.0 * (num2 + (double) num3));
+            matrix4x4.M12 = (float) (2.0 * (num4 + (double) num5));
+            matrix4x4.M13 = (float) (2.0 * (num6 - (double) num7));
+            matrix4x4.M21 = (float) (2.0 * (num4 - (double) num5));
+            matrix4x4.M22 = (float) (1.0 - 2.0 * (num3 + (double) num1));
+            matrix4x4.M23 = (float) (2.0 * (num8 + (double) num9));
+            matrix4x4.M31 = (float) (2.0 * (num6 + (double) num7));
+            matrix4x4.M32 = (float) (2.0 * (num8 - (double) num9));
+            matrix4x4.M33 = (float) (1.0 - 2.0 * (num2 + (double) num1));
             return matrix4x4;
         }
 
         public static Matrix3x3 CreateFromYawPitchRoll(float yaw, float pitch, float roll)
         {
-            return Matrix3x3.CreateFromQuaternion(Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll));
+            return CreateFromQuaternion(Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll));
         }
     }
-
 }

@@ -20,11 +20,6 @@
             Format = format;
         }
 
-        public override string ToString()
-        {
-            return Name;
-        }
-
         public int Size
         {
             get
@@ -35,6 +30,11 @@
                     return 4;
                 return 1;
             }
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 
@@ -67,6 +67,7 @@
 
         Mat4
     }
+
     public interface IShaderTemplate
     {
         void WriteLine(string textToAppend);

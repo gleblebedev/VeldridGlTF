@@ -7,18 +7,25 @@ namespace VeldridGlTF.Viewer.Systems.Render
 {
     public class PipelineKey : IEquatable<PipelineKey>
     {
+        public AlphaMode AlphaMode = AlphaMode.Opaque;
+        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
+        public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
+        public ShaderKey Shader;
+        public RenderVertexLayout VertexLayout;
+
         public bool Equals(PipelineKey other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return DepthStencilState.Equals(other.DepthStencilState) && PrimitiveTopology == other.PrimitiveTopology && Equals(Shader, other.Shader) && Equals(VertexLayout, other.VertexLayout);
+            return DepthStencilState.Equals(other.DepthStencilState) && PrimitiveTopology == other.PrimitiveTopology &&
+                   Equals(Shader, other.Shader) && Equals(VertexLayout, other.VertexLayout);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((PipelineKey) obj);
         }
 
@@ -44,11 +51,5 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             return !Equals(left, right);
         }
-
-        public AlphaMode AlphaMode = AlphaMode.Opaque;
-        public DepthStencilStateDescription DepthStencilState = DepthStencilStateDescription.DepthOnlyLessEqual;
-        public PrimitiveTopology PrimitiveTopology = PrimitiveTopology.TriangleList;
-        public ShaderKey Shader;
-        public RenderVertexLayout VertexLayout;
     }
 }

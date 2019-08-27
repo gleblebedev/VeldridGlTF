@@ -2,7 +2,7 @@
   "profiles": {
     "VeldridGlTF.Viewer.Desktop": {
       "commandName": "Project",
-      "commandLineArgs": "-g Direct3D11 -i Buggy.glb --renderdoc",
+      "commandLineArgs": "-g OpenGL -i Buggy.glb --renderdoc",
       "nativeDebugging": true
     }
   }

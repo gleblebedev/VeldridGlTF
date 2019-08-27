@@ -1,5 +1,4 @@
-﻿using System;
-using Veldrid;
+﻿using Veldrid;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
 

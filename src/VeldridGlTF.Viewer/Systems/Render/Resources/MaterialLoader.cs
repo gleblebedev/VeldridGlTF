@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
-using SixLabors.ImageSharp.Processing.Dithering;
 using Veldrid;
 using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Resources;
@@ -45,9 +44,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                     var metallicRoughnessParameters = MetallicRoughness.Identity;
                     metallicRoughnessParameters.AlphaCutoff = description.AlphaCutoff;
 
-                    metallicRoughnessParameters = await SetBaseColorMap(context, metallicRoughness.BaseColor, metallicRoughnessParameters, slots, renderContext);
-                    metallicRoughnessParameters = await SetMetallicRoughnessMap(context, metallicRoughness.MetallicRoughnessMap, metallicRoughnessParameters, slots, renderContext);
-                    slots.Add(AddUniformBuffer(renderContext, disposables, ref metallicRoughnessParameters, MaterialResource.Slots.MetallicRoughness));
+                    metallicRoughnessParameters = await SetBaseColorMap(context, metallicRoughness.BaseColor,
+                        metallicRoughnessParameters, slots, renderContext);
+                    metallicRoughnessParameters = await SetMetallicRoughnessMap(context,
+                        metallicRoughness.MetallicRoughnessMap, metallicRoughnessParameters, slots, renderContext);
+                    slots.Add(AddUniformBuffer(renderContext, disposables, ref metallicRoughnessParameters,
+                        MaterialResource.Slots.MetallicRoughness));
                 }
 
                 var specularGlossiness = description.SpecularGlossiness;
@@ -56,9 +58,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                     var specularGlossinessParameters = SpecularGlossiness.Identity;
                     specularGlossinessParameters.AlphaCutoff = description.AlphaCutoff;
 
-                    specularGlossinessParameters = await SetDiffuseMap(context, specularGlossiness.Diffuse, specularGlossinessParameters, slots, renderContext);
-                    specularGlossinessParameters = await SetSpecularGlossinessMap(context, specularGlossiness.SpecularGlossinessMap, specularGlossinessParameters, slots, renderContext);
-                    slots.Add(AddUniformBuffer(renderContext, disposables, ref specularGlossinessParameters, MaterialResource.Slots.SpecularGlossiness));
+                    specularGlossinessParameters = await SetDiffuseMap(context, specularGlossiness.Diffuse,
+                        specularGlossinessParameters, slots, renderContext);
+                    specularGlossinessParameters = await SetSpecularGlossinessMap(context,
+                        specularGlossiness.SpecularGlossinessMap, specularGlossinessParameters, slots, renderContext);
+                    slots.Add(AddUniformBuffer(renderContext, disposables, ref specularGlossinessParameters,
+                        MaterialResource.Slots.SpecularGlossiness));
                 }
 
                 await SetEmissiveMap(context, description.Emissive, slots, renderContext, disposables);
@@ -79,15 +84,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             }
             catch (Exception)
             {
-                foreach (var disposable in disposables)
-                {
-                    disposable.Dispose();
-                }
+                foreach (var disposable in disposables) disposable.Dispose();
                 throw;
             }
         }
 
-        private static async Task<MetallicRoughness> SetMetallicRoughnessMap(ResourceContext context, 
+        private static async Task<MetallicRoughness> SetMetallicRoughnessMap(ResourceContext context,
             MapParameters metallicRoughnessMapParameters,
             MetallicRoughness metallicRoughnessParameters,
             List<ResourceSetSlot> slots, RenderContext renderContext)
@@ -98,7 +100,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                     await context.ResolveDependencyAsync(metallicRoughnessMapParameters.Map) as TextureResource;
                 if (metallicRoughnessMap != null)
                 {
-                    slots.Add(new ResourceSetSlot(MaterialResource.Slots.MetallicRoughnessTexture, ResourceKind.TextureReadOnly,
+                    slots.Add(new ResourceSetSlot(MaterialResource.Slots.MetallicRoughnessTexture,
+                        ResourceKind.TextureReadOnly,
                         metallicRoughnessMap.View));
                     slots.Add(await CreateSamplerAsync(renderContext, MaterialResource.Slots.MetallicRoughnessSampler,
                         metallicRoughnessMapParameters));
@@ -113,7 +116,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             return metallicRoughnessParameters;
         }
 
-        private static async Task<MetallicRoughness> SetBaseColorMap(ResourceContext context, MapParameters baseColorMapParameters,
+        private static async Task<MetallicRoughness> SetBaseColorMap(ResourceContext context,
+            MapParameters baseColorMapParameters,
             MetallicRoughness metallicRoughnessParameters,
             List<ResourceSetSlot> slots,
             RenderContext renderContext)
@@ -156,15 +160,17 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                 }
 
                 specularGlossinessParameters.SpecularGlossinessUVSet = specularGlossinessMapParameters.UVSet;
-                specularGlossinessParameters.SpecularGlossinessUVTransform = specularGlossinessMapParameters.UVTransform;
+                specularGlossinessParameters.SpecularGlossinessUVTransform =
+                    specularGlossinessMapParameters.UVTransform;
                 specularGlossinessParameters.SpecularFactor = new Vector3(specularGlossinessMapParameters.Color.X,
                     specularGlossinessMapParameters.Color.Y, specularGlossinessMapParameters.Color.Z);
                 specularGlossinessParameters.GlossinessFactor = specularGlossinessMapParameters.Color.W;
             }
+
             return specularGlossinessParameters;
         }
 
-        private static async Task<SpecularGlossiness> SetDiffuseMap(ResourceContext context, 
+        private static async Task<SpecularGlossiness> SetDiffuseMap(ResourceContext context,
             MapParameters diffuseMapParameters,
             SpecularGlossiness specularGlossinessParameters,
             List<ResourceSetSlot> slots,
@@ -185,10 +191,12 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                 specularGlossinessParameters.DiffuseUVTransform = diffuseMapParameters.UVTransform;
                 specularGlossinessParameters.DiffuseFactor = diffuseMapParameters.Color;
             }
+
             return specularGlossinessParameters;
         }
 
-        private static async Task SetEmissiveMap(ResourceContext context, MapParameters descriptionEmissive, List<ResourceSetSlot> slots,
+        private static async Task SetEmissiveMap(ResourceContext context, MapParameters descriptionEmissive,
+            List<ResourceSetSlot> slots,
             RenderContext renderContext, List<IDisposable> disposables)
         {
             if (descriptionEmissive != null)
@@ -209,7 +217,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             }
         }
 
-        private static async Task setOcclustionMap(ResourceContext context, MapParameters descriptionOcclusion, List<ResourceSetSlot> slots,
+        private static async Task setOcclustionMap(ResourceContext context, MapParameters descriptionOcclusion,
+            List<ResourceSetSlot> slots,
             RenderContext renderContext, List<IDisposable> disposables)
         {
             if (descriptionOcclusion != null)
@@ -230,7 +239,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             }
         }
 
-        private static async Task SetNormalMap(ResourceContext context, MapParameters descriptionNormal, List<ResourceSetSlot> slots,
+        private static async Task SetNormalMap(ResourceContext context, MapParameters descriptionNormal,
+            List<ResourceSetSlot> slots,
             RenderContext renderContext, List<IDisposable> disposables)
         {
             if (descriptionNormal != null)
@@ -240,7 +250,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
                 {
                     slots.Add(new ResourceSetSlot(MaterialResource.Slots.NormalTexture, ResourceKind.TextureReadOnly,
                         map.View));
-                    slots.Add(await CreateSamplerAsync(renderContext, MaterialResource.Slots.NormalSampler, descriptionNormal));
+                    slots.Add(await CreateSamplerAsync(renderContext, MaterialResource.Slots.NormalSampler,
+                        descriptionNormal));
                     var normalMapProperties = NormalMapProperties.Identity;
                     normalMapProperties.NormalUVSet = descriptionNormal.UVSet;
                     normalMapProperties.NormalUVTransform = descriptionNormal.UVTransform;
@@ -250,13 +261,14 @@ namespace VeldridGlTF.Viewer.Systems.Render.Resources
             }
         }
 
-        private static async Task<ResourceSetSlot> CreateSamplerAsync(RenderContext renderContext, string slot, MapParameters mapParameters)
+        private static async Task<ResourceSetSlot> CreateSamplerAsync(RenderContext renderContext, string slot,
+            MapParameters mapParameters)
         {
             var samplerDescription = SamplerDescription.Aniso4x;
             samplerDescription.AddressModeU = ConvertWrap(mapParameters.AddressModeU);
             samplerDescription.AddressModeV = ConvertWrap(mapParameters.AddressModeV);
             samplerDescription.AddressModeW = ConvertWrap(mapParameters.AddressModeW);
-            Sampler sampler = await renderContext.RenderSystem.GetOrCreateSampler(samplerDescription);
+            var sampler = await renderContext.RenderSystem.GetOrCreateSampler(samplerDescription);
             return new ResourceSetSlot(slot, ResourceKind.Sampler, sampler);
         }
 

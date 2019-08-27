@@ -26,6 +26,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
     public class VeldridRenderSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IRenderSystem
     {
         private readonly bool _enableRenderDoc;
+
+        private readonly List<ScheduledDrawCall> _opaqueDrawCalls = new List<ScheduledDrawCall>(512);
         private readonly LazyAsyncCollection<PipelineKey, PipelineAndLayouts> _pipelines;
 
         private readonly ManualResourceHandler<RenderContext> _renderContext =
@@ -34,6 +36,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private readonly LazyAsyncCollection<SamplerDescription, Sampler> _samplers;
 
         private readonly StepContext _stepContext;
+        private readonly List<ScheduledDrawCall> _transparentDrawCalls = new List<ScheduledDrawCall>(512);
         private ImageSharpTexture _albedoImage;
 
         private ImageSharpTexture _brdfLUTImage;
@@ -48,8 +51,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private GraphicsDevice _graphicsDevice;
         private CommandList _opaqueCL;
 
-        private readonly List<ScheduledDrawCall> _opaqueDrawCalls = new List<ScheduledDrawCall>(512);
-
         //private DeviceBuffer _projectionBuffer;
         private RenderDoc _renderDoc;
 
@@ -58,7 +59,6 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private ShaderManager _shaderManager;
         private Texture _surfaceTexture;
         private CommandList _transparentCL;
-        private readonly List<ScheduledDrawCall> _transparentDrawCalls = new List<ScheduledDrawCall>(512);
 
         //private DeviceBuffer _objectProperties;
 
@@ -72,7 +72,14 @@ namespace VeldridGlTF.Viewer.Systems.Render
             Window.Resized += HandleWindowResize;
             Window.GraphicsDeviceCreated += OnGraphicsDeviceCreated;
             Window.GraphicsDeviceDestroyed += OnDeviceDestroyed;
-            if (_enableRenderDoc) RenderDoc.Load(out _renderDoc);
+            if (_enableRenderDoc)
+            {
+                RenderDoc.Load(out _renderDoc);
+                if (_renderDoc != null)
+                {
+                    _renderDoc.DebugOutputMute = false;
+                }
+            }
         }
 
         public IResourceHandler<RenderContext> RenderContext => _renderContext;
@@ -201,6 +208,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                             for (var index = 0; index < drawCallCollection.MorphWeights.Count; index++)
                                 objectProperties.MorphWeights[index] = drawCallCollection.MorphWeights[index];
                     }
+
                     var objectDataOffset = _dynamicObjectProperties.Add(ref objectProperties);
 
                     ScheduleDrawCalls(drawCallCollection, objectDataOffset);
@@ -266,7 +274,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             var data = new EnvironmentProperties();
             data.u_ViewProjectionMatrix = lookAt * perspectiveFieldOfView;
             data.u_Camera = _camera.Position;
-            data.u_Exposure = 2.0f;
+            data.u_Exposure = 1.0f;
             data.u_MipCount = 10;
             cl.UpdateBuffer(_environmentProperties, 0, data);
         }
@@ -279,7 +287,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             DrawCallCollection drawCallCollection;
 
-            ObjectProperties o = new ObjectProperties();
+            var o = new ObjectProperties();
             //var objectDataOffset = _dynamicObjectProperties.Allocate(out var segment);
             //ref var o = ref segment.AsObjectProperties();
             o.ModelMatrix = Matrix4x4.Identity;
@@ -299,6 +307,8 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
             return false;
         }
+
+
 
         private int ScheduleDrawCalls(DrawCallCollection drawCallCollection, uint objectPropertiesOffset)
         {
@@ -501,7 +511,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 factory.CreateBuffer(new BufferDescription(GetBufferSize<EnvironmentProperties>(),
                     BufferUsage.UniformBuffer));
 
-            _dynamicObjectProperties = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 4 * 1024 * 1024,
+            _dynamicObjectProperties = new DynamicUniformBuffer<ObjectProperties>(_renderContextValue, 1024 * 1024,
                 new byte[1024 * 1024]);
 
             //_objectProperties = factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
@@ -535,7 +545,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 new ResourceSetSlot("ObjectProperties", ResourceKind.UniformBuffer,
                     ResourceLayoutElementOptions.DynamicBinding, _dynamicObjectProperties.BindableResource,
                     DynamicResource.ObjectProperties),
-                new ResourceSetSlot(null, ResourceKind.UniformBuffer, ResourceLayoutElementOptions.DynamicBinding, 
+                new ResourceSetSlot(null, ResourceKind.UniformBuffer, ResourceLayoutElementOptions.DynamicBinding,
                     _dynamicObjectProperties.BindableResource, DynamicResource.ObjectProperties),
                 new ResourceSetSlot(MaterialResource.Slots.DiffuseEnvTexture, ResourceKind.TextureReadOnly,
                     _diffuseEnvTextureView),

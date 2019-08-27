@@ -9,47 +9,35 @@ namespace VeldridGlTF.Viewer.Systems.Render
         ObjectProperties,
         MaxValue
     }
+
     public class ResourceSetSlot
     {
-        private readonly string _name;
-        private readonly ResourceKind _resourceKind;
-        private readonly ResourceLayoutElementOptions _options;
         private readonly BindableResource _bindableResource;
-        private readonly DynamicResource _dynamicResource;
+        private readonly ResourceLayoutElementOptions _options;
+        private readonly ResourceKind _resourceKind;
 
         public ResourceSetSlot(string name, ResourceKind resourceKind, BindableResource bindableResource)
-        :this(name, resourceKind, ResourceLayoutElementOptions.None, bindableResource)
+            : this(name, resourceKind, ResourceLayoutElementOptions.None, bindableResource)
         {
-
         }
 
-        public ResourceSetSlot(string name, ResourceKind resourceKind, ResourceLayoutElementOptions options, BindableResource bindableResource, DynamicResource dynamicResource = DynamicResource.None)
+        public ResourceSetSlot(string name, ResourceKind resourceKind, ResourceLayoutElementOptions options,
+            BindableResource bindableResource, DynamicResource dynamicResource = DynamicResource.None)
         {
             if ((options & ResourceLayoutElementOptions.DynamicBinding) != 0 && dynamicResource == DynamicResource.None)
-            {
                 throw new ArgumentException("Dynamic resource identifier isn't set");
-            }
-            _name = name ?? "";
+            Name = name ?? "";
             _resourceKind = resourceKind;
             _options = options;
             _bindableResource = bindableResource;
-            _dynamicResource = dynamicResource;
+            DynamicResource = dynamicResource;
         }
 
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get; }
 
-        public bool IsDynamic
-        {
-            get { return 0 != (_options & ResourceLayoutElementOptions.DynamicBinding); }
-        }
+        public bool IsDynamic => 0 != (_options & ResourceLayoutElementOptions.DynamicBinding);
 
-        public DynamicResource DynamicResource
-        {
-            get { return _dynamicResource; }
-        }
+        public DynamicResource DynamicResource { get; }
 
         public ResourceLayoutElementDescription GetElementDescription(ShaderStages stages)
         {
@@ -63,7 +51,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public override string ToString()
         {
-            return _name ?? base.ToString();
+            return Name ?? base.ToString();
         }
     }
 }

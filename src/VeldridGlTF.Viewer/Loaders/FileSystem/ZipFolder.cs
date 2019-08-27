@@ -15,7 +15,7 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
         private readonly object _gate = new object();
 
 
-        public ZipFolder(string mountPoint):base(mountPoint)
+        public ZipFolder(string mountPoint) : base(mountPoint)
         {
         }
 

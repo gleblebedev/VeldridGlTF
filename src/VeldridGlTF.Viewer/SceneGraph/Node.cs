@@ -167,6 +167,11 @@ namespace VeldridGlTF.Viewer.SceneGraph
             }
         }
 
+        public IStaticModel AddStaticModel()
+        {
+            return _scene.Render.AddStaticModel(_entity);
+        }
+
         public class WorldMatrixUpdateQueue
         {
             private readonly List<Node> _queue = new List<Node>(128);
@@ -190,11 +195,6 @@ namespace VeldridGlTF.Viewer.SceneGraph
                 _queue.Add(node);
                 return new WorldMatrixToken(_queue.Count);
             }
-        }
-
-        public IStaticModel AddStaticModel()
-        {
-            return _scene.Render.AddStaticModel(_entity);
         }
     }
 }

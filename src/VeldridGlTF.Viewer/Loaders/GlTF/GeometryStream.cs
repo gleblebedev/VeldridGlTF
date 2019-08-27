@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Numerics;
 using SharpGLTF.Schema2;
-using VeldridGlTF.Viewer.Data;
 using VeldridGlTF.Viewer.Data.Geometry;
 using VeldridGlTF.Viewer.Systems.Render;
 
@@ -33,11 +32,14 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 case DimensionType.SCALAR:
                     return new ScalarGeometryStream(key, ScalarGeometryStream.AsReadOnlyList(accessor.AsScalarArray()));
                 case DimensionType.VEC2:
-                    return new Vector2GeometryStream(key, Vector2GeometryStream.AsReadOnlyList(accessor.AsVector2Array()));
+                    return new Vector2GeometryStream(key,
+                        Vector2GeometryStream.AsReadOnlyList(accessor.AsVector2Array()));
                 case DimensionType.VEC3:
-                    return new Vector3GeometryStream(key, Vector3GeometryStream.AsReadOnlyList(accessor.AsVector3Array()));
+                    return new Vector3GeometryStream(key,
+                        Vector3GeometryStream.AsReadOnlyList(accessor.AsVector3Array()));
                 case DimensionType.VEC4:
-                    return new Vector4GeometryStream(key, Vector4GeometryStream.AsReadOnlyList(accessor.AsVector4Array()));
+                    return new Vector4GeometryStream(key,
+                        Vector4GeometryStream.AsReadOnlyList(accessor.AsVector4Array()));
                 default:
                     throw new ArgumentOutOfRangeException();
             }

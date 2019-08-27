@@ -7,11 +7,11 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
-    <PackageReference Include="Veldrid" Version="4.7.0" />
-    <PackageReference Include="Veldrid.OpenGLBindings" Version="4.7.0" />
+    <PackageReference Include="Veldrid" Version="$(VeldridVersion)" />
+    <PackageReference Include="Veldrid.OpenGLBindings" Version="$(VeldridVersion)" />
     <PackageReference Include="Veldrid.RenderDoc" Version="1.0.0" />
-    <PackageReference Include="Veldrid.SDL2" Version="4.7.0" />
-    <PackageReference Include="Veldrid.SPIRV" Version="1.0.12" />
+    <PackageReference Include="Veldrid.SDL2" Version="$(VeldridVersion)" />
+    <PackageReference Include="Veldrid.SPIRV" Version="$(VeldridSpirvVersion)" />
   </ItemGroup>
 
   <ItemGroup>

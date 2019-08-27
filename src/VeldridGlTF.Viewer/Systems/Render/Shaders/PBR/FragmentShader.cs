@@ -7,28 +7,28 @@
 //     the code is regenerated.
 // </auto-generated>
 // ------------------------------------------------------------------------------
+
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
 {
-    using System.Linq;
-    using System.Text;
-    using System.Collections.Generic;
-    using System;
-    
     /// <summary>
-    /// Class to produce the template output
+    ///     Class to produce the template output
     /// </summary>
-    
-    #line 1 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
+#line 1 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+    [GeneratedCode("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
     public partial class FragmentShader : FragmentShaderBase
     {
-#line hidden
         /// <summary>
-        /// Create the template output
+        ///     Create the template output
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write(@"#version 450
+            Write(@"#version 450
 
 //#define DEBUG_OUTPUT
 //#define DEBUG_ROUGHNESS
@@ -48,108 +48,107 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
 //     https://www.cs.virginia.edu/~jdl/bib/appearance/analytic%20models/schlick94b.pdf
 
 ");
-            
-            #line 25 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
-	WriteDefines();
+#line 25 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
-            
-            #line default
-            #line hidden
-            this.Write("\r\n");
-            
-            #line 29 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+            WriteDefines();
 
-	for (int location=0; location<Context.Varyings.Count; ++location)
-	{
-		WriteLine(string.Format("layout(location = {0}) in {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
-	}
 
-            
-            #line default
-            #line hidden
-            this.Write("layout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
-            
-            #line 37 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+#line default
+#line hidden
+            Write("\r\n");
 
-	WriteMembers<EnvironmentProperties>();
+#line 29 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
-            
-            #line default
-            #line hidden
-            this.Write("};\r\nlayout (location=0) out vec4 outFragColor;\r\n\r\n#ifdef USE_TEX_LOD\r\n#extension " +
-                    "GL_EXT_shader_texture_lod: enable\r\n#endif\r\n\r\n#extension GL_OES_standard_derivati" +
-                    "ves : enable\r\n\r\n#ifdef USE_HDR\r\n#extension GL_OES_texture_float : enable\r\n#exten" +
-                    "sion GL_OES_texture_float_linear : enable\r\n#endif\r\n\r\nprecision highp float;\r\n\r\nc" +
-                    "onst float GAMMA = 2.2;\r\nconst float INV_GAMMA = 1.0 / GAMMA;\r\n\r\n// linear to sR" +
-                    "GB approximation\r\n// see http://chilliant.blogspot.com/2012/08/srgb-approximatio" +
-                    "ns-for-hlsl.html\r\nvec3 LINEARtoSRGB(vec3 color)\r\n{\r\n    return pow(color, vec3(I" +
-                    "NV_GAMMA));\r\n}\r\n\r\n// sRGB to linear approximation\r\n// see http://chilliant.blogs" +
-                    "pot.com/2012/08/srgb-approximations-for-hlsl.html\r\nvec4 SRGBtoLINEAR(vec4 srgbIn" +
-                    ")\r\n{\r\n    return vec4(pow(srgbIn.xyz, vec3(GAMMA)), srgbIn.w);\r\n}\r\n\r\n// Uncharte" +
-                    "d 2 tone map\r\n// see: http://filmicworlds.com/blog/filmic-tonemapping-operators/" +
-                    "\r\nvec3 toneMapUncharted2Impl(vec3 color)\r\n{\r\n    const float A = 0.15;\r\n    cons" +
-                    "t float B = 0.50;\r\n    const float C = 0.10;\r\n    const float D = 0.20;\r\n    con" +
-                    "st float E = 0.02;\r\n    const float F = 0.30;\r\n    return ((color*(A*color+C*B)+" +
-                    "D*E)/(color*(A*color+B)+D*F))-E/F;\r\n}\r\n\r\nvec3 toneMapUncharted(vec3 color)\r\n{\r\n " +
-                    "   const float W = 11.2;\r\n    color = toneMapUncharted2Impl(color * 2.0);\r\n    v" +
-                    "ec3 whiteScale = 1.0 / toneMapUncharted2Impl(vec3(W));\r\n    return LINEARtoSRGB(" +
-                    "color * whiteScale);\r\n}\r\n\r\n// Hejl Richard tone map\r\n// see: http://filmicworlds" +
-                    ".com/blog/filmic-tonemapping-operators/\r\nvec3 toneMapHejlRichard(vec3 color)\r\n{\r" +
-                    "\n    color = max(vec3(0.0), color - vec3(0.004));\r\n    return (color*(6.2*color+" +
-                    ".5))/(color*(6.2*color+1.7)+0.06);\r\n}\r\n\r\n// ACES tone map\r\n// see: https://knark" +
-                    "owicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/\r\nvec3 toneMapACES" +
-                    "(vec3 color)\r\n{\r\n    const float A = 2.51;\r\n    const float B = 0.03;\r\n    const" +
-                    " float C = 2.43;\r\n    const float D = 0.59;\r\n    const float E = 0.14;\r\n    retu" +
-                    "rn LINEARtoSRGB(clamp((color * (A * color + B)) / (color * (C * color + D) + E)," +
-                    " 0.0, 1.0));\r\n}\r\n\r\nvec3 toneMap(vec3 color)\r\n{\r\n    color *= u_Exposure;\r\n\r\n#ifd" +
-                    "ef TONEMAP_UNCHARTED\r\n    return toneMapUncharted(color);\r\n#endif\r\n\r\n#ifdef TONE" +
-                    "MAP_HEJLRICHARD\r\n    return toneMapHejlRichard(color);\r\n#endif\r\n\r\n#ifdef TONEMAP" +
-                    "_ACES\r\n    return toneMapACES(color);\r\n#endif\r\n\r\n    return LINEARtoSRGB(color);" +
-                    "\r\n}\r\n\r\n\r\n// General Material\r\n#ifdef HAS_NORMAL_MAP\r\nlayout(set = 7, binding = 0" +
-                    ") uniform texture2D NormalTexture;\r\nlayout(set = 7, binding = 1) uniform sampler" +
-                    " NormalSampler;\r\nlayout(set = 7, binding = 2) uniform NormalMapProperties\r\n{\r\n");
-            
-            #line 140 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+            for (var location = 0; location < Context.Varyings.Count; ++location)
+                WriteLine(string.Format("layout(location = {0}) in {1} {2};", Context.Varyings[location].Location,
+                    Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
 
-	WriteMembers<NormalMapProperties>();
 
-            
-            #line default
-            #line hidden
-            this.Write("};\r\n#endif\r\n\r\n#ifdef HAS_OCCLUSION_MAP\r\nlayout(set = 8, binding = 0) uniform text" +
-                    "ure2D OcclusionTexture;\r\nlayout(set = 8, binding = 1) uniform sampler OcclusionS" +
-                    "ampler;\r\nlayout(set = 8, binding = 2) uniform OcclusionMapProperties\r\n{\r\n");
-            
-            #line 151 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+#line default
+#line hidden
+            Write("layout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
 
-	WriteMembers<OcclusionMapProperties>();
+#line 37 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
-            
-            #line default
-            #line hidden
-            this.Write("};\r\n#endif\r\n\r\n\r\n#ifdef HAS_EMISSIVE_MAP\r\nlayout(set = 5, binding = 0) uniform tex" +
-                    "ture2D EmissiveTexture;\r\nlayout(set = 5, binding = 1) uniform sampler EmissiveSa" +
-                    "mpler;\r\nlayout(set = 5, binding = 2) uniform EmissiveMapProperties\r\n{\r\n");
-            
-            #line 163 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+            WriteMembers<EnvironmentProperties>();
 
-	WriteMembers<EmissiveMapProperties>();
 
-            
-            #line default
-            #line hidden
-            this.Write("};\r\n\r\n#endif\r\n\r\n#ifdef MATERIAL_SPECULARGLOSSINESS\r\nlayout(set = 6, binding = 0) " +
-                    "uniform SpecularGlossiness\r\n{\r\n");
-            
-            #line 173 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+#line default
+#line hidden
+            Write("};\r\nlayout (location=0) out vec4 outFragColor;\r\n\r\n#ifdef USE_TEX_LOD\r\n#extension " +
+                  "GL_EXT_shader_texture_lod: enable\r\n#endif\r\n\r\n#extension GL_OES_standard_derivati" +
+                  "ves : enable\r\n\r\n#ifdef USE_HDR\r\n#extension GL_OES_texture_float : enable\r\n#exten" +
+                  "sion GL_OES_texture_float_linear : enable\r\n#endif\r\n\r\nprecision highp float;\r\n\r\nc" +
+                  "onst float GAMMA = 2.2;\r\nconst float INV_GAMMA = 1.0 / GAMMA;\r\n\r\n// linear to sR" +
+                  "GB approximation\r\n// see http://chilliant.blogspot.com/2012/08/srgb-approximatio" +
+                  "ns-for-hlsl.html\r\nvec3 LINEARtoSRGB(vec3 color)\r\n{\r\n    return pow(color, vec3(I" +
+                  "NV_GAMMA));\r\n}\r\n\r\n// sRGB to linear approximation\r\n// see http://chilliant.blogs" +
+                  "pot.com/2012/08/srgb-approximations-for-hlsl.html\r\nvec4 SRGBtoLINEAR(vec4 srgbIn" +
+                  ")\r\n{\r\n    return vec4(pow(srgbIn.xyz, vec3(GAMMA)), srgbIn.w);\r\n}\r\n\r\n// Uncharte" +
+                  "d 2 tone map\r\n// see: http://filmicworlds.com/blog/filmic-tonemapping-operators/" +
+                  "\r\nvec3 toneMapUncharted2Impl(vec3 color)\r\n{\r\n    const float A = 0.15;\r\n    cons" +
+                  "t float B = 0.50;\r\n    const float C = 0.10;\r\n    const float D = 0.20;\r\n    con" +
+                  "st float E = 0.02;\r\n    const float F = 0.30;\r\n    return ((color*(A*color+C*B)+" +
+                  "D*E)/(color*(A*color+B)+D*F))-E/F;\r\n}\r\n\r\nvec3 toneMapUncharted(vec3 color)\r\n{\r\n " +
+                  "   const float W = 11.2;\r\n    color = toneMapUncharted2Impl(color * 2.0);\r\n    v" +
+                  "ec3 whiteScale = 1.0 / toneMapUncharted2Impl(vec3(W));\r\n    return LINEARtoSRGB(" +
+                  "color * whiteScale);\r\n}\r\n\r\n// Hejl Richard tone map\r\n// see: http://filmicworlds" +
+                  ".com/blog/filmic-tonemapping-operators/\r\nvec3 toneMapHejlRichard(vec3 color)\r\n{\r" +
+                  "\n    color = max(vec3(0.0), color - vec3(0.004));\r\n    return (color*(6.2*color+" +
+                  ".5))/(color*(6.2*color+1.7)+0.06);\r\n}\r\n\r\n// ACES tone map\r\n// see: https://knark" +
+                  "owicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/\r\nvec3 toneMapACES" +
+                  "(vec3 color)\r\n{\r\n    const float A = 2.51;\r\n    const float B = 0.03;\r\n    const" +
+                  " float C = 2.43;\r\n    const float D = 0.59;\r\n    const float E = 0.14;\r\n    retu" +
+                  "rn LINEARtoSRGB(clamp((color * (A * color + B)) / (color * (C * color + D) + E)," +
+                  " 0.0, 1.0));\r\n}\r\n\r\nvec3 toneMap(vec3 color)\r\n{\r\n    color *= u_Exposure;\r\n\r\n#ifd" +
+                  "ef TONEMAP_UNCHARTED\r\n    return toneMapUncharted(color);\r\n#endif\r\n\r\n#ifdef TONE" +
+                  "MAP_HEJLRICHARD\r\n    return toneMapHejlRichard(color);\r\n#endif\r\n\r\n#ifdef TONEMAP" +
+                  "_ACES\r\n    return toneMapACES(color);\r\n#endif\r\n\r\n    return LINEARtoSRGB(color);" +
+                  "\r\n}\r\n\r\n\r\n// General Material\r\n#ifdef HAS_NORMAL_MAP\r\nlayout(set = 7, binding = 0" +
+                  ") uniform texture2D NormalTexture;\r\nlayout(set = 7, binding = 1) uniform sampler" +
+                  " NormalSampler;\r\nlayout(set = 7, binding = 2) uniform NormalMapProperties\r\n{\r\n");
 
-	WriteMembers<SpecularGlossiness>();
+#line 140 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
-            
-            #line default
-            #line hidden
-            this.Write(@"};
+            WriteMembers<NormalMapProperties>();
+
+
+#line default
+#line hidden
+            Write("};\r\n#endif\r\n\r\n#ifdef HAS_OCCLUSION_MAP\r\nlayout(set = 8, binding = 0) uniform text" +
+                  "ure2D OcclusionTexture;\r\nlayout(set = 8, binding = 1) uniform sampler OcclusionS" +
+                  "ampler;\r\nlayout(set = 8, binding = 2) uniform OcclusionMapProperties\r\n{\r\n");
+
+#line 151 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+
+            WriteMembers<OcclusionMapProperties>();
+
+
+#line default
+#line hidden
+            Write("};\r\n#endif\r\n\r\n\r\n#ifdef HAS_EMISSIVE_MAP\r\nlayout(set = 5, binding = 0) uniform tex" +
+                  "ture2D EmissiveTexture;\r\nlayout(set = 5, binding = 1) uniform sampler EmissiveSa" +
+                  "mpler;\r\nlayout(set = 5, binding = 2) uniform EmissiveMapProperties\r\n{\r\n");
+
+#line 163 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+
+            WriteMembers<EmissiveMapProperties>();
+
+
+#line default
+#line hidden
+            Write("};\r\n\r\n#endif\r\n\r\n#ifdef MATERIAL_SPECULARGLOSSINESS\r\nlayout(set = 6, binding = 0) " +
+                  "uniform SpecularGlossiness\r\n{\r\n");
+
+#line 173 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
+
+            WriteMembers<SpecularGlossiness>();
+
+
+#line default
+#line hidden
+            Write(@"};
 
 #endif
 #ifdef HAS_DIFFUSE_MAP
@@ -165,550 +164,522 @@ layout(set = 6, binding = 4) uniform sampler SpecularGlossinessSampler;
 layout(set = 6, binding = 0) uniform MetallicRoughness
 {
 ");
-            
-            #line 191 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
-	WriteMembers<MetallicRoughness>();
+#line 191 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\PBR\FragmentShader.tt"
 
-            
-            #line default
-            #line hidden
-            this.Write("};\r\n\r\n#endif\r\n#ifdef HAS_BASE_COLOR_MAP\r\nlayout(set = 6, binding = 1) uniform tex" +
-                    "ture2D BaseColorTexture;\r\nlayout(set = 6, binding = 2) uniform sampler BaseColor" +
-                    "Sampler;\r\n#endif\r\n#ifdef HAS_METALLIC_ROUGHNESS_MAP\r\nlayout(set = 6, binding = 3" +
-                    ") uniform texture2D MetallicRoughnessTexture;\r\nlayout(set = 6, binding = 4) unif" +
-                    "orm sampler MetallicRoughnessSampler;\r\n#endif\r\n\r\n// IBL\r\n#ifdef USE_IBL\r\nlayout(" +
-                    "set = 0, binding = 1) uniform texture2D brdfLUTTexture;\r\nlayout(set = 0, binding" +
-                    " = 2) uniform sampler brdfLUTSampler;\r\n\r\nlayout(set = 1, binding = 0) uniform te" +
-                    "xtureCube DiffuseEnvTexture;\r\nlayout(set = 1, binding = 1) uniform sampler Diffu" +
-                    "seEnvSampler;\r\nlayout(set = 1, binding = 2) uniform textureCube SpecularEnvTextu" +
-                    "re;\r\nlayout(set = 1, binding = 3) uniform sampler SpecularEnvSampler;\r\n#endif\r\n\r" +
-                    "\nvec2 getNormalUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_NORMAL_" +
-                    "MAP\r\n    uv.xy = NormalUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_NORM" +
-                    "AL_UV_TRANSFORM\r\n    uv *= NormalUVTransform;\r\n    #endif\r\n#endif\r\n    return uv" +
-                    ".xy;\r\n}\r\n\r\nvec2 getEmissiveUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef" +
-                    " HAS_EMISSIVE_MAP\r\n    uv.xy = EmissiveUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n   " +
-                    " #ifdef HAS_EMISSIVE_UV_TRANSFORM\r\n    uv *= EmissiveUVTransform;\r\n    #endif\r\n#" +
-                    "endif\r\n\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getOcclusionUV()\r\n{\r\n    vec3 uv = vec3(v_" +
-                    "UVCoord1, 1.0);\r\n#ifdef HAS_OCCLUSION_MAP\r\n    uv.xy = OcclusionUVSet < 1 ? v_UV" +
-                    "Coord1 : v_UVCoord2;\r\n    #ifdef HAS_OCCLSION_UV_TRANSFORM\r\n    uv *= OcclusionU" +
-                    "VTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getBaseColorUV()\r\n" +
-                    "{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    uv.xy = " +
-                    "BaseColorUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_BASECOLOR_UV_TRANS" +
-                    "FORM\r\n    uv *= BaseColorUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r" +
-                    "\n\r\nvec2 getMetallicRoughnessUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifde" +
-                    "f HAS_METALLIC_ROUGHNESS_MAP\r\n    uv.xy = MetallicRoughnessUVSet < 1 ? v_UVCoord" +
-                    "1 : v_UVCoord2;\r\n    #ifdef HAS_METALLICROUGHNESS_UV_TRANSFORM\r\n    uv *= Metall" +
-                    "icRoughnessUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getSpe" +
-                    "cularGlossinessUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_SPECULA" +
-                    "R_GLOSSINESS_MAP\r\n    uv.xy = SpecularGlossinessUVSet < 1 ? v_UVCoord1 : v_UVCoo" +
-                    "rd2;\r\n    #ifdef HAS_SPECULARGLOSSINESS_UV_TRANSFORM\r\n    uv *= SpecularGlossine" +
-                    "ssUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getDiffuseUV()\r" +
-                    "\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_DIFFUSE_MAP\r\n    uv.xy = Di" +
-                    "ffuseUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_DIFFUSE_UV_TRANSFORM\r\n" +
-                    "    uv *= DiffuseUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nconst" +
-                    " float M_PI = 3.141592653589793;\r\nconst float c_MinReflectance = 0.04;\r\n\r\nstruct" +
-                    " AngularInfo\r\n{\r\n    float NdotL;                  // cos angle between normal a" +
-                    "nd light direction\r\n    float NdotV;                  // cos angle between norma" +
-                    "l and view direction\r\n    float NdotH;                  // cos angle between nor" +
-                    "mal and half vector\r\n    float LdotH;                  // cos angle between ligh" +
-                    "t direction and half vector\r\n\r\n    float VdotH;                  // cos angle be" +
-                    "tween view direction and half vector\r\n\r\n    vec3 padding;\r\n};\r\n\r\nvec4 getVertexC" +
-                    "olor()\r\n{\r\n   vec4 color = vec4(1.0, 1.0, 1.0, 1.0);\r\n\r\n#ifdef HAS_VERTEX_COLOR_" +
-                    "VEC3\r\n    color.rgb = v_Color;\r\n#endif\r\n#ifdef HAS_VERTEX_COLOR_VEC4\r\n    color " +
-                    "= v_Color;\r\n#endif\r\n\r\n   return color;\r\n}\r\n\r\n// Find the normal for this fragmen" +
-                    "t, pulling either from a predefined normal map\r\n// or from the interpolated mesh" +
-                    " normal and tangent attributes.\r\nvec3 getNormal()\r\n{\r\n    vec2 UV = getNormalUV(" +
-                    ");\r\n\r\n    // Retrieve the tangent space matrix\r\n#ifndef HAS_TANGENTS\r\n    vec3 p" +
-                    "os_dx = dFdx(v_Position);\r\n    vec3 pos_dy = dFdy(v_Position);\r\n    vec3 tex_dx " +
-                    "= dFdx(vec3(UV, 0.0));\r\n    vec3 tex_dy = dFdy(vec3(UV, 0.0));\r\n    vec3 t = (te" +
-                    "x_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx." +
-                    "t);\r\n\r\n#ifdef HAS_NORMALS\r\n    vec3 ng = normalize(v_Normal);\r\n#else\r\n    vec3 n" +
-                    "g = cross(pos_dx, pos_dy);\r\n#endif\r\n\r\n    t = normalize(t - ng * dot(ng, t));\r\n " +
-                    "   vec3 b = normalize(cross(ng, t));\r\n    mat3 tbn = mat3(t, b, ng);\r\n#else // H" +
-                    "AS_TANGENTS\r\n    mat3 tbn = v_TBN;\r\n#endif\r\n\r\n#ifdef HAS_NORMAL_MAP\r\n    vec3 n " +
-                    "= texture(sampler2D(NormalTexture, NormalSampler), UV).rgb;\r\n    n = normalize(t" +
-                    "bn * ((2.0 * n - 1.0) * vec3(NormalScale, NormalScale, 1.0)));\r\n#else\r\n    // Th" +
-                    "e tbn matrix is linearly interpolated, so we need to re-normalize\r\n    vec3 n = " +
-                    "normalize(tbn[2].xyz);\r\n#endif\r\n\r\n    return n;\r\n}\r\n\r\nfloat getPerceivedBrightne" +
-                    "ss(vec3 vector)\r\n{\r\n    return sqrt(0.299 * vector.r * vector.r + 0.587 * vector" +
-                    ".g * vector.g + 0.114 * vector.b * vector.b);\r\n}\r\n\r\n// https://github.com/Khrono" +
-                    "sGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossine" +
-                    "ss/examples/convert-between-workflows/js/three.pbrUtilities.js#L34\r\nfloat solveM" +
-                    "etallic(vec3 diffuse, vec3 specular, float oneMinusSpecularStrength) {\r\n    floa" +
-                    "t specularBrightness = getPerceivedBrightness(specular);\r\n\r\n    if (specularBrig" +
-                    "htness < c_MinReflectance) {\r\n        return 0.0;\r\n    }\r\n\r\n    float diffuseBri" +
-                    "ghtness = getPerceivedBrightness(diffuse);\r\n\r\n    float a = c_MinReflectance;\r\n " +
-                    "   float b = diffuseBrightness * oneMinusSpecularStrength / (1.0 - c_MinReflecta" +
-                    "nce) + specularBrightness - 2.0 * c_MinReflectance;\r\n    float c = c_MinReflecta" +
-                    "nce - specularBrightness;\r\n    float D = b * b - 4.0 * a * c;\r\n\r\n    return clam" +
-                    "p((-b + sqrt(D)) / (2.0 * a), 0.0, 1.0);\r\n}\r\n\r\nAngularInfo getAngularInfo(vec3 p" +
-                    "ointToLight, vec3 normal, vec3 view)\r\n{\r\n    // Standard one-letter names\r\n    v" +
-                    "ec3 n = normalize(normal);           // Outward direction of surface point\r\n    " +
-                    "vec3 v = normalize(view);             // Direction from surface point to view\r\n " +
-                    "   vec3 l = normalize(pointToLight);     // Direction from surface point to ligh" +
-                    "t\r\n    vec3 h = normalize(l + v);            // Direction of the vector between " +
-                    "l and v\r\n\r\n    float NdotL = clamp(dot(n, l), 0.0, 1.0);\r\n    float NdotV = clam" +
-                    "p(dot(n, v), 0.0, 1.0);\r\n    float NdotH = clamp(dot(n, h), 0.0, 1.0);\r\n    floa" +
-                    "t LdotH = clamp(dot(l, h), 0.0, 1.0);\r\n    float VdotH = clamp(dot(v, h), 0.0, 1" +
-                    ".0);\r\n\r\n    return AngularInfo(\r\n        NdotL,\r\n        NdotV,\r\n        NdotH,\r" +
-                    "\n        LdotH,\r\n        VdotH,\r\n        vec3(0, 0, 0)\r\n    );\r\n}\r\n\r\n// KHR_ligh" +
-                    "ts_punctual extension.\r\n// see https://github.com/KhronosGroup/glTF/tree/master/" +
-                    "extensions/2.0/Khronos/KHR_lights_punctual\r\n\r\nstruct Light\r\n{\r\n    vec3 directio" +
-                    "n;\r\n    float range;\r\n\r\n    vec3 color;\r\n    float intensity;\r\n\r\n    vec3 positi" +
-                    "on;\r\n    float innerConeCos;\r\n\r\n    float outerConeCos;\r\n    int type;\r\n\r\n    ve" +
-                    "c2 padding;\r\n};\r\n\r\nconst int LightType_Directional = 0;\r\nconst int LightType_Poi" +
-                    "nt = 1;\r\nconst int LightType_Spot = 2;\r\n\r\n#ifdef USE_PUNCTUAL\r\nuniform Light u_L" +
-                    "ights[LIGHT_COUNT];\r\n#endif\r\n\r\nstruct MaterialInfo\r\n{\r\n    float perceptualRough" +
-                    "ness;    // roughness value, as authored by the model creator (input to shader)\r" +
-                    "\n    vec3 reflectance0;            // full reflectance color (normal incidence a" +
-                    "ngle)\r\n\r\n    float alphaRoughness;         // roughness mapped to a more linear " +
-                    "change in the roughness (proposed by [2])\r\n    vec3 diffuseColor;            // " +
-                    "color contribution from diffuse lighting\r\n\r\n    vec3 reflectance90;           //" +
-                    " reflectance color at grazing angle\r\n    vec3 specularColor;           // color " +
-                    "contribution from specular lighting\r\n};\r\n\r\n// Calculation of the lighting contri" +
-                    "bution from an optional Image Based Light source.\r\n// Precomputed Environment Ma" +
-                    "ps are required uniform inputs and are computed as outlined in [1].\r\n// See our " +
-                    "README.md on Environment Maps [3] for additional discussion.\r\n#ifdef USE_IBL\r\nve" +
-                    "c3 getIBLContribution(MaterialInfo materialInfo, vec3 n, vec3 v)\r\n{\r\n    float N" +
-                    "dotV = clamp(dot(n, v), 0.0, 1.0);\r\n\r\n\tint MipCount = u_MipCount;\r\n    float lod" +
-                    " = clamp(materialInfo.perceptualRoughness * float(MipCount), 0.0, float(MipCount" +
-                    "));\r\n    vec3 reflection = normalize(reflect(-v, n));\r\n\r\n    vec2 brdfSamplePoin" +
-                    "t = clamp(vec2(NdotV, materialInfo.perceptualRoughness), vec2(0.0, 0.0), vec2(1." +
-                    "0, 1.0));\r\n    // retrieve a scale and bias to F0. See [1], Figure 3\r\n    vec2 b" +
-                    "rdf = texture(sampler2D(brdfLUTTexture, brdfLUTSampler), brdfSamplePoint).rg;\r\n\r" +
-                    "\n#ifdef USE_TEX_LOD\r\n\tvec4 diffuseSample = textureLod(samplerCube(SpecularEnvTex" +
-                    "ture, SpecularEnvSampler), n, 6);\r\n    vec4 specularSample = textureLod(samplerC" +
-                    "ube(SpecularEnvTexture, SpecularEnvSampler), reflection, lod);\r\n#else\r\n    vec4 " +
-                    "diffuseSample = texture(samplerCube(DiffuseEnvTexture, DiffuseEnvSampler), n);\r\n" +
-                    "    vec4 specularSample = texture(samplerCube(SpecularEnvTexture, SpecularEnvSam" +
-                    "pler), reflection);\r\n#endif\r\n\r\n#ifdef USE_HDR\r\n    // Already linear.\r\n    vec3 " +
-                    "diffuseLight = diffuseSample.rgb;\r\n    vec3 specularLight = specularSample.rgb;\r" +
-                    "\n#else\r\n    vec3 diffuseLight = SRGBtoLINEAR(diffuseSample).rgb;\r\n    vec3 specu" +
-                    "larLight = SRGBtoLINEAR(specularSample).rgb;\r\n#endif\r\n\r\n    vec3 diffuse = diffu" +
-                    "seLight * materialInfo.diffuseColor;\r\n    vec3 specular = specularLight * (mater" +
-                    "ialInfo.specularColor * brdf.x + brdf.y);\r\n\r\n    return diffuse + specular;\r\n}\r\n" +
-                    "#endif\r\n\r\n// Lambert lighting\r\n// see https://seblagarde.wordpress.com/2012/01/0" +
-                    "8/pi-or-not-to-pi-in-game-lighting-equation/\r\nvec3 diffuse(MaterialInfo material" +
-                    "Info)\r\n{\r\n    return materialInfo.diffuseColor / M_PI;\r\n}\r\n\r\n// The following eq" +
-                    "uation models the Fresnel reflectance term of the spec equation (aka F())\r\n// Im" +
-                    "plementation of fresnel from [4], Equation 15\r\nvec3 specularReflection(MaterialI" +
-                    "nfo materialInfo, AngularInfo angularInfo)\r\n{\r\n    return materialInfo.reflectan" +
-                    "ce0 + (materialInfo.reflectance90 - materialInfo.reflectance0) * pow(clamp(1.0 -" +
-                    " angularInfo.VdotH, 0.0, 1.0), 5.0);\r\n}\r\n\r\n// Smith Joint GGX\r\n// Note: Vis = G " +
-                    "/ (4 * NdotL * NdotV)\r\n// see Eric Heitz. 2014. Understanding the Masking-Shadow" +
-                    "ing Function in Microfacet-Based BRDFs. Journal of Computer Graphics Techniques," +
-                    " 3\r\n// see Real-Time Rendering. Page 331 to 336.\r\n// see https://google.github.i" +
-                    "o/filament/Filament.md.html#materialsystem/specularbrdf/geometricshadowing(specu" +
-                    "larg)\r\nfloat visibilityOcclusion(MaterialInfo materialInfo, AngularInfo angularI" +
-                    "nfo)\r\n{\r\n    float NdotL = angularInfo.NdotL;\r\n    float NdotV = angularInfo.Ndo" +
-                    "tV;\r\n    float alphaRoughnessSq = materialInfo.alphaRoughness * materialInfo.alp" +
-                    "haRoughness;\r\n\r\n    float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughn" +
-                    "essSq) + alphaRoughnessSq);\r\n    float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 " +
-                    "- alphaRoughnessSq) + alphaRoughnessSq);\r\n\r\n    float GGX = GGXV + GGXL;\r\n    if" +
-                    " (GGX > 0.0)\r\n    {\r\n        return 0.5 / GGX;\r\n    }\r\n    return 0.0;\r\n}\r\n\r\n// " +
-                    "The following equation(s) model the distribution of microfacet normals across th" +
-                    "e area being drawn (aka D())\r\n// Implementation from \"Average Irregularity Repre" +
-                    "sentation of a Roughened Surface for Ray Reflection\" by T. S. Trowbridge, and K." +
-                    " P. Reitz\r\n// Follows the distribution function recommended in the SIGGRAPH 2013" +
-                    " course notes from EPIC Games [1], Equation 3.\r\nfloat microfacetDistribution(Mat" +
-                    "erialInfo materialInfo, AngularInfo angularInfo)\r\n{\r\n    float alphaRoughnessSq " +
-                    "= materialInfo.alphaRoughness * materialInfo.alphaRoughness;\r\n    float f = (ang" +
-                    "ularInfo.NdotH * alphaRoughnessSq - angularInfo.NdotH) * angularInfo.NdotH + 1.0" +
-                    ";\r\n    return alphaRoughnessSq / (M_PI * f * f);\r\n}\r\n\r\nvec3 getPointShade(vec3 p" +
-                    "ointToLight, MaterialInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    AngularI" +
-                    "nfo angularInfo = getAngularInfo(pointToLight, normal, view);\r\n\r\n    if (angular" +
-                    "Info.NdotL > 0.0 || angularInfo.NdotV > 0.0)\r\n    {\r\n        // Calculate the sh" +
-                    "ading terms for the microfacet specular shading model\r\n        vec3 F = specular" +
-                    "Reflection(materialInfo, angularInfo);\r\n        float Vis = visibilityOcclusion(" +
-                    "materialInfo, angularInfo);\r\n        float D = microfacetDistribution(materialIn" +
-                    "fo, angularInfo);\r\n\r\n        // Calculation of analytical lighting contribution\r" +
-                    "\n        vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);\r\n        vec3 " +
-                    "specContrib = F * Vis * D;\r\n\r\n        // Obtain final intensity as reflectance (" +
-                    "BRDF) scaled by the energy of the light (cosine law)\r\n        return angularInfo" +
-                    ".NdotL * (diffuseContrib + specContrib);\r\n    }\r\n\r\n    return vec3(0.0, 0.0, 0.0" +
-                    ");\r\n}\r\n\r\n// https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khro" +
-                    "nos/KHR_lights_punctual/README.md#range-property\r\nfloat getRangeAttenuation(floa" +
-                    "t range, float distance)\r\n{\r\n    if (range < 0.0)\r\n    {\r\n        // negative ra" +
-                    "nge means unlimited\r\n        return 1.0;\r\n    }\r\n    return max(min(1.0 - pow(di" +
-                    "stance / range, 4.0), 1.0), 0.0) / pow(distance, 2.0);\r\n}\r\n\r\n// https://github.c" +
-                    "om/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/READ" +
-                    "ME.md#inner-and-outer-cone-angles\r\nfloat getSpotAttenuation(vec3 pointToLight, v" +
-                    "ec3 spotDirection, float outerConeCos, float innerConeCos)\r\n{\r\n    float actualC" +
-                    "os = dot(normalize(spotDirection), normalize(-pointToLight));\r\n    if (actualCos" +
-                    " > outerConeCos)\r\n    {\r\n        if (actualCos < innerConeCos)\r\n        {\r\n     " +
-                    "       return smoothstep(outerConeCos, innerConeCos, actualCos);\r\n        }\r\n   " +
-                    "     return 1.0;\r\n    }\r\n    return 0.0;\r\n}\r\n\r\nvec3 applyDirectionalLight(Light " +
-                    "light, MaterialInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    vec3 pointToLi" +
-                    "ght = -light.direction;\r\n    vec3 shade = getPointShade(pointToLight, materialIn" +
-                    "fo, normal, view);\r\n    return light.intensity * light.color * shade;\r\n}\r\n\r\nvec3" +
-                    " applyPointLight(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)" +
-                    "\r\n{\r\n    vec3 pointToLight = light.position - v_Position;\r\n    float distance = " +
-                    "length(pointToLight);\r\n    float attenuation = getRangeAttenuation(light.range, " +
-                    "distance);\r\n    vec3 shade = getPointShade(pointToLight, materialInfo, normal, v" +
-                    "iew);\r\n    return attenuation * light.intensity * light.color * shade;\r\n}\r\n\r\nvec" +
-                    "3 applySpotLight(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)" +
-                    "\r\n{\r\n    vec3 pointToLight = light.position - v_Position;\r\n    float distance = " +
-                    "length(pointToLight);\r\n    float rangeAttenuation = getRangeAttenuation(light.ra" +
-                    "nge, distance);\r\n    float spotAttenuation = getSpotAttenuation(pointToLight, li" +
-                    "ght.direction, light.outerConeCos, light.innerConeCos);\r\n    vec3 shade = getPoi" +
-                    "ntShade(pointToLight, materialInfo, normal, view);\r\n    return rangeAttenuation " +
-                    "* spotAttenuation * light.intensity * light.color * shade;\r\n}\r\n\r\nvoid main()\r\n{\r" +
-                    "\n    // Metallic and Roughness material properties are packed together\r\n    // I" +
-                    "n glTF, these factors can be specified by fixed scalar values\r\n    // or from a " +
-                    "metallic-roughness map\r\n    float perceptualRoughness = 0.0;\r\n    float metallic" +
-                    " = 0.0;\r\n    vec4 baseColor = vec4(0.0, 0.0, 0.0, 1.0);\r\n    vec3 diffuseColor =" +
-                    " vec3(0.0);\r\n    vec3 specularColor= vec3(0.0);\r\n    vec3 f0 = vec3(0.04);\r\n\r\n#i" +
-                    "fdef MATERIAL_SPECULARGLOSSINESS\r\n\r\n#ifdef HAS_SPECULAR_GLOSSINESS_MAP\r\n    vec4" +
-                    " sgSample = SRGBtoLINEAR(texture(sampler2D(SpecularGlossinessTexture, SpecularGl" +
-                    "ossinessSampler), getSpecularGlossinessUV()));\r\n    perceptualRoughness = (1.0 -" +
-                    " sgSample.a * GlossinessFactor); // glossiness to roughness\r\n    f0 = sgSample.r" +
-                    "gb * SpecularFactor; // specular\r\n#else\r\n    f0 = SpecularFactor;\r\n    perceptua" +
-                    "lRoughness = 1.0 - GlossinessFactor;\r\n#endif // ! HAS_SPECULAR_GLOSSINESS_MAP\r\n\r" +
-                    "\n#ifdef HAS_DIFFUSE_MAP\r\n    baseColor = SRGBtoLINEAR(texture(sampler2D(DiffuseT" +
-                    "exture, DiffuseSampler), getDiffuseUV())) * DiffuseFactor;\r\n#else\r\n    baseColor" +
-                    " = DiffuseFactor;\r\n#endif // !HAS_DIFFUSE_MAP\r\n\r\n    baseColor *= getVertexColor" +
-                    "();\r\n\r\n    // f0 = specular\r\n    specularColor = f0;\r\n    float oneMinusSpecular" +
-                    "Strength = 1.0 - max(max(f0.r, f0.g), f0.b);\r\n    diffuseColor = baseColor.rgb *" +
-                    " oneMinusSpecularStrength;\r\n\r\n#ifdef DEBUG_METALLIC\r\n    // do conversion betwee" +
-                    "n metallic M-R and S-G metallic\r\n    metallic = solveMetallic(baseColor.rgb, spe" +
-                    "cularColor, oneMinusSpecularStrength);\r\n#endif // ! DEBUG_METALLIC\r\n\r\n#endif // " +
-                    "! MATERIAL_SPECULARGLOSSINESS\r\n\r\n#ifdef MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef HAS" +
-                    "_METALLIC_ROUGHNESS_MAP\r\n    // Roughness is stored in the \'g\' channel, metallic" +
-                    " is stored in the \'b\' channel.\r\n    // This layout intentionally reserves the \'r" +
-                    "\' channel for (optional) occlusion map data\r\n    vec4 mrSample = texture(sampler" +
-                    "2D(MetallicRoughnessTexture, MetallicRoughnessSampler), getMetallicRoughnessUV()" +
-                    ");\r\n    perceptualRoughness = mrSample.g * RoughnessFactor;\r\n    metallic = mrSa" +
-                    "mple.b * MetallicFactor;\r\n#else\r\n    metallic = MetallicFactor;\r\n    perceptualR" +
-                    "oughness = RoughnessFactor;\r\n#endif\r\n\r\n    // The albedo may be defined from a b" +
-                    "ase texture or a flat color\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    baseColor = SRGBtoLI" +
-                    "NEAR(texture(sampler2D(BaseColorTexture, BaseColorSampler), getBaseColorUV())) *" +
-                    " BaseColorFactor;\r\n#else\r\n    baseColor = BaseColorFactor;\r\n#endif\r\n\r\n    baseCo" +
-                    "lor *= getVertexColor();\r\n\r\n    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) " +
-                    "* (1.0 - metallic);\r\n\r\n    specularColor = mix(f0, baseColor.rgb, metallic);\r\n\r\n" +
-                    "#endif // ! MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef ALPHAMODE_MASK\r\n    if(baseColo" +
-                    "r.a < AlphaCutoff)\r\n    {\r\n        discard;\r\n    }\r\n    baseColor.a = 1.0;\r\n#end" +
-                    "if\r\n\r\n#ifdef ALPHAMODE_OPAQUE\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef MATERIAL" +
-                    "_UNLIT\r\n    outFragColor = vec4(LINEARtoSRGB(baseColor.rgb), baseColor.a);\r\n    " +
-                    "return;\r\n#endif\r\n\r\n    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0" +
-                    ");\r\n    metallic = clamp(metallic, 0.0, 1.0);\r\n\r\n    // Roughness is authored as" +
-                    " perceptual roughness; as is convention,\r\n    // convert to material roughness b" +
-                    "y squaring the perceptual roughness [2].\r\n    float alphaRoughness = perceptualR" +
-                    "oughness * perceptualRoughness;\r\n\r\n    // Compute reflectance.\r\n    float reflec" +
-                    "tance = max(max(specularColor.r, specularColor.g), specularColor.b);\r\n\r\n    vec3" +
-                    " specularEnvironmentR0 = specularColor.rgb;\r\n    // Anything less than 2% is phy" +
-                    "sically impossible and is instead considered to be shadowing. Compare to \"Real-T" +
-                    "ime-Rendering\" 4th editon on page 325.\r\n    vec3 specularEnvironmentR90 = vec3(c" +
-                    "lamp(reflectance * 50.0, 0.0, 1.0));\r\n\r\n    MaterialInfo materialInfo = Material" +
-                    "Info(\r\n        perceptualRoughness,\r\n        specularEnvironmentR0,\r\n        alp" +
-                    "haRoughness,\r\n        diffuseColor,\r\n        specularEnvironmentR90,\r\n        sp" +
-                    "ecularColor\r\n    );\r\n\r\n    // LIGHTING\r\n\r\n    vec3 color = vec3(0.0, 0.0, 0.0);\r" +
-                    "\n    vec3 normal = getNormal();\r\n    vec3 view = normalize(u_Camera - v_Position" +
-                    ");\r\n\r\n#ifdef USE_PUNCTUAL\r\n    for (int i = 0; i < LIGHT_COUNT; ++i)\r\n    {\r\n   " +
-                    "     Light light = u_Lights[i];\r\n        if (light.type == LightType_Directional" +
-                    ")\r\n        {\r\n            color += applyDirectionalLight(light, materialInfo, no" +
-                    "rmal, view);\r\n        }\r\n        else if (light.type == LightType_Point)\r\n      " +
-                    "  {\r\n            color += applyPointLight(light, materialInfo, normal, view);\r\n " +
-                    "       }\r\n        else if (light.type == LightType_Spot)\r\n        {\r\n           " +
-                    " color += applySpotLight(light, materialInfo, normal, view);\r\n        }\r\n    }\r\n" +
-                    "#endif\r\n\r\n    // Calculate lighting contribution from image based lighting sourc" +
-                    "e (IBL)\r\n#ifdef USE_IBL\r\n    color += getIBLContribution(materialInfo, normal, v" +
-                    "iew);\r\n#endif\r\n\r\n    float ao = 1.0;\r\n    // Apply optional PBR terms for additi" +
-                    "onal (optional) shading\r\n#ifdef HAS_OCCLUSION_MAP\r\n    ao = texture(sampler2D(Oc" +
-                    "clusionTexture, OcclusionSampler), getOcclusionUV()).r;\r\n    color = mix(color, " +
-                    "color * ao, OcclusionStrength);\r\n#endif\r\n\r\n    vec3 emissive = vec3(0);\r\n#ifdef " +
-                    "HAS_EMISSIVE_MAP\r\n    emissive = SRGBtoLINEAR(texture(sampler2D(EmissiveTexture," +
-                    " EmissiveSampler), getEmissiveUV())).rgb * EmissiveFactor;\r\n    color += emissiv" +
-                    "e;\r\n#endif\r\n\r\n#ifndef DEBUG_OUTPUT // no debug\r\n\r\n   // regular shading\r\n   outF" +
-                    "ragColor = vec4(toneMap(color), baseColor.a);\r\n\r\n#else // debug output\r\n\r\n    #i" +
-                    "fdef DEBUG_METALLIC\r\n        outFragColor.rgb = vec3(metallic);\r\n    #endif\r\n\r\n " +
-                    "   #ifdef DEBUG_ROUGHNESS\r\n        outFragColor.rgb = vec3(perceptualRoughness);" +
-                    "\r\n    #endif\r\n\r\n    #ifdef DEBUG_NORMAL\r\n        #ifdef HAS_NORMAL_MAP\r\n        " +
-                    "    outFragColor.rgb = texture2D(NormalSampler, getNormalUV()).rgb;\r\n        #el" +
-                    "se\r\n            outFragColor.rgb = vec3(0.5, 0.5, 1.0);\r\n        #endif\r\n    #en" +
-                    "dif\r\n\r\n    #ifdef DEBUG_BASECOLOR\r\n        outFragColor.rgb = LINEARtoSRGB(baseC" +
-                    "olor.rgb);\r\n    #endif\r\n\r\n    #ifdef DEBUG_OCCLUSION\r\n        outFragColor.rgb =" +
-                    " vec3(ao);\r\n    #endif\r\n\r\n    #ifdef DEBUG_EMISSIVE\r\n        outFragColor.rgb = " +
-                    "LINEARtoSRGB(emissive);\r\n    #endif\r\n\r\n    #ifdef DEBUG_F0\r\n        outFragColor" +
-                    ".rgb = vec3(f0);\r\n    #endif\r\n\r\n    #ifdef DEBUG_ALPHA\r\n        outFragColor.rgb" +
-                    " = vec3(baseColor.a);\r\n    #endif\r\n\r\n    outFragColor.a = 1.0;\r\n\r\n#endif // !DEB" +
-                    "UG_OUTPUT\r\n}");
-            return this.GenerationEnvironment.ToString();
+            WriteMembers<MetallicRoughness>();
+
+
+#line default
+#line hidden
+            Write("};\r\n\r\n#endif\r\n#ifdef HAS_BASE_COLOR_MAP\r\nlayout(set = 6, binding = 1) uniform tex" +
+                  "ture2D BaseColorTexture;\r\nlayout(set = 6, binding = 2) uniform sampler BaseColor" +
+                  "Sampler;\r\n#endif\r\n#ifdef HAS_METALLIC_ROUGHNESS_MAP\r\nlayout(set = 6, binding = 3" +
+                  ") uniform texture2D MetallicRoughnessTexture;\r\nlayout(set = 6, binding = 4) unif" +
+                  "orm sampler MetallicRoughnessSampler;\r\n#endif\r\n\r\n// IBL\r\n#ifdef USE_IBL\r\nlayout(" +
+                  "set = 0, binding = 1) uniform texture2D brdfLUTTexture;\r\nlayout(set = 0, binding" +
+                  " = 2) uniform sampler brdfLUTSampler;\r\n\r\nlayout(set = 1, binding = 0) uniform te" +
+                  "xtureCube DiffuseEnvTexture;\r\nlayout(set = 1, binding = 1) uniform sampler Diffu" +
+                  "seEnvSampler;\r\nlayout(set = 1, binding = 2) uniform textureCube SpecularEnvTextu" +
+                  "re;\r\nlayout(set = 1, binding = 3) uniform sampler SpecularEnvSampler;\r\n#endif\r\n\r" +
+                  "\nvec2 getNormalUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_NORMAL_" +
+                  "MAP\r\n    uv.xy = NormalUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_NORM" +
+                  "AL_UV_TRANSFORM\r\n    uv *= NormalUVTransform;\r\n    #endif\r\n#endif\r\n    return uv" +
+                  ".xy;\r\n}\r\n\r\nvec2 getEmissiveUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef" +
+                  " HAS_EMISSIVE_MAP\r\n    uv.xy = EmissiveUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n   " +
+                  " #ifdef HAS_EMISSIVE_UV_TRANSFORM\r\n    uv *= EmissiveUVTransform;\r\n    #endif\r\n#" +
+                  "endif\r\n\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getOcclusionUV()\r\n{\r\n    vec3 uv = vec3(v_" +
+                  "UVCoord1, 1.0);\r\n#ifdef HAS_OCCLUSION_MAP\r\n    uv.xy = OcclusionUVSet < 1 ? v_UV" +
+                  "Coord1 : v_UVCoord2;\r\n    #ifdef HAS_OCCLSION_UV_TRANSFORM\r\n    uv *= OcclusionU" +
+                  "VTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getBaseColorUV()\r\n" +
+                  "{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    uv.xy = " +
+                  "BaseColorUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_BASECOLOR_UV_TRANS" +
+                  "FORM\r\n    uv *= BaseColorUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r" +
+                  "\n\r\nvec2 getMetallicRoughnessUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifde" +
+                  "f HAS_METALLIC_ROUGHNESS_MAP\r\n    uv.xy = MetallicRoughnessUVSet < 1 ? v_UVCoord" +
+                  "1 : v_UVCoord2;\r\n    #ifdef HAS_METALLICROUGHNESS_UV_TRANSFORM\r\n    uv *= Metall" +
+                  "icRoughnessUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getSpe" +
+                  "cularGlossinessUV()\r\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_SPECULA" +
+                  "R_GLOSSINESS_MAP\r\n    uv.xy = SpecularGlossinessUVSet < 1 ? v_UVCoord1 : v_UVCoo" +
+                  "rd2;\r\n    #ifdef HAS_SPECULARGLOSSINESS_UV_TRANSFORM\r\n    uv *= SpecularGlossine" +
+                  "ssUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nvec2 getDiffuseUV()\r" +
+                  "\n{\r\n    vec3 uv = vec3(v_UVCoord1, 1.0);\r\n#ifdef HAS_DIFFUSE_MAP\r\n    uv.xy = Di" +
+                  "ffuseUVSet < 1 ? v_UVCoord1 : v_UVCoord2;\r\n    #ifdef HAS_DIFFUSE_UV_TRANSFORM\r\n" +
+                  "    uv *= DiffuseUVTransform;\r\n    #endif\r\n#endif\r\n    return uv.xy;\r\n}\r\n\r\nconst" +
+                  " float M_PI = 3.141592653589793;\r\nconst float c_MinReflectance = 0.04;\r\n\r\nstruct" +
+                  " AngularInfo\r\n{\r\n    float NdotL;                  // cos angle between normal a" +
+                  "nd light direction\r\n    float NdotV;                  // cos angle between norma" +
+                  "l and view direction\r\n    float NdotH;                  // cos angle between nor" +
+                  "mal and half vector\r\n    float LdotH;                  // cos angle between ligh" +
+                  "t direction and half vector\r\n\r\n    float VdotH;                  // cos angle be" +
+                  "tween view direction and half vector\r\n\r\n    vec3 padding;\r\n};\r\n\r\nvec4 getVertexC" +
+                  "olor()\r\n{\r\n   vec4 color = vec4(1.0, 1.0, 1.0, 1.0);\r\n\r\n#ifdef HAS_VERTEX_COLOR_" +
+                  "VEC3\r\n    color.rgb = v_Color;\r\n#endif\r\n#ifdef HAS_VERTEX_COLOR_VEC4\r\n    color " +
+                  "= v_Color;\r\n#endif\r\n\r\n   return color;\r\n}\r\n\r\n// Find the normal for this fragmen" +
+                  "t, pulling either from a predefined normal map\r\n// or from the interpolated mesh" +
+                  " normal and tangent attributes.\r\nvec3 getNormal()\r\n{\r\n    vec2 UV = getNormalUV(" +
+                  ");\r\n\r\n    // Retrieve the tangent space matrix\r\n#ifndef HAS_TANGENTS\r\n    vec3 p" +
+                  "os_dx = dFdx(v_Position);\r\n    vec3 pos_dy = dFdy(v_Position);\r\n    vec3 tex_dx " +
+                  "= dFdx(vec3(UV, 0.0));\r\n    vec3 tex_dy = dFdy(vec3(UV, 0.0));\r\n    vec3 t = (te" +
+                  "x_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx." +
+                  "t);\r\n\r\n#ifdef HAS_NORMALS\r\n    vec3 ng = normalize(v_Normal);\r\n#else\r\n    vec3 n" +
+                  "g = cross(pos_dx, pos_dy);\r\n#endif\r\n\r\n    t = normalize(t - ng * dot(ng, t));\r\n " +
+                  "   vec3 b = normalize(cross(ng, t));\r\n    mat3 tbn = mat3(t, b, ng);\r\n#else // H" +
+                  "AS_TANGENTS\r\n    mat3 tbn = v_TBN;\r\n#endif\r\n\r\n#ifdef HAS_NORMAL_MAP\r\n    vec3 n " +
+                  "= texture(sampler2D(NormalTexture, NormalSampler), UV).rgb;\r\n    n = normalize(t" +
+                  "bn * ((2.0 * n - 1.0) * vec3(NormalScale, NormalScale, 1.0)));\r\n#else\r\n    // Th" +
+                  "e tbn matrix is linearly interpolated, so we need to re-normalize\r\n    vec3 n = " +
+                  "normalize(tbn[2].xyz);\r\n#endif\r\n\r\n    return n;\r\n}\r\n\r\nfloat getPerceivedBrightne" +
+                  "ss(vec3 vector)\r\n{\r\n    return sqrt(0.299 * vector.r * vector.r + 0.587 * vector" +
+                  ".g * vector.g + 0.114 * vector.b * vector.b);\r\n}\r\n\r\n// https://github.com/Khrono" +
+                  "sGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossine" +
+                  "ss/examples/convert-between-workflows/js/three.pbrUtilities.js#L34\r\nfloat solveM" +
+                  "etallic(vec3 diffuse, vec3 specular, float oneMinusSpecularStrength) {\r\n    floa" +
+                  "t specularBrightness = getPerceivedBrightness(specular);\r\n\r\n    if (specularBrig" +
+                  "htness < c_MinReflectance) {\r\n        return 0.0;\r\n    }\r\n\r\n    float diffuseBri" +
+                  "ghtness = getPerceivedBrightness(diffuse);\r\n\r\n    float a = c_MinReflectance;\r\n " +
+                  "   float b = diffuseBrightness * oneMinusSpecularStrength / (1.0 - c_MinReflecta" +
+                  "nce) + specularBrightness - 2.0 * c_MinReflectance;\r\n    float c = c_MinReflecta" +
+                  "nce - specularBrightness;\r\n    float D = b * b - 4.0 * a * c;\r\n\r\n    return clam" +
+                  "p((-b + sqrt(D)) / (2.0 * a), 0.0, 1.0);\r\n}\r\n\r\nAngularInfo getAngularInfo(vec3 p" +
+                  "ointToLight, vec3 normal, vec3 view)\r\n{\r\n    // Standard one-letter names\r\n    v" +
+                  "ec3 n = normalize(normal);           // Outward direction of surface point\r\n    " +
+                  "vec3 v = normalize(view);             // Direction from surface point to view\r\n " +
+                  "   vec3 l = normalize(pointToLight);     // Direction from surface point to ligh" +
+                  "t\r\n    vec3 h = normalize(l + v);            // Direction of the vector between " +
+                  "l and v\r\n\r\n    float NdotL = clamp(dot(n, l), 0.0, 1.0);\r\n    float NdotV = clam" +
+                  "p(dot(n, v), 0.0, 1.0);\r\n    float NdotH = clamp(dot(n, h), 0.0, 1.0);\r\n    floa" +
+                  "t LdotH = clamp(dot(l, h), 0.0, 1.0);\r\n    float VdotH = clamp(dot(v, h), 0.0, 1" +
+                  ".0);\r\n\r\n    return AngularInfo(\r\n        NdotL,\r\n        NdotV,\r\n        NdotH,\r" +
+                  "\n        LdotH,\r\n        VdotH,\r\n        vec3(0, 0, 0)\r\n    );\r\n}\r\n\r\n// KHR_ligh" +
+                  "ts_punctual extension.\r\n// see https://github.com/KhronosGroup/glTF/tree/master/" +
+                  "extensions/2.0/Khronos/KHR_lights_punctual\r\n\r\nstruct Light\r\n{\r\n    vec3 directio" +
+                  "n;\r\n    float range;\r\n\r\n    vec3 color;\r\n    float intensity;\r\n\r\n    vec3 positi" +
+                  "on;\r\n    float innerConeCos;\r\n\r\n    float outerConeCos;\r\n    int type;\r\n\r\n    ve" +
+                  "c2 padding;\r\n};\r\n\r\nconst int LightType_Directional = 0;\r\nconst int LightType_Poi" +
+                  "nt = 1;\r\nconst int LightType_Spot = 2;\r\n\r\n#ifdef USE_PUNCTUAL\r\nuniform Light u_L" +
+                  "ights[LIGHT_COUNT];\r\n#endif\r\n\r\nstruct MaterialInfo\r\n{\r\n    float perceptualRough" +
+                  "ness;    // roughness value, as authored by the model creator (input to shader)\r" +
+                  "\n    vec3 reflectance0;            // full reflectance color (normal incidence a" +
+                  "ngle)\r\n\r\n    float alphaRoughness;         // roughness mapped to a more linear " +
+                  "change in the roughness (proposed by [2])\r\n    vec3 diffuseColor;            // " +
+                  "color contribution from diffuse lighting\r\n\r\n    vec3 reflectance90;           //" +
+                  " reflectance color at grazing angle\r\n    vec3 specularColor;           // color " +
+                  "contribution from specular lighting\r\n};\r\n\r\n// Calculation of the lighting contri" +
+                  "bution from an optional Image Based Light source.\r\n// Precomputed Environment Ma" +
+                  "ps are required uniform inputs and are computed as outlined in [1].\r\n// See our " +
+                  "README.md on Environment Maps [3] for additional discussion.\r\n#ifdef USE_IBL\r\nve" +
+                  "c3 getIBLContribution(MaterialInfo materialInfo, vec3 n, vec3 v)\r\n{\r\n    float N" +
+                  "dotV = clamp(dot(n, v), 0.0, 1.0);\r\n\r\n\tint MipCount = u_MipCount;\r\n    float lod" +
+                  " = clamp(materialInfo.perceptualRoughness * float(MipCount), 0.0, float(MipCount" +
+                  "));\r\n    vec3 reflection = normalize(reflect(-v, n));\r\n\r\n    vec2 brdfSamplePoin" +
+                  "t = clamp(vec2(NdotV, materialInfo.perceptualRoughness), vec2(0.0, 0.0), vec2(1." +
+                  "0, 1.0));\r\n    // retrieve a scale and bias to F0. See [1], Figure 3\r\n    vec2 b" +
+                  "rdf = texture(sampler2D(brdfLUTTexture, brdfLUTSampler), brdfSamplePoint).rg;\r\n\r" +
+                  "\n#ifdef USE_TEX_LOD\r\n\tvec4 diffuseSample = textureLod(samplerCube(SpecularEnvTex" +
+                  "ture, SpecularEnvSampler), n, 6);\r\n    vec4 specularSample = textureLod(samplerC" +
+                  "ube(SpecularEnvTexture, SpecularEnvSampler), reflection, lod);\r\n#else\r\n    vec4 " +
+                  "diffuseSample = texture(samplerCube(DiffuseEnvTexture, DiffuseEnvSampler), n);\r\n" +
+                  "    vec4 specularSample = texture(samplerCube(SpecularEnvTexture, SpecularEnvSam" +
+                  "pler), reflection);\r\n#endif\r\n\r\n#ifdef USE_HDR\r\n    // Already linear.\r\n    vec3 " +
+                  "diffuseLight = diffuseSample.rgb;\r\n    vec3 specularLight = specularSample.rgb;\r" +
+                  "\n#else\r\n    vec3 diffuseLight = SRGBtoLINEAR(diffuseSample).rgb;\r\n    vec3 specu" +
+                  "larLight = SRGBtoLINEAR(specularSample).rgb;\r\n#endif\r\n\r\n    vec3 diffuse = diffu" +
+                  "seLight * materialInfo.diffuseColor;\r\n    vec3 specular = specularLight * (mater" +
+                  "ialInfo.specularColor * brdf.x + brdf.y);\r\n\r\n    return diffuse + specular;\r\n}\r\n" +
+                  "#endif\r\n\r\n// Lambert lighting\r\n// see https://seblagarde.wordpress.com/2012/01/0" +
+                  "8/pi-or-not-to-pi-in-game-lighting-equation/\r\nvec3 diffuse(MaterialInfo material" +
+                  "Info)\r\n{\r\n    return materialInfo.diffuseColor / M_PI;\r\n}\r\n\r\n// The following eq" +
+                  "uation models the Fresnel reflectance term of the spec equation (aka F())\r\n// Im" +
+                  "plementation of fresnel from [4], Equation 15\r\nvec3 specularReflection(MaterialI" +
+                  "nfo materialInfo, AngularInfo angularInfo)\r\n{\r\n    return materialInfo.reflectan" +
+                  "ce0 + (materialInfo.reflectance90 - materialInfo.reflectance0) * pow(clamp(1.0 -" +
+                  " angularInfo.VdotH, 0.0, 1.0), 5.0);\r\n}\r\n\r\n// Smith Joint GGX\r\n// Note: Vis = G " +
+                  "/ (4 * NdotL * NdotV)\r\n// see Eric Heitz. 2014. Understanding the Masking-Shadow" +
+                  "ing Function in Microfacet-Based BRDFs. Journal of Computer Graphics Techniques," +
+                  " 3\r\n// see Real-Time Rendering. Page 331 to 336.\r\n// see https://google.github.i" +
+                  "o/filament/Filament.md.html#materialsystem/specularbrdf/geometricshadowing(specu" +
+                  "larg)\r\nfloat visibilityOcclusion(MaterialInfo materialInfo, AngularInfo angularI" +
+                  "nfo)\r\n{\r\n    float NdotL = angularInfo.NdotL;\r\n    float NdotV = angularInfo.Ndo" +
+                  "tV;\r\n    float alphaRoughnessSq = materialInfo.alphaRoughness * materialInfo.alp" +
+                  "haRoughness;\r\n\r\n    float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughn" +
+                  "essSq) + alphaRoughnessSq);\r\n    float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 " +
+                  "- alphaRoughnessSq) + alphaRoughnessSq);\r\n\r\n    float GGX = GGXV + GGXL;\r\n    if" +
+                  " (GGX > 0.0)\r\n    {\r\n        return 0.5 / GGX;\r\n    }\r\n    return 0.0;\r\n}\r\n\r\n// " +
+                  "The following equation(s) model the distribution of microfacet normals across th" +
+                  "e area being drawn (aka D())\r\n// Implementation from \"Average Irregularity Repre" +
+                  "sentation of a Roughened Surface for Ray Reflection\" by T. S. Trowbridge, and K." +
+                  " P. Reitz\r\n// Follows the distribution function recommended in the SIGGRAPH 2013" +
+                  " course notes from EPIC Games [1], Equation 3.\r\nfloat microfacetDistribution(Mat" +
+                  "erialInfo materialInfo, AngularInfo angularInfo)\r\n{\r\n    float alphaRoughnessSq " +
+                  "= materialInfo.alphaRoughness * materialInfo.alphaRoughness;\r\n    float f = (ang" +
+                  "ularInfo.NdotH * alphaRoughnessSq - angularInfo.NdotH) * angularInfo.NdotH + 1.0" +
+                  ";\r\n    return alphaRoughnessSq / (M_PI * f * f);\r\n}\r\n\r\nvec3 getPointShade(vec3 p" +
+                  "ointToLight, MaterialInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    AngularI" +
+                  "nfo angularInfo = getAngularInfo(pointToLight, normal, view);\r\n\r\n    if (angular" +
+                  "Info.NdotL > 0.0 || angularInfo.NdotV > 0.0)\r\n    {\r\n        // Calculate the sh" +
+                  "ading terms for the microfacet specular shading model\r\n        vec3 F = specular" +
+                  "Reflection(materialInfo, angularInfo);\r\n        float Vis = visibilityOcclusion(" +
+                  "materialInfo, angularInfo);\r\n        float D = microfacetDistribution(materialIn" +
+                  "fo, angularInfo);\r\n\r\n        // Calculation of analytical lighting contribution\r" +
+                  "\n        vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);\r\n        vec3 " +
+                  "specContrib = F * Vis * D;\r\n\r\n        // Obtain final intensity as reflectance (" +
+                  "BRDF) scaled by the energy of the light (cosine law)\r\n        return angularInfo" +
+                  ".NdotL * (diffuseContrib + specContrib);\r\n    }\r\n\r\n    return vec3(0.0, 0.0, 0.0" +
+                  ");\r\n}\r\n\r\n// https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khro" +
+                  "nos/KHR_lights_punctual/README.md#range-property\r\nfloat getRangeAttenuation(floa" +
+                  "t range, float distance)\r\n{\r\n    if (range < 0.0)\r\n    {\r\n        // negative ra" +
+                  "nge means unlimited\r\n        return 1.0;\r\n    }\r\n    return max(min(1.0 - pow(di" +
+                  "stance / range, 4.0), 1.0), 0.0) / pow(distance, 2.0);\r\n}\r\n\r\n// https://github.c" +
+                  "om/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/READ" +
+                  "ME.md#inner-and-outer-cone-angles\r\nfloat getSpotAttenuation(vec3 pointToLight, v" +
+                  "ec3 spotDirection, float outerConeCos, float innerConeCos)\r\n{\r\n    float actualC" +
+                  "os = dot(normalize(spotDirection), normalize(-pointToLight));\r\n    if (actualCos" +
+                  " > outerConeCos)\r\n    {\r\n        if (actualCos < innerConeCos)\r\n        {\r\n     " +
+                  "       return smoothstep(outerConeCos, innerConeCos, actualCos);\r\n        }\r\n   " +
+                  "     return 1.0;\r\n    }\r\n    return 0.0;\r\n}\r\n\r\nvec3 applyDirectionalLight(Light " +
+                  "light, MaterialInfo materialInfo, vec3 normal, vec3 view)\r\n{\r\n    vec3 pointToLi" +
+                  "ght = -light.direction;\r\n    vec3 shade = getPointShade(pointToLight, materialIn" +
+                  "fo, normal, view);\r\n    return light.intensity * light.color * shade;\r\n}\r\n\r\nvec3" +
+                  " applyPointLight(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)" +
+                  "\r\n{\r\n    vec3 pointToLight = light.position - v_Position;\r\n    float distance = " +
+                  "length(pointToLight);\r\n    float attenuation = getRangeAttenuation(light.range, " +
+                  "distance);\r\n    vec3 shade = getPointShade(pointToLight, materialInfo, normal, v" +
+                  "iew);\r\n    return attenuation * light.intensity * light.color * shade;\r\n}\r\n\r\nvec" +
+                  "3 applySpotLight(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)" +
+                  "\r\n{\r\n    vec3 pointToLight = light.position - v_Position;\r\n    float distance = " +
+                  "length(pointToLight);\r\n    float rangeAttenuation = getRangeAttenuation(light.ra" +
+                  "nge, distance);\r\n    float spotAttenuation = getSpotAttenuation(pointToLight, li" +
+                  "ght.direction, light.outerConeCos, light.innerConeCos);\r\n    vec3 shade = getPoi" +
+                  "ntShade(pointToLight, materialInfo, normal, view);\r\n    return rangeAttenuation " +
+                  "* spotAttenuation * light.intensity * light.color * shade;\r\n}\r\n\r\nvoid main()\r\n{\r" +
+                  "\n    // Metallic and Roughness material properties are packed together\r\n    // I" +
+                  "n glTF, these factors can be specified by fixed scalar values\r\n    // or from a " +
+                  "metallic-roughness map\r\n    float perceptualRoughness = 0.0;\r\n    float metallic" +
+                  " = 0.0;\r\n    vec4 baseColor = vec4(0.0, 0.0, 0.0, 1.0);\r\n    vec3 diffuseColor =" +
+                  " vec3(0.0);\r\n    vec3 specularColor= vec3(0.0);\r\n    vec3 f0 = vec3(0.04);\r\n\r\n#i" +
+                  "fdef MATERIAL_SPECULARGLOSSINESS\r\n\r\n#ifdef HAS_SPECULAR_GLOSSINESS_MAP\r\n    vec4" +
+                  " sgSample = SRGBtoLINEAR(texture(sampler2D(SpecularGlossinessTexture, SpecularGl" +
+                  "ossinessSampler), getSpecularGlossinessUV()));\r\n    perceptualRoughness = (1.0 -" +
+                  " sgSample.a * GlossinessFactor); // glossiness to roughness\r\n    f0 = sgSample.r" +
+                  "gb * SpecularFactor; // specular\r\n#else\r\n    f0 = SpecularFactor;\r\n    perceptua" +
+                  "lRoughness = 1.0 - GlossinessFactor;\r\n#endif // ! HAS_SPECULAR_GLOSSINESS_MAP\r\n\r" +
+                  "\n#ifdef HAS_DIFFUSE_MAP\r\n    baseColor = SRGBtoLINEAR(texture(sampler2D(DiffuseT" +
+                  "exture, DiffuseSampler), getDiffuseUV())) * DiffuseFactor;\r\n#else\r\n    baseColor" +
+                  " = DiffuseFactor;\r\n#endif // !HAS_DIFFUSE_MAP\r\n\r\n    baseColor *= getVertexColor" +
+                  "();\r\n\r\n    // f0 = specular\r\n    specularColor = f0;\r\n    float oneMinusSpecular" +
+                  "Strength = 1.0 - max(max(f0.r, f0.g), f0.b);\r\n    diffuseColor = baseColor.rgb *" +
+                  " oneMinusSpecularStrength;\r\n\r\n#ifdef DEBUG_METALLIC\r\n    // do conversion betwee" +
+                  "n metallic M-R and S-G metallic\r\n    metallic = solveMetallic(baseColor.rgb, spe" +
+                  "cularColor, oneMinusSpecularStrength);\r\n#endif // ! DEBUG_METALLIC\r\n\r\n#endif // " +
+                  "! MATERIAL_SPECULARGLOSSINESS\r\n\r\n#ifdef MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef HAS" +
+                  "_METALLIC_ROUGHNESS_MAP\r\n    // Roughness is stored in the \'g\' channel, metallic" +
+                  " is stored in the \'b\' channel.\r\n    // This layout intentionally reserves the \'r" +
+                  "\' channel for (optional) occlusion map data\r\n    vec4 mrSample = texture(sampler" +
+                  "2D(MetallicRoughnessTexture, MetallicRoughnessSampler), getMetallicRoughnessUV()" +
+                  ");\r\n    perceptualRoughness = mrSample.g * RoughnessFactor;\r\n    metallic = mrSa" +
+                  "mple.b * MetallicFactor;\r\n#else\r\n    metallic = MetallicFactor;\r\n    perceptualR" +
+                  "oughness = RoughnessFactor;\r\n#endif\r\n\r\n    // The albedo may be defined from a b" +
+                  "ase texture or a flat color\r\n#ifdef HAS_BASE_COLOR_MAP\r\n    baseColor = SRGBtoLI" +
+                  "NEAR(texture(sampler2D(BaseColorTexture, BaseColorSampler), getBaseColorUV())) *" +
+                  " BaseColorFactor;\r\n#else\r\n    baseColor = BaseColorFactor;\r\n#endif\r\n\r\n    baseCo" +
+                  "lor *= getVertexColor();\r\n\r\n    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) " +
+                  "* (1.0 - metallic);\r\n\r\n    specularColor = mix(f0, baseColor.rgb, metallic);\r\n\r\n" +
+                  "#endif // ! MATERIAL_METALLICROUGHNESS\r\n\r\n#ifdef ALPHAMODE_MASK\r\n    if(baseColo" +
+                  "r.a < AlphaCutoff)\r\n    {\r\n        discard;\r\n    }\r\n    baseColor.a = 1.0;\r\n#end" +
+                  "if\r\n\r\n#ifdef ALPHAMODE_OPAQUE\r\n    baseColor.a = 1.0;\r\n#endif\r\n\r\n#ifdef MATERIAL" +
+                  "_UNLIT\r\n    outFragColor = vec4(LINEARtoSRGB(baseColor.rgb), baseColor.a);\r\n    " +
+                  "return;\r\n#endif\r\n\r\n    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0" +
+                  ");\r\n    metallic = clamp(metallic, 0.0, 1.0);\r\n\r\n    // Roughness is authored as" +
+                  " perceptual roughness; as is convention,\r\n    // convert to material roughness b" +
+                  "y squaring the perceptual roughness [2].\r\n    float alphaRoughness = perceptualR" +
+                  "oughness * perceptualRoughness;\r\n\r\n    // Compute reflectance.\r\n    float reflec" +
+                  "tance = max(max(specularColor.r, specularColor.g), specularColor.b);\r\n\r\n    vec3" +
+                  " specularEnvironmentR0 = specularColor.rgb;\r\n    // Anything less than 2% is phy" +
+                  "sically impossible and is instead considered to be shadowing. Compare to \"Real-T" +
+                  "ime-Rendering\" 4th editon on page 325.\r\n    vec3 specularEnvironmentR90 = vec3(c" +
+                  "lamp(reflectance * 50.0, 0.0, 1.0));\r\n\r\n    MaterialInfo materialInfo = Material" +
+                  "Info(\r\n        perceptualRoughness,\r\n        specularEnvironmentR0,\r\n        alp" +
+                  "haRoughness,\r\n        diffuseColor,\r\n        specularEnvironmentR90,\r\n        sp" +
+                  "ecularColor\r\n    );\r\n\r\n    // LIGHTING\r\n\r\n    vec3 color = vec3(0.0, 0.0, 0.0);\r" +
+                  "\n    vec3 normal = getNormal();\r\n    vec3 view = normalize(u_Camera - v_Position" +
+                  ");\r\n\r\n#ifdef USE_PUNCTUAL\r\n    for (int i = 0; i < LIGHT_COUNT; ++i)\r\n    {\r\n   " +
+                  "     Light light = u_Lights[i];\r\n        if (light.type == LightType_Directional" +
+                  ")\r\n        {\r\n            color += applyDirectionalLight(light, materialInfo, no" +
+                  "rmal, view);\r\n        }\r\n        else if (light.type == LightType_Point)\r\n      " +
+                  "  {\r\n            color += applyPointLight(light, materialInfo, normal, view);\r\n " +
+                  "       }\r\n        else if (light.type == LightType_Spot)\r\n        {\r\n           " +
+                  " color += applySpotLight(light, materialInfo, normal, view);\r\n        }\r\n    }\r\n" +
+                  "#endif\r\n\r\n    // Calculate lighting contribution from image based lighting sourc" +
+                  "e (IBL)\r\n#ifdef USE_IBL\r\n    color += getIBLContribution(materialInfo, normal, v" +
+                  "iew);\r\n#endif\r\n\r\n    float ao = 1.0;\r\n    // Apply optional PBR terms for additi" +
+                  "onal (optional) shading\r\n#ifdef HAS_OCCLUSION_MAP\r\n    ao = texture(sampler2D(Oc" +
+                  "clusionTexture, OcclusionSampler), getOcclusionUV()).r;\r\n    color = mix(color, " +
+                  "color * ao, OcclusionStrength);\r\n#endif\r\n\r\n    vec3 emissive = vec3(0);\r\n#ifdef " +
+                  "HAS_EMISSIVE_MAP\r\n    emissive = SRGBtoLINEAR(texture(sampler2D(EmissiveTexture," +
+                  " EmissiveSampler), getEmissiveUV())).rgb * EmissiveFactor;\r\n    color += emissiv" +
+                  "e;\r\n#endif\r\n\r\n#ifndef DEBUG_OUTPUT // no debug\r\n\r\n   // regular shading\r\n   outF" +
+                  "ragColor = vec4(toneMap(color), baseColor.a);\r\n\r\n#else // debug output\r\n\r\n    #i" +
+                  "fdef DEBUG_METALLIC\r\n        outFragColor.rgb = vec3(metallic);\r\n    #endif\r\n\r\n " +
+                  "   #ifdef DEBUG_ROUGHNESS\r\n        outFragColor.rgb = vec3(perceptualRoughness);" +
+                  "\r\n    #endif\r\n\r\n    #ifdef DEBUG_NORMAL\r\n        #ifdef HAS_NORMAL_MAP\r\n        " +
+                  "    outFragColor.rgb = texture2D(NormalSampler, getNormalUV()).rgb;\r\n        #el" +
+                  "se\r\n            outFragColor.rgb = vec3(0.5, 0.5, 1.0);\r\n        #endif\r\n    #en" +
+                  "dif\r\n\r\n    #ifdef DEBUG_BASECOLOR\r\n        outFragColor.rgb = LINEARtoSRGB(baseC" +
+                  "olor.rgb);\r\n    #endif\r\n\r\n    #ifdef DEBUG_OCCLUSION\r\n        outFragColor.rgb =" +
+                  " vec3(ao);\r\n    #endif\r\n\r\n    #ifdef DEBUG_EMISSIVE\r\n        outFragColor.rgb = " +
+                  "LINEARtoSRGB(emissive);\r\n    #endif\r\n\r\n    #ifdef DEBUG_F0\r\n        outFragColor" +
+                  ".rgb = vec3(f0);\r\n    #endif\r\n\r\n    #ifdef DEBUG_ALPHA\r\n        outFragColor.rgb" +
+                  " = vec3(baseColor.a);\r\n    #endif\r\n\r\n    outFragColor.a = 1.0;\r\n\r\n#endif // !DEB" +
+                  "UG_OUTPUT\r\n}");
+            return GenerationEnvironment.ToString();
         }
     }
-    
-    #line default
-    #line hidden
+
+#line default
+#line hidden
+
     #region Base class
+
     /// <summary>
-    /// Base class for this transformation
+    ///     Base class for this transformation
     /// </summary>
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
+    [GeneratedCode("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
     public class FragmentShaderBase
     {
         #region Fields
-        private global::System.Text.StringBuilder generationEnvironmentField;
-        private global::System.CodeDom.Compiler.CompilerErrorCollection errorsField;
-        private global::System.Collections.Generic.List<int> indentLengthsField;
-        private string currentIndentField = "";
+
+        private StringBuilder generationEnvironmentField;
+        private CompilerErrorCollection errorsField;
+        private List<int> indentLengthsField;
         private bool endsWithNewline;
-        private global::System.Collections.Generic.IDictionary<string, object> sessionField;
+
         #endregion
+
         #region Properties
+
         /// <summary>
-        /// The string builder that generation-time code is using to assemble generated output
+        ///     The string builder that generation-time code is using to assemble generated output
         /// </summary>
-        protected System.Text.StringBuilder GenerationEnvironment
+        protected StringBuilder GenerationEnvironment
         {
             get
             {
-                if ((this.generationEnvironmentField == null))
-                {
-                    this.generationEnvironmentField = new global::System.Text.StringBuilder();
-                }
-                return this.generationEnvironmentField;
+                if (generationEnvironmentField == null) generationEnvironmentField = new StringBuilder();
+                return generationEnvironmentField;
             }
-            set
-            {
-                this.generationEnvironmentField = value;
-            }
+            set => generationEnvironmentField = value;
         }
+
         /// <summary>
-        /// The error collection for the generation process
+        ///     The error collection for the generation process
         /// </summary>
-        public System.CodeDom.Compiler.CompilerErrorCollection Errors
+        public CompilerErrorCollection Errors
         {
             get
             {
-                if ((this.errorsField == null))
-                {
-                    this.errorsField = new global::System.CodeDom.Compiler.CompilerErrorCollection();
-                }
-                return this.errorsField;
+                if (errorsField == null) errorsField = new CompilerErrorCollection();
+                return errorsField;
             }
         }
+
         /// <summary>
-        /// A list of the lengths of each indent that was added with PushIndent
+        ///     A list of the lengths of each indent that was added with PushIndent
         /// </summary>
-        private System.Collections.Generic.List<int> indentLengths
+        private List<int> indentLengths
         {
             get
             {
-                if ((this.indentLengthsField == null))
-                {
-                    this.indentLengthsField = new global::System.Collections.Generic.List<int>();
-                }
-                return this.indentLengthsField;
+                if (indentLengthsField == null) indentLengthsField = new List<int>();
+                return indentLengthsField;
             }
         }
+
         /// <summary>
-        /// Gets the current indent we use when adding lines to the output
+        ///     Gets the current indent we use when adding lines to the output
         /// </summary>
-        public string CurrentIndent
-        {
-            get
-            {
-                return this.currentIndentField;
-            }
-        }
+        public string CurrentIndent { get; private set; } = "";
+
         /// <summary>
-        /// Current transformation session
+        ///     Current transformation session
         /// </summary>
-        public virtual global::System.Collections.Generic.IDictionary<string, object> Session
-        {
-            get
-            {
-                return this.sessionField;
-            }
-            set
-            {
-                this.sessionField = value;
-            }
-        }
+        public virtual IDictionary<string, object> Session { get; set; }
+
         #endregion
+
         #region Transform-time helpers
+
         /// <summary>
-        /// Write text directly into the generated output
+        ///     Write text directly into the generated output
         /// </summary>
         public void Write(string textToAppend)
         {
-            if (string.IsNullOrEmpty(textToAppend))
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(textToAppend)) return;
             // If we're starting off, or if the previous text ended with a newline,
             // we have to append the current indent first.
-            if (((this.GenerationEnvironment.Length == 0) 
-                        || this.endsWithNewline))
+            if (GenerationEnvironment.Length == 0
+                || endsWithNewline)
             {
-                this.GenerationEnvironment.Append(this.currentIndentField);
-                this.endsWithNewline = false;
+                GenerationEnvironment.Append(CurrentIndent);
+                endsWithNewline = false;
             }
+
             // Check if the current text ends with a newline
-            if (textToAppend.EndsWith(global::System.Environment.NewLine, global::System.StringComparison.CurrentCulture))
-            {
-                this.endsWithNewline = true;
-            }
+            if (textToAppend.EndsWith(Environment.NewLine, StringComparison.CurrentCulture)) endsWithNewline = true;
             // This is an optimization. If the current indent is "", then we don't have to do any
             // of the more complex stuff further down.
-            if ((this.currentIndentField.Length == 0))
+            if (CurrentIndent.Length == 0)
             {
-                this.GenerationEnvironment.Append(textToAppend);
+                GenerationEnvironment.Append(textToAppend);
                 return;
             }
+
             // Everywhere there is a newline in the text, add an indent after it
-            textToAppend = textToAppend.Replace(global::System.Environment.NewLine, (global::System.Environment.NewLine + this.currentIndentField));
+            textToAppend = textToAppend.Replace(Environment.NewLine, Environment.NewLine + CurrentIndent);
             // If the text ends with a newline, then we should strip off the indent added at the very end
             // because the appropriate indent will be added when the next time Write() is called
-            if (this.endsWithNewline)
-            {
-                this.GenerationEnvironment.Append(textToAppend, 0, (textToAppend.Length - this.currentIndentField.Length));
-            }
+            if (endsWithNewline)
+                GenerationEnvironment.Append(textToAppend, 0, textToAppend.Length - CurrentIndent.Length);
             else
-            {
-                this.GenerationEnvironment.Append(textToAppend);
-            }
+                GenerationEnvironment.Append(textToAppend);
         }
+
         /// <summary>
-        /// Write text directly into the generated output
+        ///     Write text directly into the generated output
         /// </summary>
         public void WriteLine(string textToAppend)
         {
-            this.Write(textToAppend);
-            this.GenerationEnvironment.AppendLine();
-            this.endsWithNewline = true;
+            Write(textToAppend);
+            GenerationEnvironment.AppendLine();
+            endsWithNewline = true;
         }
+
         /// <summary>
-        /// Write formatted text directly into the generated output
+        ///     Write formatted text directly into the generated output
         /// </summary>
         public void Write(string format, params object[] args)
         {
-            this.Write(string.Format(global::System.Globalization.CultureInfo.CurrentCulture, format, args));
+            Write(string.Format(CultureInfo.CurrentCulture, format, args));
         }
+
         /// <summary>
-        /// Write formatted text directly into the generated output
+        ///     Write formatted text directly into the generated output
         /// </summary>
         public void WriteLine(string format, params object[] args)
         {
-            this.WriteLine(string.Format(global::System.Globalization.CultureInfo.CurrentCulture, format, args));
+            WriteLine(string.Format(CultureInfo.CurrentCulture, format, args));
         }
+
         /// <summary>
-        /// Raise an error
+        ///     Raise an error
         /// </summary>
         public void Error(string message)
         {
-            System.CodeDom.Compiler.CompilerError error = new global::System.CodeDom.Compiler.CompilerError();
+            var error = new CompilerError();
             error.ErrorText = message;
-            this.Errors.Add(error);
+            Errors.Add(error);
         }
+
         /// <summary>
-        /// Raise a warning
+        ///     Raise a warning
         /// </summary>
         public void Warning(string message)
         {
-            System.CodeDom.Compiler.CompilerError error = new global::System.CodeDom.Compiler.CompilerError();
+            var error = new CompilerError();
             error.ErrorText = message;
             error.IsWarning = true;
-            this.Errors.Add(error);
+            Errors.Add(error);
         }
+
         /// <summary>
-        /// Increase the indent
+        ///     Increase the indent
         /// </summary>
         public void PushIndent(string indent)
         {
-            if ((indent == null))
-            {
-                throw new global::System.ArgumentNullException("indent");
-            }
-            this.currentIndentField = (this.currentIndentField + indent);
-            this.indentLengths.Add(indent.Length);
+            if (indent == null) throw new ArgumentNullException("indent");
+            CurrentIndent = CurrentIndent + indent;
+            indentLengths.Add(indent.Length);
         }
+
         /// <summary>
-        /// Remove the last indent that was added with PushIndent
+        ///     Remove the last indent that was added with PushIndent
         /// </summary>
         public string PopIndent()
         {
-            string returnValue = "";
-            if ((this.indentLengths.Count > 0))
+            var returnValue = "";
+            if (indentLengths.Count > 0)
             {
-                int indentLength = this.indentLengths[(this.indentLengths.Count - 1)];
-                this.indentLengths.RemoveAt((this.indentLengths.Count - 1));
-                if ((indentLength > 0))
+                var indentLength = indentLengths[indentLengths.Count - 1];
+                indentLengths.RemoveAt(indentLengths.Count - 1);
+                if (indentLength > 0)
                 {
-                    returnValue = this.currentIndentField.Substring((this.currentIndentField.Length - indentLength));
-                    this.currentIndentField = this.currentIndentField.Remove((this.currentIndentField.Length - indentLength));
+                    returnValue = CurrentIndent.Substring(CurrentIndent.Length - indentLength);
+                    CurrentIndent = CurrentIndent.Remove(CurrentIndent.Length - indentLength);
                 }
             }
+
             return returnValue;
         }
+
         /// <summary>
-        /// Remove any indentation
+        ///     Remove any indentation
         /// </summary>
         public void ClearIndent()
         {
-            this.indentLengths.Clear();
-            this.currentIndentField = "";
+            indentLengths.Clear();
+            CurrentIndent = "";
         }
+
         #endregion
+
         #region ToString Helpers
+
         /// <summary>
-        /// Utility class to produce culture-oriented representation of an object as a string.
+        ///     Utility class to produce culture-oriented representation of an object as a string.
         /// </summary>
         public class ToStringInstanceHelper
         {
-            private System.IFormatProvider formatProviderField  = global::System.Globalization.CultureInfo.InvariantCulture;
+            private IFormatProvider formatProviderField = CultureInfo.InvariantCulture;
+
             /// <summary>
-            /// Gets or sets format provider to be used by ToStringWithCulture method.
+            ///     Gets or sets format provider to be used by ToStringWithCulture method.
             /// </summary>
-            public System.IFormatProvider FormatProvider
+            public IFormatProvider FormatProvider
             {
-                get
-                {
-                    return this.formatProviderField ;
-                }
+                get => formatProviderField;
                 set
                 {
-                    if ((value != null))
-                    {
-                        this.formatProviderField  = value;
-                    }
+                    if (value != null) formatProviderField = value;
                 }
             }
+
             /// <summary>
-            /// This is called from the compile/run appdomain to convert objects within an expression block to a string
+            ///     This is called from the compile/run appdomain to convert objects within an expression block to a string
             /// </summary>
             public string ToStringWithCulture(object objectToConvert)
             {
-                if ((objectToConvert == null))
+                if (objectToConvert == null) throw new ArgumentNullException("objectToConvert");
+                var t = objectToConvert.GetType();
+                var method = t.GetMethod("ToString", new[]
                 {
-                    throw new global::System.ArgumentNullException("objectToConvert");
-                }
-                System.Type t = objectToConvert.GetType();
-                System.Reflection.MethodInfo method = t.GetMethod("ToString", new System.Type[] {
-                            typeof(System.IFormatProvider)});
-                if ((method == null))
-                {
+                    typeof(IFormatProvider)
+                });
+                if (method == null)
                     return objectToConvert.ToString();
-                }
-                else
+                return (string) method.Invoke(objectToConvert, new object[]
                 {
-                    return ((string)(method.Invoke(objectToConvert, new object[] {
-                                this.formatProviderField })));
-                }
+                    formatProviderField
+                });
             }
         }
-        private ToStringInstanceHelper toStringHelperField = new ToStringInstanceHelper();
+
         /// <summary>
-        /// Helper to produce culture-oriented representation of an object as a string
+        ///     Helper to produce culture-oriented representation of an object as a string
         /// </summary>
-        public ToStringInstanceHelper ToStringHelper
-        {
-            get
-            {
-                return this.toStringHelperField;
-            }
-        }
+        public ToStringInstanceHelper ToStringHelper { get; } = new ToStringInstanceHelper();
+
         #endregion
     }
+
     #endregion
 }

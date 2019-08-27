@@ -10,7 +10,8 @@ namespace VeldridGlTF.Viewer
 
         [Option('w', "windowstate")] public WindowState WindowState { get; set; } = WindowState.Normal;
 
-        [Option('d', "data", Default = "Assets")] public string DataFolder { get; set; } = "Assets";
+        [Option('d', "data", Default = "Assets")]
+        public string DataFolder { get; set; } = "Assets";
 
         [Option('i', "input")] public string FileName { get; set; }
 

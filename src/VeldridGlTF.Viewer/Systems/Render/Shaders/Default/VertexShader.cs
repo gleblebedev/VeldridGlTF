@@ -7,389 +7,353 @@
 //     the code is regenerated.
 // </auto-generated>
 // ------------------------------------------------------------------------------
+
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using VeldridGlTF.Viewer.Systems.Render.Uniforms;
+
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders.Default
 {
-    using System.Linq;
-    using System.Text;
-    using System.Collections.Generic;
-    using VeldridGlTF.Viewer.Systems.Render.Uniforms;
-    using System;
-    
     /// <summary>
-    /// Class to produce the template output
+    ///     Class to produce the template output
     /// </summary>
-    
-    #line 1 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
+#line 1 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+    [GeneratedCode("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
     public partial class VertexShader : VertexShaderBase
     {
-#line hidden
         /// <summary>
-        /// Create the template output
+        ///     Create the template output
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write("#version 450\r\n\r\nlayout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
-            
-            #line 11 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            Write("#version 450\r\n\r\nlayout(set = 0, binding = 0) uniform EnvironmentProperties\r\n{\r\n");
 
-	Glsl.WriteMembers<EnvironmentProperties>(this);
+#line 11 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
-            
-            #line default
-            #line hidden
-            this.Write("};\r\nlayout(set = 2, binding = 0) uniform ObjectProperties\r\n{\r\n");
-            
-            #line 17 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            Glsl.WriteMembers<EnvironmentProperties>(this);
 
-	Glsl.WriteMembers<ObjectProperties>(this);
 
-            
-            #line default
-            #line hidden
-            this.Write("};\r\n\r\n");
-            
-            #line 22 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+#line default
+#line hidden
+            Write("};\r\nlayout(set = 2, binding = 0) uniform ObjectProperties\r\n{\r\n");
 
-	for (int location=0; location<Context.VertexElements.Count; ++location)
-	{
-		WriteLine(string.Format("layout(location = {0}) in {1} {2};", location, Glsl.NameOf(Context.VertexElements[location].Format), Context.VertexElements[location].Name));
-	}
+#line 17 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
-            
-            #line default
-            #line hidden
-            
-            #line 28 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            Glsl.WriteMembers<ObjectProperties>(this);
 
-	for (int location=0; location<Context.Varyings.Count; ++location)
-	{
-		WriteLine(string.Format("layout(location = {0}) out {1} {2};", Context.Varyings[location].Location, Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
-	}
 
-            
-            #line default
-            #line hidden
-            this.Write("\r\nvoid main()\r\n{\r\n    vec4 worldPosition = u_ModelMatrix * vec4(POSITION, 1);\r\n\t");
-            
-            #line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.WorldPosition));
-            
-            #line default
-            #line hidden
-            this.Write(" = worldPosition.xyz;\r\n\t");
-            
-            #line 39 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Context.CameraPosition));
-            
-            #line default
-            #line hidden
-            this.Write(" = u_Camera;\r\n    vec4 clipPosition = u_ViewProjectionMatrix * worldPosition;\r\n  " +
-                    "  gl_Position = clipPosition;\r\n");
-            
-            #line 42 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+#line default
+#line hidden
+            Write("};\r\n\r\n");
 
-	if (Context.Normal != null)
-	{
-		WriteLine(string.Format("{0} = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));", Context.Normal.Name));
-	}
-	if (Context.TBN != null)
-	{
-	    WriteLine("vec4 tangent = TANGENT;");
-		WriteLine("vec3 normalW = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));");
-		WriteLine("vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(tangent.xyz, 0.0)));");
-		WriteLine("vec3 bitangentW = cross(normalW, tangentW) * tangent.w;");
-		WriteLine(string.Format("{0} = mat3(tangentW, bitangentW, normalW);", Context.TBN.Name));
-	}
-	if (Context.TexCoord0 != null)
-	{
-		WriteLine(string.Format("{0} = TEXCOORD_0;", Context.TexCoord0.Name));
-	}
-	if (Context.TexCoord1 != null)
-	{
-		WriteLine(string.Format("{0} = TEXCOORD_1;", Context.TexCoord1.Name));
-	}
+#line 22 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
 
-            
-            #line default
-            #line hidden
-            this.Write("}");
-            return this.GenerationEnvironment.ToString();
+            for (var location = 0; location < Context.VertexElements.Count; ++location)
+                WriteLine(string.Format("layout(location = {0}) in {1} {2};", location,
+                    Glsl.NameOf(Context.VertexElements[location].Format), Context.VertexElements[location].Name));
+
+
+#line default
+#line hidden
+
+#line 28 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+
+            for (var location = 0; location < Context.Varyings.Count; ++location)
+                WriteLine(string.Format("layout(location = {0}) out {1} {2};", Context.Varyings[location].Location,
+                    Glsl.NameOf(Context.Varyings[location].Format), Context.Varyings[location].Name));
+
+
+#line default
+#line hidden
+            Write("\r\nvoid main()\r\n{\r\n    vec4 worldPosition = u_ModelMatrix * vec4(POSITION, 1);\r\n\t");
+
+#line 38 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            Write(ToStringHelper.ToStringWithCulture(Context.WorldPosition));
+
+#line default
+#line hidden
+            Write(" = worldPosition.xyz;\r\n\t");
+
+#line 39 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+            Write(ToStringHelper.ToStringWithCulture(Context.CameraPosition));
+
+#line default
+#line hidden
+            Write(" = u_Camera;\r\n    vec4 clipPosition = u_ViewProjectionMatrix * worldPosition;\r\n  " +
+                  "  gl_Position = clipPosition;\r\n");
+
+#line 42 "E:\MyWork\VeldridGlTF\src\VeldridGlTF.Viewer\Systems\Render\Shaders\Default\VertexShader.tt"
+
+            if (Context.Normal != null)
+                WriteLine(string.Format("{0} = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));",
+                    Context.Normal.Name));
+            if (Context.TBN != null)
+            {
+                WriteLine("vec4 tangent = TANGENT;");
+                WriteLine("vec3 normalW = normalize(vec3(u_NormalMatrix * vec4(NORMAL, 0.0)));");
+                WriteLine("vec3 tangentW = normalize(vec3(u_ModelMatrix * vec4(tangent.xyz, 0.0)));");
+                WriteLine("vec3 bitangentW = cross(normalW, tangentW) * tangent.w;");
+                WriteLine(string.Format("{0} = mat3(tangentW, bitangentW, normalW);", Context.TBN.Name));
+            }
+
+            if (Context.TexCoord0 != null) WriteLine(string.Format("{0} = TEXCOORD_0;", Context.TexCoord0.Name));
+            if (Context.TexCoord1 != null) WriteLine(string.Format("{0} = TEXCOORD_1;", Context.TexCoord1.Name));
+
+
+#line default
+#line hidden
+            Write("}");
+            return GenerationEnvironment.ToString();
         }
     }
-    
-    #line default
-    #line hidden
+
+#line default
+#line hidden
+
     #region Base class
+
     /// <summary>
-    /// Base class for this transformation
+    ///     Base class for this transformation
     /// </summary>
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
+    [GeneratedCode("Microsoft.VisualStudio.TextTemplating", "16.0.0.0")]
     public class VertexShaderBase
     {
         #region Fields
-        private global::System.Text.StringBuilder generationEnvironmentField;
-        private global::System.CodeDom.Compiler.CompilerErrorCollection errorsField;
-        private global::System.Collections.Generic.List<int> indentLengthsField;
-        private string currentIndentField = "";
+
+        private StringBuilder generationEnvironmentField;
+        private CompilerErrorCollection errorsField;
+        private List<int> indentLengthsField;
         private bool endsWithNewline;
-        private global::System.Collections.Generic.IDictionary<string, object> sessionField;
+
         #endregion
+
         #region Properties
+
         /// <summary>
-        /// The string builder that generation-time code is using to assemble generated output
+        ///     The string builder that generation-time code is using to assemble generated output
         /// </summary>
-        protected System.Text.StringBuilder GenerationEnvironment
+        protected StringBuilder GenerationEnvironment
         {
             get
             {
-                if ((this.generationEnvironmentField == null))
-                {
-                    this.generationEnvironmentField = new global::System.Text.StringBuilder();
-                }
-                return this.generationEnvironmentField;
+                if (generationEnvironmentField == null) generationEnvironmentField = new StringBuilder();
+                return generationEnvironmentField;
             }
-            set
-            {
-                this.generationEnvironmentField = value;
-            }
+            set => generationEnvironmentField = value;
         }
+
         /// <summary>
-        /// The error collection for the generation process
+        ///     The error collection for the generation process
         /// </summary>
-        public System.CodeDom.Compiler.CompilerErrorCollection Errors
+        public CompilerErrorCollection Errors
         {
             get
             {
-                if ((this.errorsField == null))
-                {
-                    this.errorsField = new global::System.CodeDom.Compiler.CompilerErrorCollection();
-                }
-                return this.errorsField;
+                if (errorsField == null) errorsField = new CompilerErrorCollection();
+                return errorsField;
             }
         }
+
         /// <summary>
-        /// A list of the lengths of each indent that was added with PushIndent
+        ///     A list of the lengths of each indent that was added with PushIndent
         /// </summary>
-        private System.Collections.Generic.List<int> indentLengths
+        private List<int> indentLengths
         {
             get
             {
-                if ((this.indentLengthsField == null))
-                {
-                    this.indentLengthsField = new global::System.Collections.Generic.List<int>();
-                }
-                return this.indentLengthsField;
+                if (indentLengthsField == null) indentLengthsField = new List<int>();
+                return indentLengthsField;
             }
         }
+
         /// <summary>
-        /// Gets the current indent we use when adding lines to the output
+        ///     Gets the current indent we use when adding lines to the output
         /// </summary>
-        public string CurrentIndent
-        {
-            get
-            {
-                return this.currentIndentField;
-            }
-        }
+        public string CurrentIndent { get; private set; } = "";
+
         /// <summary>
-        /// Current transformation session
+        ///     Current transformation session
         /// </summary>
-        public virtual global::System.Collections.Generic.IDictionary<string, object> Session
-        {
-            get
-            {
-                return this.sessionField;
-            }
-            set
-            {
-                this.sessionField = value;
-            }
-        }
+        public virtual IDictionary<string, object> Session { get; set; }
+
         #endregion
+
         #region Transform-time helpers
+
         /// <summary>
-        /// Write text directly into the generated output
+        ///     Write text directly into the generated output
         /// </summary>
         public void Write(string textToAppend)
         {
-            if (string.IsNullOrEmpty(textToAppend))
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(textToAppend)) return;
             // If we're starting off, or if the previous text ended with a newline,
             // we have to append the current indent first.
-            if (((this.GenerationEnvironment.Length == 0) 
-                        || this.endsWithNewline))
+            if (GenerationEnvironment.Length == 0
+                || endsWithNewline)
             {
-                this.GenerationEnvironment.Append(this.currentIndentField);
-                this.endsWithNewline = false;
+                GenerationEnvironment.Append(CurrentIndent);
+                endsWithNewline = false;
             }
+
             // Check if the current text ends with a newline
-            if (textToAppend.EndsWith(global::System.Environment.NewLine, global::System.StringComparison.CurrentCulture))
-            {
-                this.endsWithNewline = true;
-            }
+            if (textToAppend.EndsWith(Environment.NewLine, StringComparison.CurrentCulture)) endsWithNewline = true;
             // This is an optimization. If the current indent is "", then we don't have to do any
             // of the more complex stuff further down.
-            if ((this.currentIndentField.Length == 0))
+            if (CurrentIndent.Length == 0)
             {
-                this.GenerationEnvironment.Append(textToAppend);
+                GenerationEnvironment.Append(textToAppend);
                 return;
             }
+
             // Everywhere there is a newline in the text, add an indent after it
-            textToAppend = textToAppend.Replace(global::System.Environment.NewLine, (global::System.Environment.NewLine + this.currentIndentField));
+            textToAppend = textToAppend.Replace(Environment.NewLine, Environment.NewLine + CurrentIndent);
             // If the text ends with a newline, then we should strip off the indent added at the very end
             // because the appropriate indent will be added when the next time Write() is called
-            if (this.endsWithNewline)
-            {
-                this.GenerationEnvironment.Append(textToAppend, 0, (textToAppend.Length - this.currentIndentField.Length));
-            }
+            if (endsWithNewline)
+                GenerationEnvironment.Append(textToAppend, 0, textToAppend.Length - CurrentIndent.Length);
             else
-            {
-                this.GenerationEnvironment.Append(textToAppend);
-            }
+                GenerationEnvironment.Append(textToAppend);
         }
+
         /// <summary>
-        /// Write text directly into the generated output
+        ///     Write text directly into the generated output
         /// </summary>
         public void WriteLine(string textToAppend)
         {
-            this.Write(textToAppend);
-            this.GenerationEnvironment.AppendLine();
-            this.endsWithNewline = true;
+            Write(textToAppend);
+            GenerationEnvironment.AppendLine();
+            endsWithNewline = true;
         }
+
         /// <summary>
-        /// Write formatted text directly into the generated output
+        ///     Write formatted text directly into the generated output
         /// </summary>
         public void Write(string format, params object[] args)
         {
-            this.Write(string.Format(global::System.Globalization.CultureInfo.CurrentCulture, format, args));
+            Write(string.Format(CultureInfo.CurrentCulture, format, args));
         }
+
         /// <summary>
-        /// Write formatted text directly into the generated output
+        ///     Write formatted text directly into the generated output
         /// </summary>
         public void WriteLine(string format, params object[] args)
         {
-            this.WriteLine(string.Format(global::System.Globalization.CultureInfo.CurrentCulture, format, args));
+            WriteLine(string.Format(CultureInfo.CurrentCulture, format, args));
         }
+
         /// <summary>
-        /// Raise an error
+        ///     Raise an error
         /// </summary>
         public void Error(string message)
         {
-            System.CodeDom.Compiler.CompilerError error = new global::System.CodeDom.Compiler.CompilerError();
+            var error = new CompilerError();
             error.ErrorText = message;
-            this.Errors.Add(error);
+            Errors.Add(error);
         }
+
         /// <summary>
-        /// Raise a warning
+        ///     Raise a warning
         /// </summary>
         public void Warning(string message)
         {
-            System.CodeDom.Compiler.CompilerError error = new global::System.CodeDom.Compiler.CompilerError();
+            var error = new CompilerError();
             error.ErrorText = message;
             error.IsWarning = true;
-            this.Errors.Add(error);
+            Errors.Add(error);
         }
+
         /// <summary>
-        /// Increase the indent
+        ///     Increase the indent
         /// </summary>
         public void PushIndent(string indent)
         {
-            if ((indent == null))
-            {
-                throw new global::System.ArgumentNullException("indent");
-            }
-            this.currentIndentField = (this.currentIndentField + indent);
-            this.indentLengths.Add(indent.Length);
+            if (indent == null) throw new ArgumentNullException("indent");
+            CurrentIndent = CurrentIndent + indent;
+            indentLengths.Add(indent.Length);
         }
+
         /// <summary>
-        /// Remove the last indent that was added with PushIndent
+        ///     Remove the last indent that was added with PushIndent
         /// </summary>
         public string PopIndent()
         {
-            string returnValue = "";
-            if ((this.indentLengths.Count > 0))
+            var returnValue = "";
+            if (indentLengths.Count > 0)
             {
-                int indentLength = this.indentLengths[(this.indentLengths.Count - 1)];
-                this.indentLengths.RemoveAt((this.indentLengths.Count - 1));
-                if ((indentLength > 0))
+                var indentLength = indentLengths[indentLengths.Count - 1];
+                indentLengths.RemoveAt(indentLengths.Count - 1);
+                if (indentLength > 0)
                 {
-                    returnValue = this.currentIndentField.Substring((this.currentIndentField.Length - indentLength));
-                    this.currentIndentField = this.currentIndentField.Remove((this.currentIndentField.Length - indentLength));
+                    returnValue = CurrentIndent.Substring(CurrentIndent.Length - indentLength);
+                    CurrentIndent = CurrentIndent.Remove(CurrentIndent.Length - indentLength);
                 }
             }
+
             return returnValue;
         }
+
         /// <summary>
-        /// Remove any indentation
+        ///     Remove any indentation
         /// </summary>
         public void ClearIndent()
         {
-            this.indentLengths.Clear();
-            this.currentIndentField = "";
+            indentLengths.Clear();
+            CurrentIndent = "";
         }
+
         #endregion
+
         #region ToString Helpers
+
         /// <summary>
-        /// Utility class to produce culture-oriented representation of an object as a string.
+        ///     Utility class to produce culture-oriented representation of an object as a string.
         /// </summary>
         public class ToStringInstanceHelper
         {
-            private System.IFormatProvider formatProviderField  = global::System.Globalization.CultureInfo.InvariantCulture;
+            private IFormatProvider formatProviderField = CultureInfo.InvariantCulture;
+
             /// <summary>
-            /// Gets or sets format provider to be used by ToStringWithCulture method.
+            ///     Gets or sets format provider to be used by ToStringWithCulture method.
             /// </summary>
-            public System.IFormatProvider FormatProvider
+            public IFormatProvider FormatProvider
             {
-                get
-                {
-                    return this.formatProviderField ;
-                }
+                get => formatProviderField;
                 set
                 {
-                    if ((value != null))
-                    {
-                        this.formatProviderField  = value;
-                    }
+                    if (value != null) formatProviderField = value;
                 }
             }
+
             /// <summary>
-            /// This is called from the compile/run appdomain to convert objects within an expression block to a string
+            ///     This is called from the compile/run appdomain to convert objects within an expression block to a string
             /// </summary>
             public string ToStringWithCulture(object objectToConvert)
             {
-                if ((objectToConvert == null))
+                if (objectToConvert == null) throw new ArgumentNullException("objectToConvert");
+                var t = objectToConvert.GetType();
+                var method = t.GetMethod("ToString", new[]
                 {
-                    throw new global::System.ArgumentNullException("objectToConvert");
-                }
-                System.Type t = objectToConvert.GetType();
-                System.Reflection.MethodInfo method = t.GetMethod("ToString", new System.Type[] {
-                            typeof(System.IFormatProvider)});
-                if ((method == null))
-                {
+                    typeof(IFormatProvider)
+                });
+                if (method == null)
                     return objectToConvert.ToString();
-                }
-                else
+                return (string) method.Invoke(objectToConvert, new object[]
                 {
-                    return ((string)(method.Invoke(objectToConvert, new object[] {
-                                this.formatProviderField })));
-                }
+                    formatProviderField
+                });
             }
         }
-        private ToStringInstanceHelper toStringHelperField = new ToStringInstanceHelper();
+
         /// <summary>
-        /// Helper to produce culture-oriented representation of an object as a string
+        ///     Helper to produce culture-oriented representation of an object as a string
         /// </summary>
-        public ToStringInstanceHelper ToStringHelper
-        {
-            get
-            {
-                return this.toStringHelperField;
-            }
-        }
+        public ToStringInstanceHelper ToStringHelper { get; } = new ToStringInstanceHelper();
+
         #endregion
     }
+
     #endregion
 }

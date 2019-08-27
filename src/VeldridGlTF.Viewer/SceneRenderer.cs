@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -90,19 +89,22 @@ namespace VeldridGlTF.Viewer
                 switch (stream.Key)
                 {
                     case "POSITION":
-                        values = stream.AsVector3().Select(_=>Vector3.Transform(_,t)).Select(_ => $"new Vector3({_.X}f, {_.Y}f, {_.Z}f)");
+                        values = stream.AsVector3().Select(_ => Vector3.Transform(_, t))
+                            .Select(_ => $"new Vector3({_.X}f, {_.Y}f, {_.Z}f)");
                         break;
                     case "NORMAL":
-                        values = stream.AsVector3().Select(_ => Vector3.TransformNormal(_, t)).Select(_ => $"new Vector3({_.X}f, {_.Y}f, {_.Z}f)");
+                        values = stream.AsVector3().Select(_ => Vector3.TransformNormal(_, t))
+                            .Select(_ => $"new Vector3({_.X}f, {_.Y}f, {_.Z}f)");
                         break;
                     case "TANGENT":
-                        values = stream.AsVector4().Select(_ => TransformTangent(_, t)).Select(_ => $"new Vector4({_.X}f, {_.Y}f, {_.Z}f, {_.W}f)");
+                        values = stream.AsVector4().Select(_ => TransformTangent(_, t))
+                            .Select(_ => $"new Vector4({_.X}f, {_.Y}f, {_.Z}f, {_.W}f)");
                         break;
                     default:
                         switch (stream.Format)
                         {
                             case GeometryStreamFormat.Float1:
-                                values = stream.AsScalar().Select(_ => _.ToString()+"f");
+                                values = stream.AsScalar().Select(_ => _ + "f");
                                 break;
                             case GeometryStreamFormat.Float2:
                                 values = stream.AsVector2().Select(_ => $"new Vector2({_.X}f, {_.Y}f)");
@@ -121,14 +123,16 @@ namespace VeldridGlTF.Viewer
                         break;
                 }
 
-                Debug.WriteLine("AbstractGeometryStream.Create(\"" + stream.Key + "\", new []{" + string.Join(", ", values) + "}),");
+                Debug.WriteLine("AbstractGeometryStream.Create(\"" + stream.Key + "\", new []{" +
+                                string.Join(", ", values) + "}),");
             }
+
             Debug.WriteLine(string.Join(", ", geometryPrimitive.Indices));
         }
 
         private static Vector4 TransformTangent(Vector4 _, Matrix4x4 t)
         {
-            var tangent = Vector3.TransformNormal(new Vector3(_.X,_.Y, _.Z), t);
+            var tangent = Vector3.TransformNormal(new Vector3(_.X, _.Y, _.Z), t);
             return new Vector4(tangent.X, tangent.Y, tangent.Z, _.W);
         }
 

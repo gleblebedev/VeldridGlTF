@@ -7,15 +7,14 @@ namespace VeldridGlTF.Viewer.Loaders.FileSystem
 {
     public class FilesystemFolder : AbstractFolder, IFolder
     {
-        private readonly string _physicalPath;
-
         private readonly Dictionary<string, ManualResourceHandler<IFile>> _files =
             new Dictionary<string, ManualResourceHandler<IFile>>();
 
         private readonly Dictionary<string, IFolder> _folders = new Dictionary<string, IFolder>();
         private readonly object _gate = new object();
+        private readonly string _physicalPath;
 
-        public FilesystemFolder(string physicalPath, string logicalPath): base(logicalPath)
+        public FilesystemFolder(string physicalPath, string logicalPath) : base(logicalPath)
         {
             _physicalPath = physicalPath;
         }

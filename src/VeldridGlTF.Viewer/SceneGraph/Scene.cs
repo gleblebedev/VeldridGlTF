@@ -6,7 +6,6 @@ namespace VeldridGlTF.Viewer.SceneGraph
     public class Scene : NodeContainer
     {
         private readonly Node.WorldMatrixUpdateQueue _worldMatrixUpdateQueue = new Node.WorldMatrixUpdateQueue();
-        private IRenderSystem _render;
 
         public Scene()
         {
@@ -18,11 +17,7 @@ namespace VeldridGlTF.Viewer.SceneGraph
 
         public EcsSystems Systems { get; set; }
 
-        public IRenderSystem Render
-        {
-            get { return _render; }
-            set { _render = value; }
-        }
+        public IRenderSystem Render { get; set; }
 
         public WorldMatrixToken EnqueueWorldTransformUpdate(Node node)
         {

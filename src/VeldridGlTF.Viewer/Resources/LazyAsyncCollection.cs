@@ -14,15 +14,13 @@ namespace VeldridGlTF.Viewer.Resources
 
         public LazyAsyncCollection(Func<TKey, Task<TValue>> factory)
         {
-            _factory = _=>new Lazy<Task<TValue>>(()=>factory(_), LazyThreadSafetyMode.ExecutionAndPublication);
+            _factory = _ => new Lazy<Task<TValue>>(() => factory(_), LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
-        public LazyAsyncCollection(Func<TKey, TValue> factory): this(_ => Task.Run(() => factory(_)))
+        public LazyAsyncCollection(Func<TKey, TValue> factory) : this(_ => Task.Run(() => factory(_)))
         {
         }
-        public Task<TValue> this[TKey key]
-        {
-            get { return _resources.GetOrAdd(key, _factory).Value; }
-        }
+
+        public Task<TValue> this[TKey key] => _resources.GetOrAdd(key, _factory).Value;
     }
 }

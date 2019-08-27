@@ -6,7 +6,8 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders.PBR
 {
     public class PBRShaderKey : ShaderKey, IEquatable<PBRShaderKey>
     {
-        public PBRShaderKey(IShaderFactory factory, ILayoutNameResolver layoutNameResolver,  RenderVertexLayout layout) : base(factory, layoutNameResolver)
+        public PBRShaderKey(IShaderFactory factory, ILayoutNameResolver layoutNameResolver, RenderVertexLayout layout) :
+            base(factory, layoutNameResolver)
         {
             VertexLayout = layout;
             foreach (var element in VertexLayout.VertexLayoutDescription.Elements)

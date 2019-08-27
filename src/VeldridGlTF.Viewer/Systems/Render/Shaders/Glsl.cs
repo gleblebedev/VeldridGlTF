@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Veldrid;
-using VeldridGlTF.Viewer.Systems.Render.Shaders.PBR;
 
 namespace VeldridGlTF.Viewer.Systems.Render.Shaders
 {
@@ -111,33 +110,18 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
             return stringBuilder.ToString();
         }
 
-        private class ShaderTemplateProxy:IShaderTemplate
-        {
-            private readonly StringBuilder _stringBuilder;
-
-            public ShaderTemplateProxy(StringBuilder stringBuilder)
-            {
-                _stringBuilder = stringBuilder;
-            }
-
-            public void WriteLine(string textToAppend)
-            {
-                _stringBuilder.AppendLine(textToAppend);
-            }
-        }
         public static void WriteMembers<T>(IShaderTemplate template)
         {
-            foreach (var fieldInfo in typeof(T).GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
+            foreach (var fieldInfo in typeof(T).GetFields(BindingFlags.NonPublic | BindingFlags.Public |
+                                                          BindingFlags.Instance))
             {
-                var fixedBuffer = (FixedBufferAttribute)fieldInfo.GetCustomAttribute(typeof(FixedBufferAttribute), false);
+                var fixedBuffer =
+                    (FixedBufferAttribute) fieldInfo.GetCustomAttribute(typeof(FixedBufferAttribute), false);
                 if (fixedBuffer != null)
-                {
-                    template.WriteLine("    " + NameOf(fixedBuffer.ElementType) + " " + fieldInfo.Name + " ["+fixedBuffer.Length+"];");
-                }
+                    template.WriteLine("    " + NameOf(fixedBuffer.ElementType) + " " + fieldInfo.Name + " [" +
+                                       fixedBuffer.Length + "];");
                 else
-                {
                     template.WriteLine("    " + NameOf(fieldInfo.FieldType) + " " + fieldInfo.Name + ";");
-                }
             }
         }
 
@@ -158,6 +142,21 @@ namespace VeldridGlTF.Viewer.Systems.Render.Shaders
             if (type == typeof(Matrix3x3))
                 return "mat3";
             throw new NotImplementedException(type.FullName);
+        }
+
+        private class ShaderTemplateProxy : IShaderTemplate
+        {
+            private readonly StringBuilder _stringBuilder;
+
+            public ShaderTemplateProxy(StringBuilder stringBuilder)
+            {
+                _stringBuilder = stringBuilder;
+            }
+
+            public void WriteLine(string textToAppend)
+            {
+                _stringBuilder.AppendLine(textToAppend);
+            }
         }
     }
 }
