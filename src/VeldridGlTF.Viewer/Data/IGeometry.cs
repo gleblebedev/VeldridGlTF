@@ -3,6 +3,9 @@ using VeldridGlTF.Viewer.Data.Geometry;
 
 namespace VeldridGlTF.Viewer.Data
 {
+    public interface ISkeleton
+    {
+    }
     public interface IGeometry
     {
         IReadOnlyList<IGeometryPrimitive> Primitives { get; }

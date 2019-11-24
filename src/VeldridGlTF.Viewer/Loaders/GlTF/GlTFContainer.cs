@@ -50,7 +50,7 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                 if (stream.CanSeek)
                 {
                     modelRoot = ModelRoot.Read(stream,
-                        new ReadSettings {FileReader = new FileReader(context).ReadAsset});
+                        new ReadSettings {FileReader = new FileReader(context).ReadAsset, SkipValidation = true});
                 }
                 else
                 {
@@ -58,7 +58,7 @@ namespace VeldridGlTF.Viewer.Loaders.GlTF
                     stream.CopyTo(buf);
                     buf.Position = 0;
                     modelRoot = ModelRoot.Read(buf,
-                        new ReadSettings {FileReader = new FileReader(context).ReadAsset});
+                        new ReadSettings {FileReader = new FileReader(context).ReadAsset, SkipValidation = true });
                 }
             }
 

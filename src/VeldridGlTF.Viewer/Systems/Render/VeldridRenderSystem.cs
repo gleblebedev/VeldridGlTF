@@ -65,6 +65,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         private DynamicUniformBuffer<ObjectProperties> _dynamicObjectProperties;
         private DynamicUniformBuffer _jointMatrices;
         private DynamicUniformBuffer _jointNormalMatrices;
+        private OffsetBuffer _offsetBuffer;
 
         //private DeviceBuffer _objectProperties;
 
@@ -156,6 +157,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             _dynamicObjectProperties.Reset();
             _jointMatrices.Reset();
             _jointNormalMatrices.Reset();
+            _offsetBuffer.Reset();
 
             _opaqueCL.Begin();
             var hasSkybox = RenderSkybox();
@@ -256,7 +258,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             
             foreach (var drawCall in _opaqueDrawCalls.Concat(_transparentDrawCalls))
             {
-                drawCall.DrawCall.Pipeline.Set(_opaqueCL, drawCall.ObjectPropertyOffset, drawCall.JointMatrices, drawCall.JointNormalMatrices);
+                drawCall.DrawCall.Pipeline.Set(_opaqueCL, _offsetBuffer, drawCall.ObjectPropertyOffset, drawCall.JointMatrices, drawCall.JointNormalMatrices);
                 _opaqueCL.SetIndexBuffer(drawCall.IndexBuffer, IndexFormat.UInt16);
                 _opaqueCL.SetVertexBuffer(0, drawCall.VertexBuffer, drawCall.DrawCall.Primitive.DataOffset);
                 _opaqueCL.DrawIndexed(drawCall.DrawCall.Primitive.Length, 1, drawCall.DrawCall.Primitive.Start, 0, 0);
@@ -420,7 +422,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             }
         }
 
-        public async Task<PipelineBinder> GetPipeline(RenderPrimitive primitive, MaterialResource material,
+        public async Task<PipelineBinder> GetPipelineBinder(RenderPrimitive primitive, MaterialResource material,
             RenderPass pass)
         {
             var pipelineKey = EvaulatePipelineKey(primitive, material, pass);
@@ -443,7 +445,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
             {
                 Pipeline = pipelineAndLayout.Pipeline,
                 ResourceLayouts = pipelineAndLayout.ResourceLayouts,
-                Sets = sets,
+                Sets = new ListSegment<ResourceSet>(sets,0,sets.Length),
                 DynamicOffsets = dynamicResources
             };
         }
@@ -556,6 +558,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
                 new byte[1024 * 1024]);
             _jointNormalMatrices = new DynamicUniformBuffer(_renderContextValue, 64 * MaxJoints, 4 * 1024 * 1024,
                 new byte[1024 * 1024]);
+            _offsetBuffer = new OffsetBuffer(1024*1024);
 
             //_objectProperties = factory.CreateBuffer(new BufferDescription(GetBufferSize<ObjectProperties>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             MaterialBuffer = CreateMaterialBuffer();

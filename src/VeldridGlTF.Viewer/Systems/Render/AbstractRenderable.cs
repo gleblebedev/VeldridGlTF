@@ -67,7 +67,7 @@ namespace VeldridGlTF.Viewer.Systems.Render
         {
             if (material == null) return null;
 
-            var PipelineBinder = await RenderSystem.GetPipeline(primitive, material, renderPass);
+            var PipelineBinder = await RenderSystem.GetPipelineBinder(primitive, material, renderPass);
             var drawCall = new DrawCall
             {
                 Pipeline = PipelineBinder,

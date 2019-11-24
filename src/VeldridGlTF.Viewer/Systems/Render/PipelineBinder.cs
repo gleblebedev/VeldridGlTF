@@ -1,5 +1,6 @@
 ﻿using System;
 using Veldrid;
+using VeldridGlTF.Viewer.Systems.Render.Buffers;
 
 namespace VeldridGlTF.Viewer.Systems.Render
 {
@@ -9,39 +10,40 @@ namespace VeldridGlTF.Viewer.Systems.Render
 
         public ResourceLayout[] ResourceLayouts { get; set; }
 
-        public ResourceSet[] Sets { get; set; }
+        public ListSegment<ResourceSet> Sets { get; set; }
 
         public DynamicResource[][] DynamicOffsets { get; set; }
 
-        public void Set(CommandList cl, uint objectProperties, uint jointMatrices, uint jointNormalMatrices)
+        public void Set(CommandList cl, OffsetBuffer offsetBuf, uint objectProperties, uint jointMatrices, uint jointNormalMatrices)
         {
             cl.SetPipeline(Pipeline);
-            for (var index = 0; index < Sets.Length; index++)
+            for (var index = 0; index < Sets.Count; index++)
             {
                 var resourceSet = Sets[index];
                 if (resourceSet != null)
                 {
-                    var offsets = DynamicOffsets[index];
-                    if (offsets != null)
+                    var dynamicOffsets = DynamicOffsets[index];
+                    if (dynamicOffsets != null)
                     {
-                        var offsetBuf = new uint[offsets.Length];
-                        for (var i = 0; i < offsets.Length; i++)
-                            switch (offsets[i])
+                        var dynamicOffsetCount = (uint)dynamicOffsets.Length;
+                        var pos = offsetBuf.Allocate(dynamicOffsetCount);
+                        for (uint i = 0; i < dynamicOffsets.Length; i++)
+                            switch (dynamicOffsets[i])
                             {
                                 case DynamicResource.ObjectProperties:
-                                    offsetBuf[i] = objectProperties;
+                                    offsetBuf[pos+i] = objectProperties;
                                     break;
                                 case DynamicResource.JointMatrices:
-                                    offsetBuf[i] = jointMatrices;
+                                    offsetBuf[pos + i] = jointMatrices;
                                     break;
                                 case DynamicResource.JointNormalMatrices:
-                                    offsetBuf[i] = jointNormalMatrices;
+                                    offsetBuf[pos + i] = jointNormalMatrices;
                                     break;
                                 default:
                                     throw new NotImplementedException();
                             }
 
-                        cl.SetGraphicsResourceSet((uint) index, resourceSet, offsetBuf);
+                        cl.SetGraphicsResourceSet((uint) index, resourceSet, dynamicOffsetCount, ref offsetBuf.GetRefAt(pos));
                     }
                     else
                     {
